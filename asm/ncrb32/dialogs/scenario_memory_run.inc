@@ -109,7 +109,6 @@ ret
 ; INPUT:   None at registers                                                   ;
 ;                                                                              ;
 ; OUTPUT:  None at registers                                                   ;
-;          TODO. Error handling                                                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 ScenarioMemoryRun:
@@ -117,6 +116,8 @@ pushad
 cld
 ;---------- Refresh system information ----------------------------------------;
 call InfoProcessor
+mov al,MSG_RUNTIME_TIMINGS
+jc .error
 ;---------- Build User Parameters Block, UPB = F( GUI widgets state ) ---------;
 mov al,0
 call GuiToUserParms
@@ -137,11 +138,12 @@ lea ebp,[BIND_LIST]
 lea ebx,[MEM_IPB]
 
 ;---------- Build application type string -------------------------------------;
-
-; TODO. Differentiate ia32 and ia32 under Win64 (WoW)
-
 lea edi,[ebp + BINDLIST.mrApplication]
 mov ax,STR_MR_APP_TYPE_32
+cmp [OS_DATA.isWow64],0       ; Differentiate ia32 and ia32 under Win64 (WoW)
+je @f
+mov ax,STR_MR_APP_TYPE_WOW
+@@:
 call PoolStringWrite          ; TODO. Make this 3 instructions as subroutine or complex parametrize with 2 offsets
 mov al,0
 stosb

@@ -435,6 +435,11 @@ mov rax,0FFFF00FFFFFFFFFFh
 and rbx,rax
 ; UNDER CONSTRUCTION RESTRICTIONS
 mov qword [rdi + BINDLIST.setMemMethod],rbx
+;---------- Bits: AX.0 = nontemporal = f(sse), AX.2 = force x32 = off ---------;
+xor eax,eax
+bt ebx,18
+setc al
+mov word [rdi + BINDLIST.setMemOption],ax
 ;--- Benchmark objects: cache memory, DRAM or user-defined block size ---------;
 ; Plus custom block size
 lea rsi,[SYS_PARMS.summaryCache]
@@ -511,7 +516,6 @@ inc ebx
 @@:
 mov word [rdi + BINDLIST.setMemLpages],bx
 ;---------- Benchmark options, set unconditionally when defaults set ----------;
-mov word [rdi + BINDLIST.setMemOption],00000001b  ; Nontemporal = on, Force x32 = off
 mov word [rdi + BINDLIST.setMemAccess],00000010b  ; Access step
 mov word [rdi + BINDLIST.setMemPref],000000010b   ; Prefetch modes
 mov word [rdi + BINDLIST.setMemMeas],11010101b    ; Measure precision modes
@@ -566,6 +570,8 @@ jz .nodata
 or [BIND_LIST.bindCache.cacheBitmap],cl
 mov bl,0FFh
 call SizePrint64
+cmp edx,1
+je .done
 mov al,' '
 stosb
 mov ax,STR_TP_X

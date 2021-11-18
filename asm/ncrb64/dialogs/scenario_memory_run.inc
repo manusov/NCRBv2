@@ -104,7 +104,6 @@ ret
 ; INPUT:   None at registers                                                   ;
 ;                                                                              ;
 ; OUTPUT:  None at registers                                                   ;
-;          TODO. Error handling                                                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 ScenarioMemoryRun:
@@ -112,6 +111,8 @@ push rbx rsi rdi rbp r12 r13 r14 r15
 cld
 ;---------- Refresh system information ----------------------------------------;
 call InfoProcessor
+mov al,MSG_RUNTIME_TIMINGS
+jc .error
 ;---------- Build User Parameters Block, UPB = F( GUI widgets state ) ---------;
 mov al,0
 call GuiToUserParms

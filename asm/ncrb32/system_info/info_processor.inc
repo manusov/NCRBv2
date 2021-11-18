@@ -164,7 +164,7 @@ push ebx esi
 mov ecx,48                   ; RCX = String length, also clear bits RCX[63-32]
 mov al,' '                   ; AL = Space
 rep stosb                    ; Blank string
-mov dword [edi - 48],'None'  ; Default string, if feature not supported
+mov byte [edi - 48],'?'      ; Default string, if feature not supported
 mov byte [edi],0             ; Zero terminator byte 
 ;---------- Check functions supported -----------------------------------------;
 mov esi,80000000h            ; ESI = First extended function = 80000000h
@@ -404,9 +404,28 @@ and eax,80000000h
 cpuid
 cmp eax,esi
 jb .bitNo
-xchg eax,esi
+;---------- Subfunction number validation -------------------------------------;
+; TODO. Subfunction number validity check yet for function 00000007h only,
+;       required unified CPUID driver.
+cmp esi,7
+jne .simpleCpuid
+test edi,edi
+jz .simpleCpuid
+mov eax,esi
+xor ecx,ecx
+cpuid
+cmp eax,edi
+mov eax,0
+mov ebx,eax
+mov ecx,eax
+mov edx,eax
+jb .skipCpuid
+.simpleCpuid:
+mov eax,esi
 mov ecx,edi
 cpuid
+.skipCpuid:
+;---------- End of subfunction number validation ------------------------------;
 mov edi,ebp
 shr edi,8
 and edi,00FFh

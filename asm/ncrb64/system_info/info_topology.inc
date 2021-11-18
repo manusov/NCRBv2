@@ -383,12 +383,12 @@ lea rdi,[rdx + 04]
 call RelationNameEntry
 lea rdi,[rdx + 18]
 mov bl,0FFh
-mov eax,r8d
+mov eax,r8d                  ; R8D = Cache size for write size x count
 call SizePrint64
 lea rdi,[rdx + 41]
 mov ax,STR_TP_X
 call PoolStringWrite
-mov eax,r9d
+mov eax,r9d                  ; R9D = Cache count for write size x count
 mov bl,0
 call DecimalPrint32
 pop rdi

@@ -2,3 +2,9 @@
 Create this repository.
 Commit engineering release v2.00.07.
 
+
+18.11.2021. Engineering release v2.00.08.
+1) Differentiation "ia32" or "ia32 under Win64" for results window after "Run" button (for 32-bit version).
+2) Cache info visualized as "size x count" if count>1 or "size" if count=1 (for system info screen).
+3) Add CPUID subfunction number validation for function 7, actual for detect AVX512 features.
+4) Fixed "Nontemporal" checkbox wrong active if CPU don't support SSE.

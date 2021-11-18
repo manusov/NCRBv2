@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.7.0'
+RESOURCE_VERSION      EQU  '2.0.8.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -1684,6 +1684,8 @@ SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_A_CPUID_CANCEL
 BIND_STOP
 endres
 ;---------- CPU common features bitmap builder script -------------------------;
+; TODO. Subfunction number validity check yet for function 00000007h only,
+;       required unified CPUID driver.
 resdata cpuCommonFeatures
 ENTRY_CPUID     00000001h             , R_EDX , 23   ; MMX
 ENTRY_CPUID     00000001h             , R_EDX , 25   ; SSE  
@@ -1705,6 +1707,8 @@ ENTRY_CPUID     00000001h             , R_EDX , 0    ; x87 (redundant by run cri
 ENTRY_STOP
 endres  
 ;---------- CPU AVX512 features bitmap builder script -------------------------;
+; TODO. Subfunction number validity check yet for function 00000007h only,
+;       required unified CPUID driver.
 resdata cpuAvx512Features
 ENTRY_CPUID_S   00000007h , 00000000h , R_EBX , 28   ; AVX512CD
 ENTRY_CPUID_S   00000007h , 00000000h , R_EBX , 26   ; AVX512PF

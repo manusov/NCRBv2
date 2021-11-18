@@ -118,7 +118,7 @@ jmp ExitCpuId
 ;         Flags condition code: Carry (C) = means entries count limit
 ;------------------------------------------------------------------------------;
 SequenceCpuId:
-mov r10d,eax              ; R10D = standard or extended functions limit 
+mov r10d,eax          ; R10D = standard or extended functions limit 
 CycleCpuId:
 ;--- Specific handling for functions with subfunctions ---
 mov eax,r9d           ; EAX = function number, input at R9D

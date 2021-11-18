@@ -393,14 +393,14 @@ call RelationNameEntry
 lea edi,[edx + 18]
 mov bl,0FFh
 push edx
-mov eax,[ebp + 04]
+mov eax,[ebp + 04]     ; dword [ebp + 04] = Cache size for write size x count
 xor edx,edx
 call SizePrint64
 pop edx
 lea edi,[edx + 41]
 mov ax,STR_TP_X
 call PoolStringWrite
-mov eax,[ebp + 08]
+mov eax,[ebp + 08]     ; dword [ebp + 08] = Cache count for write size x count
 mov bl,0
 call DecimalPrint32
 pop edi
