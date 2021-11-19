@@ -160,18 +160,19 @@ jmp .skipTable
 ; ECX = CPUs, EDX = RAMs, RSI = Start, RBX = Limit
 .sratParse:
 push rbx rdx
-lea rsi,[r12 + 44]            ; RSI = Pointer to resource list in the SRAT
+lea rsi,[r12 + 48]            ; RSI = Pointer to resource list in the SRAT
 mov ebx,[r12 + 04]
 add rbx,r12                      ; RBX  = Table limit
 xor ecx,ecx                      ; ECX = Counter of CPUs
 xor edx,edx                      ; EDX = Counter of RAMs
 xor r8d,r8d                      ; R8 = Domains bitmap
+xor r9d,r9d                      ; R9D = Errors marker, 0FFFFFFFFh means error
+;---------- Cycle for scan nodes ----------------------------------------------;
 .sratScanNodes:                  ; Cycle for scan nodes
 mov al,[rsi]
-mov r9d,-1                       ; R9D = Error marker, set
 cmp al,2
-ja .exitSrat
-xor r9d,r9d                      ; R9D = Error marker, clear
+ja .errorSrat
+;---------- Detect processor affinity structure -------------------------------;
 cmp al,0                         ; 0 = Processor affinity structure
 jne @f                           ; Go skip if not a CPU
 test byte [rsi + 04],00000001b   ; Check Flags.Enable
@@ -181,6 +182,7 @@ mov r10d,[rsi + 09]
 and r10d,00FFFFFFh
 shl r10d,24                      ; This component, bits[31-08] only for CPUs
 @@:
+;---------- Detect memory affinity structure ----------------------------------;
 cmp al,1                         ; 1 = Memory affinity structure
 jne @f
 test byte [rsi + 28],00000001b   ; Check Flags.Enable
@@ -194,10 +196,10 @@ cmp r10d,63
 jbe @f
 mov r9d,-1                ; R9D = Mark output as invalid if Domain Number > 63
 @@:
+;---------- Make cycle for scan nodes -----------------------------------------;
 movzx eax,byte [rsi + 01] ; RAX = Size of structure, for skip it and access next
-mov r9d,-1                ; R9D = Error marker, set
 cmp al,0
-je .exitSrat
+je .errorSrat
 add rsi,rax
 cmp rsi,rbx
 jb .sratScanNodes         ; Cycle for scan structures
@@ -211,6 +213,9 @@ inc eax                  ; Counter +1 if "1" detected
 @@:
 dec bl
 jnz .scanOnes
+jmp .exitSrat
+.errorSrat:
+mov r9d,0FFFFFFFFh
 .exitSrat:
 or eax,r9d               ; This is checks for invalid number
 xchg r8d,eax             ; R8D = NUMA domains count

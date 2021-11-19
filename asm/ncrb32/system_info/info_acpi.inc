@@ -152,7 +152,7 @@ jmp .skipTable
 ;---------- SRAT ( System/Static Resource Affinity Table Table ) parse --------;
 .sratParse:
 push ebx
-lea esi,[edx + 44]   ; ESI = Pointer to APIC list in the MADT
+lea esi,[edx + 48]   ; ESI = Pointer to APIC list in the MADT
 mov ebx,[edx + 04]
 add ebx,edx          ; EBX = Table limit
 ;--- Push local variables, qword [esp] = port R8, dword [esp + 8] = port R9D --;
@@ -164,10 +164,8 @@ xor edx,edx                   ; EDX = Counter of RAMs (SRAT)
 ;---------- Cycle for scan nodes ----------------------------------------------;
 .sratScanNodes:
 mov al,[esi]
-mov dword [esp + 08],-1          ; Error marker, set
 cmp al,2
-ja .exitSrat
-mov dword [esp + 08],0           ; Error marker, clear
+ja .errorSrat
 ;---------- Detect processor affinity structure -------------------------------;
 cmp al,0                         ; 0 = Processor affinity structure
 jne @f                           ; Go skip if not a CPU
@@ -203,11 +201,10 @@ cmp byte [esi + 02],63
 jbe @f
 mov dword [esp + 08], -1   ; Mark output as invalid if Domain Number > 63
 @@:
-;---------- Make of cycle for scan nodes ---------------------------------------;
+;---------- Make cycle for scan nodes -----------------------------------------;
 movzx eax,byte [esi + 01]  ; EAX = Size of structure, for skip it and access next
-mov dword [esp + 08],-1    ; Error marker, set
 cmp al,0
-je .exitSrat
+je .errorSrat
 add esi,eax
 cmp esi,ebx
 jb .sratScanNodes          ; Cycle for scan structures
@@ -224,6 +221,9 @@ inc eax                  ; Counter +1 if "1" detected
 shr ebp,1
 dec bl
 jnz .scanOnes
+jmp .exitSrat
+.errorSrat:
+mov dword [esp + 08],-1  ; Errors marker, 0FFFFFFFFh means error
 .exitSrat:
 or eax,[esp + 08]        ; This is checks for invalid number
 ;---------- Remove stack frame ------------------------------------------------;
