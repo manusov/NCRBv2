@@ -11,5 +11,5 @@ Commit engineering release v2.00.07.
 
 
 19.11.2021. Engineering release v2.00.09.
-Fixed bug with extract parameters from ACPI table SRAT (System/Static Resource Affinity Table).
-Add results Amazon-virtual-AMD-EPYC-7R32.
+1) Fixed bug with extract parameters from ACPI table SRAT (System/Static Resource Affinity Table).
+2) Add results Amazon-virtual-AMD-EPYC-7R32.
