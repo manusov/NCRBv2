@@ -66,9 +66,9 @@ mov [rdi + MEMUPB.optionPG],eax
 xor eax,eax
 test [rsi + BINDLIST.setMemNuma],00000001b
 jz @f
-movzx ecx,[rsi + BINDLIST.getMemNuma]
-bsf ecx,ecx
-add eax,ecx
+movzx eax,[rsi + BINDLIST.getMemNuma]
+bsf eax,eax
+inc eax
 @@:
 mov [rdi + MEMUPB.optionNUMA],eax 
 ;---------- Option Object -----------------------------------------------------;

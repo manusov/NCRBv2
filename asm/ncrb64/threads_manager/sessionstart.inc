@@ -335,6 +335,7 @@ mov [rdi + MEMIPB.domainsCount],eax
 ; Option = NUMA_NON_OPTIMAL 
 ;   NUMA not optimal = shift affinity masks by ring, example 1-2-3-4 to 4-1-2-3
 ;---------- Reduce domains count for NUMA single domain scenario --------------;
+lea rcx,[NUMA_LIST]
 cmp [rdi + MEMIPB.updatedNUMA],NUMA_CURRENT_ONLY
 jne .L30                         ; Go if not a single NUMA domain mode
 mov [rdi + MEMIPB.domainsCount],1
@@ -342,7 +343,6 @@ cmp [rdi + MEMIPB.updatedThreads],1
 jbe .L30                         ; Go if not a multi-thread mode
 ;---------- This code executed only for NUMA Option = single domain -----------; 
 xor eax,eax                 ; Pre-blank logical CPU count = 0
-lea rcx,[NUMA_LIST]
 mov rdx,qword [rcx + NUMACTRL.nodeAffinity]  ; Node 0 affinity mask
 .L34:
 shr rdx,1
@@ -358,10 +358,10 @@ je .L36                     ; Skip "Threads count / 2" if Threads count = 1
 shr eax,1                   ; Threads count / 2  if required HT rejection
 .L36:
 mov [rdi + MEMIPB.updatedThreads],eax  ; Update number of threads = f ( NUMA mode )
-.L30:
 ;--- End of conditionally executed code only for NUMA Option = single domain --;
 ;--- Swap affinity masks for NUMA Non Optimal scenario, force remote access ---;
 ; TODO. Note possible bug if assymetric domains ( processors per domain ).
+.L30:
 cmp [rdi + MEMIPB.updatedNUMA],NUMA_NON_OPTIMAL
 jne .L31         ; Go if NUMA mode not a "force non-optimal"
 lea rdx,[rcx + NUMACTRL.nodeAffinity]

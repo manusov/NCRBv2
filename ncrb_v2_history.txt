@@ -1,6 +1,10 @@
-14.11.2021. 
-Create this repository.
-Commit engineering release v2.00.07.
+23.11.2021. Engineering release v2.00.10.
+Fixed bugs with NUMA support.
+
+
+19.11.2021. Engineering release v2.00.09.
+1) Fixed bug with extract parameters from ACPI table SRAT (System/Static Resource Affinity Table).
+2) Add results Amazon-virtual-AMD-EPYC-7R32.
 
 
 18.11.2021. Engineering release v2.00.08.
@@ -10,6 +14,10 @@ Commit engineering release v2.00.07.
 4) Fixed "Nontemporal" checkbox wrong active if CPU don't support SSE.
 
 
-19.11.2021. Engineering release v2.00.09.
-1) Fixed bug with extract parameters from ACPI table SRAT (System/Static Resource Affinity Table).
-2) Add results Amazon-virtual-AMD-EPYC-7R32.
+14.11.2021. 
+Create this repository.
+Commit engineering release v2.00.07.
+
+
+
+
