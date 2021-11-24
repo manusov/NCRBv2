@@ -1,0 +1,4 @@
+THIS RESULTS FOR VIRTUAL PLATFORM, NOT FOR PHYSICAL PLATFORM!
+
+Virtualization hypervisor changes platform topology, CPU cores and threads count,
+CPUID results, ACPI tables data and other system information.
