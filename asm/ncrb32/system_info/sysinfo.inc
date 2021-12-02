@@ -97,6 +97,27 @@ call TextAffinizedCpuid
 lea edi,[BIND_LIST]
 lea ebp,[CPU_DATA.vendorString]
 mov ebx,ebp
+;---------- Update threads and cores count if OS topology not available -------;
+; This update actual for some old versions of Windows XP
+lea ecx,[SYS_PARMS.summaryTopology]
+mov eax,[ecx + SUMMARYTOPOLOGY.cores]
+mov edx,[ecx + SUMMARYTOPOLOGY.threads]
+test eax,eax
+jz .updateTopology
+test edx,edx
+jnz .skipTopology
+.updateTopology:
+mov eax,[OS_DATA.systemInfo.dwNumberOfProcessors]
+mov edx,eax
+cmp eax,2
+jne .doneTopology
+test [ebx + CPUDATA.cpuFlags],0001b
+jz .doneTopology 
+shr eax,1
+.doneTopology:
+mov [ecx + SUMMARYTOPOLOGY.cores],eax
+mov [ecx + SUMMARYTOPOLOGY.threads],edx
+.skipTopology:
 ;---------- CPU vendor string, 12 chars ---------------------------------------;
 xchg eax,ebp
 stosd
@@ -402,20 +423,11 @@ test al,00000010b
 jz @f
 or ebx,00540000h      ; SSE (3) 
 @@:
+test dl,00000010b
+jz .noavx             ; If AVX context not supported, skip AVX, FMA, Gather
 test al,10000000b
 jz @f
-test dl,00000010b
-jz @f
 or ebx,15000000h      ; AVX (3) 
-@@:
-test ah,00000010b
-jz @f
-mov cl,dl
-and cl,00011100b
-cmp cl,00011100b
-jne @f
-or ebx,40000000h      ; AVX512 (3), FMA 512, VGATHERQPD 512, VSCATTERQPD 512
-or ebp,00001445h 
 @@:
 test ah,01000000b
 jz @f
@@ -424,6 +436,16 @@ bts ebp,4             ; FMA 256
 test ah,00000001b
 jz @f
 bts ebp,8             ; VGATHERQPD 256
+@@:
+.noavx:
+mov cl,dl
+and cl,00011100b
+cmp cl,00011100b
+jne @f                ; If AVX512 context not supported, skip AVX512, FMA512, Gather-Scatter 512
+test ah,00000010b
+jz @f
+or ebx,40000000h      ; AVX512 (3), FMA 512, VGATHERQPD 512, VSCATTERQPD 512
+or ebp,00001445h 
 @@:
 test ah,10000000b
 jz @f
@@ -456,9 +478,13 @@ jnz @f
 mov ecx,000000003h   ; Read MOV, option 0, enable and select bits = 0, 1
 @@:
 or ebx,ecx            ; Select default ASM method by CPU features support check
+
 ; UNDER CONSTRUCTION RESTRICTIONS
-and ebp,0FFFF00FFh
+; TODO. VERIFY GATHER/SCATTER/CLZERO PATTERNS AND UNLOCK IT
+; and ebp,0FFFF00FFh
+  and ebp,0FFFF03FFh
 ; UNDER CONSTRUCTION RESTRICTIONS
+
 mov [edi + BINDLIST.setMemMethod + 0],ebx
 mov [edi + BINDLIST.setMemMethod + 4],ebp
 ;---------- Bits: AX.0 = nontemporal = f(sse), AX.2 = force x32 = off ---------;

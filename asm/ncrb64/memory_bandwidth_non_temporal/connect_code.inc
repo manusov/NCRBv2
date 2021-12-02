@@ -67,3 +67,7 @@ include 'ntpread_medium_avx256.inc'   ; Same read with prefetch distance + 512
 include 'ntpread_long_avx256.inc'     ; Same read with prefetch distance + 2048
 include 'ntpread_medium_avx512.inc'   ; Same read with prefetch distance + 512
 include 'ntpread_long_avx512.inc'     ; Same read with prefetch distance + 2048
+;---------- Cache optimized write by AMD CLZERO instruction -------------------;
+include 'ntwrite_clzero.inc'          ; Write by CLZERO
+
+

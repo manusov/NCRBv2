@@ -1,3 +1,12 @@
+02.12.2021. v2.00.11. Changes for x64 and ia32 versions.
+1) Supported gathered read for AVX256.
+2) Supported gathered read and scattered write for AVX512, but under verification, YET LOCKED.
+3) Supported non-temporal write by AMD CLZERO instruction, but under verification, YET LOCKED.
+4) Supported CPUID-based topology scan for Intel and AMD. Actual for old versions of Windows XP,
+   if cannot detect platform topology by WinAPI.
+5) Bug fixed with SSE3 detection, system information screen.
+
+
 23.11.2021. Engineering release v2.00.10.
 Fixed bugs with NUMA support.
 

@@ -26,6 +26,15 @@ test dl,00000001b
 jz .errorX87          ; Go error if X87 FPU not supported or locked 
 test dl,00010000b
 jz .errorTsc          ; Go error if Time Stamp Counter not supported or locked
+;---------- Set HT check flag by results of CPUID function 1 ------------------;
+xor eax,eax
+bt edx,28
+jnc @f
+shr ebx,16
+cmp bl,2
+sete al
+@@:
+stosd
 ;------- Build CPU common features bitmap, for system information screen ------; 
 xor eax,eax
 mov rsi,[APP_DATA.lockedDataCpuCommon]
@@ -556,12 +565,12 @@ jb .cycleCache
 xor eax,eax
 cpuid
 cmp eax,2
-jb .doneCaches
+jb .doneIntelCaches
 mov eax,2       ; EAX = Function = 2 = Get Cache Descriptors
 xor ecx,ecx     ; ECX = Subfunction = 0
 cpuid
 cmp al,1        ; Leaf count must be 1, otherwise skip
-jne .doneCaches
+jne .doneIntelCaches
 test eax,eax    ; If bit EAX.31 = 1, means EAX contain invalid data   
 jns @f          ; Go skip clear, if EAX data valid
 xor eax,eax
@@ -607,8 +616,48 @@ jmp .cacheValues        ; Cycle for possible Cache types IDs
 pop rcx
 dec r8d
 jnz .cacheDescriptors   ; Cycle for Cache Descriptors array 
+;---------- Detect caches by AMD method ---------------------------------------;
+.doneIntelCaches:
+mov esi,80000005h
+mov eax,80000000h
+cpuid
+cmp eax,esi
+jb .doneAmdCaches
+mov eax,esi
+cpuid                       ; Execute CPUID function 80000005h: AMD L1
+and edx,0FF000000h
+shr edx,24 - 10
+cmp qword [rdi - 60 + 12],0
+jne @f
+mov [rdi - 60 + 12],rdx     ; L1 instruction cache, CPUID 80000005h, EDX[31-24]
+@@:                         ; units = KB
+and ecx,0FF000000h
+shr ecx,24 - 10
+cmp qword [rdi - 60 + 24],0
+jne @f
+mov [rdi - 60 + 24],rcx     ; L1 data cache, CPUID 80000005h, ECX[31-24]
+@@:                         ; units = KB
+inc esi
+mov eax,80000000h
+cpuid
+cmp eax,esi
+jb .doneAmdCaches
+mov eax,esi
+cpuid                       ; Execute CPUID function 80000006h: AMD L2, L3
+and ecx,0FFFF0000h
+shr ecx,16 - 10
+cmp qword [rdi - 60 + 36],0
+jne @f
+mov [rdi - 60 + 36],rcx     ; L2 unified cache, CPUID 80000006h, ECX[31-16]
+@@:                         ; units = KB
+and edx,0FFFC0000h
+shl edx,1
+cmp qword [rdi - 60 + 48],0
+jne @f
+mov [rdi - 60 + 48],rdx     ; L3 unified cache, CPUID 80000006h, EDX[31-18]
+@@:                         ; units = 512 KB
 ;---------- Exit --------------------------------------------------------------;
-.doneCaches:
+.doneAmdCaches:
 pop rsi rbx
 ret
 ;---------- Start handling detected cache type / level ------------------------;

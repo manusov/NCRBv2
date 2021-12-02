@@ -44,14 +44,14 @@
 include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
-RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition ( UNDER CONSTRUCTION )'
-RESOURCE_VERSION        EQU '2.0.10.0'
+RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition'
+RESOURCE_VERSION        EQU '2.0.11.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2021 Ilya Manusov'
-PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32 ( UNDER CONSTRUCTION )'
+PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32'
 ABOUT_CAP_TEXT          EQU 'Program info'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.00.10 for Windows ia32 ( UNDER CONSTRUCTION )'
+ABOUT_TEXT_2            EQU 'v2.00.11 for Windows ia32'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -1567,6 +1567,7 @@ struct CPUDATA
 vendorString               db 13 dup ?
 modelString                db 49 dup ?
 cpuSignature               dd ?
+cpuFlags                   dd ?   ; Bit 0 = HT check, bits [1-31] reserved
 extractedFeaturesBitmap    dq ?
 extractedAvx512Bitmap      dq ?
 extractedContextBitmap     dq ?

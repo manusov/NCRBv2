@@ -47,3 +47,5 @@ BANDWIDTH_NON_TEMPORAL  Pattern_NtpRead_L_AVX256 , DumpStart_NtpRead_L_AVX256 , 
 ;---------- AVX512 additions: medium and Long prefetch distance ---------------;
 BANDWIDTH_NON_TEMPORAL  Pattern_NtpRead_M_AVX512 , DumpStart_NtpRead_M_AVX512 , DumpStop_NtpRead_M_AVX512 , 64   ; # 19
 BANDWIDTH_NON_TEMPORAL  Pattern_NtpRead_L_AVX512 , DumpStart_NtpRead_L_AVX512 , DumpStop_NtpRead_L_AVX512 , 64   ; # 20
+;---------- Additions for AMD CLZERO instruction support ----------------------;
+BANDWIDTH_NON_TEMPORAL  Pattern_NtWrite_CLZERO   , DumpStart_NtWrite_CLZERO   , DumpStop_NtWrite_CLZERO   , 64   ; # 21

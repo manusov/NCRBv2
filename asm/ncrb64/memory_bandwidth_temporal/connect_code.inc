@@ -60,5 +60,13 @@ include 'copy_avx256.inc'      ; Copy by VMOVAPD + VMOVAPD (256 bit)
 include 'read_avx512.inc'      ; Read by VMOVAPD (512 bit)  
 include 'write_avx512.inc'     ; Write by VMOVAPD (512 bit)
 include 'copy_avx512.inc'      ; Copy by VMOVAPD + VMOVAPD (512 bit)
+;---------- FMA (Fused Multiply and Add) --------------------------------------;
 include 'dot_fma256.inc'       ; Fused multiply and add, VFMADD231PD (256 bit)
 include 'dot_fma512.inc'       ; Fused multiply and add, VFMADD231PD (512 bit) 
+;---------- Gather-Read and Scatter-Write -------------------------------------;
+include 'gather_avx256.inc'    ; Gather Read by VGATHERQPD (256 bit)
+include 'gather_avx512.inc'    ; Gather Read by VGATHERQPD (512 bit)
+include 'scatter_avx512.inc'   ; Scatter Write by VSCATTERQPD (512 bit) 
+
+
+

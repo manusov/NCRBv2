@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.10.0'
+RESOURCE_VERSION      EQU  '2.0.11.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -1690,7 +1690,7 @@ resdata cpuCommonFeatures
 ENTRY_CPUID     00000001h             , R_EDX , 23   ; MMX
 ENTRY_CPUID     00000001h             , R_EDX , 25   ; SSE  
 ENTRY_CPUID     00000001h             , R_EDX , 26   ; SSE2
-ENTRY_CPUID     00000001h             , R_ECX , 01   ; SSE3
+ENTRY_CPUID     00000001h             , R_ECX , 00   ; SSE3
 ENTRY_CPUID     00000001h             , R_ECX , 09   ; SSSE3
 ENTRY_CPUID     00000001h             , R_ECX , 19   ; SSE4.1
 ENTRY_CPUID     00000001h             , R_ECX , 20   ; SSE4.2

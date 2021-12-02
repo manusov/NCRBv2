@@ -93,6 +93,27 @@ jc .error
 ; R15 = Pointer for CPU data addressing in the application variables 
 lea rdi,[BIND_LIST]
 lea r15,[CPU_DATA.vendorString]
+;---------- Update threads and cores count if OS topology not available -------;
+; This update actual for some old versions of Windows XP
+lea rcx,[SYS_PARMS.summaryTopology]
+mov eax,[rcx + SUMMARYTOPOLOGY.cores]
+mov edx,[rcx + SUMMARYTOPOLOGY.threads]
+test eax,eax
+jz .updateTopology
+test edx,edx
+jnz .skipTopology
+.updateTopology:
+mov eax,[OS_DATA.systemInfo.dwNumberOfProcessors]
+mov edx,eax
+cmp eax,2
+jne .doneTopology
+test [r15 + CPUDATA.cpuFlags],0001b
+jz .doneTopology 
+shr eax,1
+.doneTopology:
+mov [rcx + SUMMARYTOPOLOGY.cores],eax
+mov [rcx + SUMMARYTOPOLOGY.threads],edx
+.skipTopology:
 ;---------- CPU vendor string, 12 chars ---------------------------------------; 
 mov rax,r15
 stosq
@@ -376,20 +397,11 @@ test al,00000010b
 jz @f
 or rbx,00540000h      ; SSE (3) 
 @@:
+test dl,00000010b
+jz .noavx             ; If AVX context not supported, skip AVX, FMA, Gather
 test al,10000000b
 jz @f
-test dl,00000010b
-jz @f
 or rbx,15000000h      ; AVX (3) 
-@@:
-test ah,00000010b
-jz @f
-mov cl,dl
-and cl,00011100b
-cmp cl,00011100b
-jne @f
-mov rcx,144540000000h ; AVX512 (3), FMA 512, VGATHERQPD 512, VSCATTERQPD 512
-or rbx,rcx 
 @@:
 test ah,01000000b
 jz @f
@@ -398,6 +410,16 @@ bts rbx,36            ; FMA 256
 test ah,00000001b
 jz @f
 bts rbx,40            ; VGATHERQPD 256
+@@:
+.noavx:
+mov cl,dl
+and cl,00011100b
+cmp cl,00011100b
+jne @f                ; If AVX512 context not supported, skip AVX512, FMA512, Gather-Scatter 512
+test ah,00000010b
+jz @f
+mov rcx,144540000000h ; AVX512 (3), FMA 512, VGATHERQPD 512, VSCATTERQPD 512
+or rbx,rcx 
 @@:
 test ah,10000000b
 jz @f
@@ -430,10 +452,14 @@ jnz @f
 mov ecx,000000003h   ; Read MOV, option 0, enable and select bits = 0, 1
 @@:
 or rbx,rcx           ; Select default ASM method by CPU features support check
+
 ; UNDER CONSTRUCTION RESTRICTIONS
-mov rax,0FFFF00FFFFFFFFFFh
-and rbx,rax
+; TODO. VERIFY GATHER/SCATTER/CLZERO PATTERNS AND UNLOCK IT
+; mov rax,0FFFF00FFFFFFFFFFh
+  mov rax,0FFFF03FFFFFFFFFFh
+  and rbx,rax
 ; UNDER CONSTRUCTION RESTRICTIONS
+
 mov qword [rdi + BINDLIST.setMemMethod],rbx
 ;---------- Bits: AX.0 = nontemporal = f(sse), AX.2 = force x32 = off ---------;
 xor eax,eax
