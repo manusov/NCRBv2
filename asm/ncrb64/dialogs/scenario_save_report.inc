@@ -7,10 +7,8 @@
 ;------------------------------------------------------------------------------; 
 
 ; TODO. Warning if file exists.
-; TODO. Not added ".txt" extension if file name edit.
 ; TODO. Results for system information, vector brief, simple run, 
 ;       table for drawings data.
-; TODO. Tables up strings.
 
 ScenarioSaveReport:
 push rbx rsi rdi rbp r12 r13 r14
@@ -36,7 +34,10 @@ mov [rbx + OPENFILENAME.lStructSize],sizeof.OPENFILENAME
 mov [rbx + OPENFILENAME.lpstrFilter],rsi
 mov [rbx + OPENFILENAME.lpstrFile],rdx
 mov [rbx + OPENFILENAME.nMaxFile],FILE_PATH_MAXIMUM
-mov [rbx + OPENFILENAME.Flags],OFN_FILEMUSTEXIST
+mov rsi,[APP_DATA.lockedStrings]
+mov ax,STR_REPORT_DEF_EXT
+call IndexString             ; RSI = Pointer to file default extension string
+mov [rbx + OPENFILENAME.lpstrDefExt],rsi
 mov rcx,rbx                  ; RCX = Parm#1 = Pointer to structure 
 call [GetSaveFileName]
 test rax,rax

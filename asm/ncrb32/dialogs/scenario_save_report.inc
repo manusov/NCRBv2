@@ -7,10 +7,8 @@
 ;------------------------------------------------------------------------------; 
 
 ; TODO. Warning if file exists.
-; TODO. Not added ".txt" extension if file name edit.
 ; TODO. Results for system information, vector brief, simple run, 
 ;       table for drawings data.
-; TODO. Tables up strings.
 
 ScenarioSaveReport:
 pushad
@@ -33,7 +31,10 @@ mov [ebx + OPENFILENAME.lStructSize],sizeof.OPENFILENAME
 mov [ebx + OPENFILENAME.lpstrFilter],esi
 mov [ebx + OPENFILENAME.lpstrFile],edx
 mov [ebx + OPENFILENAME.nMaxFile],FILE_PATH_MAXIMUM
-mov [ebx + OPENFILENAME.Flags],OFN_FILEMUSTEXIST
+mov esi,[APP_DATA.lockedStrings]
+mov ax,STR_REPORT_DEF_EXT
+call IndexString             ; RSI = Pointer to file default extension string
+mov [ebx + OPENFILENAME.lpstrDefExt],esi
 push ebx                     ; Parm#1 = Pointer to structure
 call [GetSaveFileName]
 test eax,eax
