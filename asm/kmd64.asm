@@ -5,7 +5,7 @@
 ; manusov1969@gmail.com                                                                                   ;
 ; Previous version v1.xx.xx                                                                               ; 
 ; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
-; This version v2.xx.xx ( UNDER CONSTRUCTION )                                                            ;
+; This version v2.xx.xx                                                                                   ;
 ; https://github.com/manusov/Prototyping                                                                  ; 
 ;                                                                                                         ;
 ; KMD64.ASM = source file for FASM                                                                        ; 

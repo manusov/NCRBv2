@@ -43,7 +43,7 @@ IDS_IMPORT_POOL         = 147
 IDS_FONTS_POOL          = 148
 IDS_BRUSHES_POOL        = 149
 IDS_BITMAP_INFO         = 150
-IDS_TABLE_TEXTS         = 151
+IDS_REPORT_INFO         = 151
 ;---------- Identifiers for icons ---------------------------------------------;
 IDI_SYSINFO             = 160
 IDI_MEMORY              = 161
@@ -890,8 +890,15 @@ STR_RUNTIME_ALLOC      = STR_WARNING_WOW + 1
 STR_RUNTIME_RELEASE    = STR_RUNTIME_ALLOC + 1
 STR_RUNTIME_TIMINGS    = STR_RUNTIME_ALLOC + 2
 STR_RUNTIME_ADDRESS    = STR_RUNTIME_ALLOC + 3
+;---------- Strings for support save text report ------------------------------;
+STR_REPORT_FILE_NAME   = STR_RUNTIME_ADDRESS + 1
+STR_REPORT_FILTER_1    = STR_REPORT_FILE_NAME + 1
+STR_REPORT_FILTER_2    = STR_REPORT_FILE_NAME + 2
+STR_REPORT_FILTER_3    = STR_REPORT_FILE_NAME + 3
+STR_REPORT_FAILED      = STR_REPORT_FILE_NAME + 4
+STR_REPORT_SAVED       = STR_REPORT_FILE_NAME + 5 
 ;---------- Strings for Kernel Mode Driver and Service Control Program --------;
-STR_NAME_KMD32         = STR_RUNTIME_ADDRESS + 1
+STR_NAME_KMD32         = STR_REPORT_SAVED + 1  
 STR_NAME_KMD64         = STR_NAME_KMD32 + 1
 STR_DRV_NAME           = STR_NAME_KMD32 + 2
 STR_DRV_DEVICE         = STR_NAME_KMD32 + 3

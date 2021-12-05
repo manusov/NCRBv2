@@ -1,3 +1,8 @@
+05.12.2021. v2.00.12. Changes for x64 and ia32 versions.
+1) Partially supported report save from main menu.
+2) Fixed wrong declaration TEMP_BUFFER size, Units "DQ" corrected to "DB".
+
+
 02.12.2021. v2.00.11. Changes for x64 and ia32 versions.
 1) Supported gathered read for AVX256.
 2) Supported gathered read and scattered write for AVX512, but under verification, YET LOCKED.

@@ -6,12 +6,15 @@
 ;          DialogueContent with user options settings data                     ;
 ;                                                                              ;
 ; OUTPUT:  CF = status flag, 0(NC)=No errors, 1(C)=Error                       ;
-;          AL = error status, valid only if error detected (when CF=1)         ; 
-;               see file "thread manager\sessionstart.inc" for decode          ;
+;          AL = error status, valid only if error detected (when CF=1)         ;
+;          Status decode:                                                      ;
+;          see file "ncrb64.asm", application runtime errors identifiers       ;
+;          see file "threads_manager\sessionstart.inc"                         ;
+;                                                                              ;
 ;          UPB = Update user parameters block with GUI widgets settings        ;
 ;          IPB = Update input parameters block with benchmark scenario data    ;   
 ;                                                                              ;
-; UPB = f (GUI) , IPB = f (UPB)                                                ;
+; UPB = f (GUI) , IPB = f (UPB, System Info)                                   ;
 ;                                                                              ;
 ; All CPU registers can be corrupted, this rule for complex modules:           ;
 ; directory threads_manager\:                                                  ;
@@ -77,8 +80,8 @@ call DecimalPrint32
 pop rbx
 mov al,0
 stosb
-;---------- Down comments strings, number of measurement repeats
-;---------- Special strings for adaptive repeats modes
+;---------- Down comments strings, number of measurement repeats --------------;
+;---------- Special strings for adaptive repeats modes ------------------------;
 ; TODO. REPEATS WRITE.
 ; TODO. MEASUREMENT MODE WRITE.
 lea rdi,[r14 + BINDLIST.mdRepeats]
@@ -306,24 +309,26 @@ mov al,MSG_RUNTIME_TIMINGS
 stc
 jmp .exit
 
-;--- Stop measurement and drawings session, release resources ---------------;
-;    used for draw performance = f( block size ) function.                   ;
-;    Include terminate  DrawSessionThread  subroutine as parallel thread     ;
-;                                                                            ;
-; INPUT:   None at CPU registers                                             ;
-;                                                                            ;
-; OUTPUT:  CF = status flag, 0(NC)=No errors, 1(C)=Error                     ;
-;          AL = error status, valid only if error detected (when CF=1)       ; 
-;               see file "thread manager\sessionstop.inc" for decode         ;   
-;                                                                            ;
-; All CPU registers can be corrupted, this rule for complex modules:         ;
-; directory threads_manager\:                                                ;
-;   sessionstart.inc, sessionstop.inc, sessionprogress.inc.                  ;
-; directory gui\:                                                            ;
-;   drawsessionstart.inc, drawsessionstop.inc                                ;
-;   but not drawsessionthread.inc because OS callback                        ;       
-; Remember about PUSH-POP in the callers.                                    ;
-;----------------------------------------------------------------------------;
+;--- Stop measurement and drawings session, release resources -----------------;
+;    used for draw performance = f( block size ) function.                     ;
+;    Include terminate  DrawSessionThread  subroutine as parallel thread       ;
+;                                                                              ;
+; INPUT:   None at CPU registers                                               ;
+;                                                                              ;
+; OUTPUT:  CF = status flag, 0(NC)=No errors, 1(C)=Error                       ;
+;          AL = error status, valid only if error detected (when CF=1)         ;
+;          Status decode:                                                      ; 
+;          see file "ncrb64.asm", application runtime errors identifiers       ;
+;          see file "threads_manager\sessionstart.inc"                         ;
+;                                                                              ;
+; All CPU registers can be corrupted, this rule for complex modules:           ;
+; directory threads_manager\:                                                  ;
+;   sessionstart.inc, sessionstop.inc, sessionprogress.inc.                    ;
+; directory gui\:                                                              ;
+;   drawsessionstart.inc, drawsessionstop.inc                                  ;
+;   but not drawsessionthread.inc because OS callback                          ;       
+; Remember about PUSH-POP in the callers.                                      ;
+;------------------------------------------------------------------------------;
 DrawSessionStop:
 push rbx rsi rdi rbp r12 r13 r14 r15
 call SessionStop    ; De-initializing, release events, threads, memory

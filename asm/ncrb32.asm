@@ -5,7 +5,7 @@
 ; manusov1969@gmail.com                                                                                   ;
 ; Previous version v1.xx.xx                                                                               ; 
 ; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
-; This version v2.xx.xx ( UNDER CONSTRUCTION )                                                            ;
+; This version v2.xx.xx                                                                                   ;
 ; https://github.com/manusov/Prototyping                                                                  ; 
 ;                                                                                                         ;
 ; NCRB32.ASM = source file for FASM                                                                       ; 
@@ -45,13 +45,13 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition'
-RESOURCE_VERSION        EQU '2.0.11.0'
+RESOURCE_VERSION        EQU '2.0.12.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2021 Ilya Manusov'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32'
 ABOUT_CAP_TEXT          EQU 'Program info'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.00.11 for Windows ia32'
+ABOUT_TEXT_2            EQU 'v2.00.12 for Windows ia32'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -79,6 +79,7 @@ MSG_RUNTIME_ALLOC       = 0
 MSG_RUNTIME_RELEASE     = 1 
 MSG_RUNTIME_TIMINGS     = 2 
 MSG_RUNTIME_ADDRESS     = 3 
+
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                                Code section.                                 ;        
@@ -1165,6 +1166,7 @@ include 'ncrb32\memory_bandwidth_temporal\connect_code.inc'
 include 'ncrb32\memory_bandwidth_non_temporal\connect_code.inc'
 include 'ncrb32\memory_latency\connect_code.inc'
 include 'ncrb32\math_bandwidth\connect_code.inc'
+
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                              Data section.                                   ;        
@@ -1206,6 +1208,7 @@ RAW_LIST       DW  IDS_STRINGS_POOL
                DW  IDS_FONTS_POOL
                DW  IDS_BRUSHES_POOL
                DW  IDS_BITMAP_INFO
+               DW  IDS_REPORT_INFO
                DW  0
 ;---------- Libraries for dynamical import ------------------------------------;
 NAME_KERNEL32  DB  'KERNEL32.DLL' , 0      ; Must be sequental list of WinAPI
@@ -1316,7 +1319,7 @@ APPROX_X32          =  2
 ; for save EXE file space. 
 align 4096
 TEMP_SIZE           EQU  48 * 1024  
-TEMP_BUFFER         DQ   TEMP_SIZE dup (?)
+TEMP_BUFFER         DB   TEMP_SIZE dup (?)
 ;---------- Threads and memory management definitions -------------------------;
 ; Thread control entry, or entire benchmark control if single thread
 ; Note keep 64 bytes per entry, see ThreadEntry, can be non parametrized coding
@@ -1496,6 +1499,7 @@ lockedImportList           dd ?     ; List for WinAPI dynamical import
 lockedFontList             dd ?     ; List of fonts names
 lockedBrushesList          dd ?     ; List of color brushes
 lockedBitmapInfo           dd ?     ; Bitmap info header for draw window
+lockedReportInfo           dd ?     ; Strings IDs for report table headers
 hFont1                     dd ?     ; Handles of created fonts
 hFont2                     dd ?
 hIcon                      dd ?     ; Application icon handle
@@ -1822,6 +1826,15 @@ textAffCpuid     ALLOCATOR ?
 ends
 align 8
 DYNA_PTR DYNAPTR ?
+;---------- Support save report file ------------------------------------------;
+FILE_PATH_BUFFER  = TEMP_BUFFER
+FILE_PATH_MAXIMUM = 4096
+FILE_WORK_BUFFER  = TEMP_BUFFER + FILE_PATH_MAXIMUM
+FILE_WORK_MAXIMUM = 65536
+REPORT_TEXT_COUNT = 11
+align 8
+OPEN_FILE_NAME OPENFILENAME ?
+
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                              Import section.                                 ;        
@@ -1832,12 +1845,15 @@ library kernel32 , 'kernel32.dll' , \
         advapi32 , 'advapi32.dll' , \
         user32   , 'user32.dll'   , \
         comctl32 , 'comctl32.dll' , \
+        comdlg32 , 'comdlg32.dll' , \
         gdi32    , 'gdi32.dll'
 include 'api\kernel32.inc'
 include 'api\advapi32.inc'
 include 'api\user32.inc'
 include 'api\comctl32.inc'
+include 'api\comdlg32.inc'
 include 'api\gdi32.inc'
+
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                            Resources section.                                ;        

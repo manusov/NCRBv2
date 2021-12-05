@@ -5,7 +5,7 @@
 ; manusov1969@gmail.com                                                                                   ;
 ; Previous version v1.xx.xx                                                                               ; 
 ; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
-; This version v2.xx.xx ( UNDER CONSTRUCTION )                                                            ;
+; This version v2.xx.xx                                                                                   ;
 ; https://github.com/manusov/Prototyping                                                                  ; 
 ;                                                                                                         ;
 ; DATA.ASM = source file for FASM                                                                         ; 
@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.11.0'
+RESOURCE_VERSION      EQU  '2.0.12.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -475,7 +475,7 @@ enddialog
 resource menus, IDR_MENU, LANG_ENGLISH + SUBLANG_DEFAULT, mainMenu
 menu mainMenu
 menuitem '&File'        , 0 , MFR_POPUP
-menuitem '&Save report' , IDM_SAVE_REPORT , 0 , MFS_DISABLED
+menuitem '&Save report' , IDM_SAVE_REPORT
 menuitem 'S&ave image'  , IDM_SAVE_IMAGE  , 0 , MFS_DISABLED
 menuseparator
 menuitem '&Load report' , IDM_LOAD_REPORT , 0 , MFS_DISABLED
@@ -497,7 +497,8 @@ IDS_ACPI_DATA_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , acpiData          , \
 IDS_IMPORT_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , importList        , \ 
 IDS_FONTS_POOL      , LANG_ENGLISH + SUBLANG_DEFAULT , fontList          , \
 IDS_BRUSHES_POOL    , LANG_ENGLISH + SUBLANG_DEFAULT , brushesList       , \ 
-IDS_BITMAP_INFO     , LANG_ENGLISH + SUBLANG_DEFAULT , bitmapInfo
+IDS_BITMAP_INFO     , LANG_ENGLISH + SUBLANG_DEFAULT , bitmapInfo        , \
+IDS_REPORT_INFO     , LANG_ENGLISH + SUBLANG_DEFAULT , reportInfo 
 ;---------- Raw resource for strings pool -------------------------------------;
 resdata stringsPool
 ;---------- Brief names for application sheets --------------------------------; 
@@ -955,6 +956,13 @@ DB  'Benchmarks buffer memory allocation error.'    , 0
 DB  'Benchmarks buffer memory release error.'       , 0
 DB  'Benchmarks timings measurement error.'         , 0 
 DB  'Benchmarks address arithmetic error.'          , 0
+;---------- Strings for support save text report ------------------------------;
+DB  'report.txt'          , 0
+DB  'Text files '         , 0
+DB  '*.txt'               , 0
+DB                          0  
+DB  'Save report failed.' , 0
+DB  'Report saved: '      , 0 
 ;---------- Strings for Kernel Mode Driver and Service Control Program --------;
 DB  'KMD32.SYS'  , 0
 DB  'KMD64.SYS'  , 0
@@ -1702,8 +1710,8 @@ ENTRY_CPUID     00000001h             , R_ECX , 05   ; VMX
 ENTRY_CPUID     80000001h             , R_ECX , 02   ; SVM
 ENTRY_CPUID     80000001h             , R_EDX , 29   ; x86-64
 ENTRY_CPUID     00000001h             , R_ECX , 12   ; FMA 256
-ENTRY_CPUID     80000008h             , R_EBX , 0    ; CLZERO
-ENTRY_CPUID     00000001h             , R_EDX , 0    ; x87 (redundant by run criteria)
+ENTRY_CPUID     80000008h             , R_EBX , 00   ; CLZERO
+ENTRY_CPUID     00000001h             , R_EDX , 00   ; x87 (redundant by run criteria)
 ENTRY_STOP
 endres  
 ;---------- CPU AVX512 features bitmap builder script -------------------------;
@@ -2121,6 +2129,20 @@ resdata bitmapInfo
 ;                         0 means all colors used for visualization.
 ;--------------------------------------------------------------
 BITMAPINFOHEADER 40,SUBWINX,SUBWINY,1,32,BI_RGB,0,0,0,0,0
+endres
+;---------- Raw resource for text report tables names and headers -------------;
+resdata reportInfo
+DW  STR_FULL_OS          , STR_PARM_VALUE_HEX
+DW  STR_FULL_NATIVE_OS   , STR_PARM_VALUE_HEX
+DW  STR_FULL_TOPOLOGY    , STR_TOPOLOGY
+DW  STR_FULL_TOPOLOGY    , STR_TOPOLOGY_SUMMARY
+DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY
+DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY_SUMMARY
+DW  STR_FULL_NUMA        , STR_NUMA
+DW  STR_FULL_P_GROUPS    , STR_GROUPS
+DW  STR_FULL_ACPI        , STR_ACPI_LIST
+DW  STR_FULL_ACPI        , STR_ACPI_SUMMARY
+DW  STR_FULL_AFF_CPUID   , STR_AFF_CPUID
 endres
 ;---------- Directory of icon resources ---------------------------------------; 
 resource icons, \

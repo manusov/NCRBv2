@@ -177,8 +177,14 @@ push ABOUT_NAME           ; Parm#2 = Pointer to "About" string
 push PARM_HWNDDLG         ; Parm#1 = Parent window handle
 call [MessageBoxA]
 jmp .processed
+;---------- Detect click "Save report" item in the main menu ------------------;
 .noabout:
+cmp ax,IDM_SAVE_REPORT       ; "Save report" item at root menu 
+jne .noSaveReport
+call ScenarioSaveReport
+jmp .processed
 ;---------- Detect click "Exit" item in the main menu -------------------------; 
+.noSaveReport:
 cmp ax,IDM_EXIT
 je .wmclose
 jmp .processed

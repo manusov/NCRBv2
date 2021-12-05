@@ -93,13 +93,13 @@ cmp ax,IDB_ACPI_CANCEL
 je .wmclose
 cmp ax,IDB_A_CPUID_CANCEL
 je .wmclose
-cmp ax,IDB_MEMORY_RUN
+cmp ax,IDB_MEMORY_RUN        ; Run simple benchmark
 je .memoryRun
-cmp ax,IDB_MEMORY_DRAW
+cmp ax,IDB_MEMORY_DRAW       ; Run benchmark with drawings
 je .memoryDraw
-cmp ax,IDB_SYSINFO_VBRF
+cmp ax,IDB_SYSINFO_VBRF      ; Run "Vector brief" benchmark
 je .vectorBriefRun
-cmp ax,IDB_MEMORY_DEFAULTS
+cmp ax,IDB_MEMORY_DEFAULTS   ; Set defaults for memory benchmark
 je .memoryDefaults
 ;---------- Detect events for make widgets dependency -------------------------;
 ;---------- Widget "Nontemporal" ----------------------------------------------;

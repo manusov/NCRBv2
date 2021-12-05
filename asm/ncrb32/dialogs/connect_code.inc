@@ -20,6 +20,8 @@ include 'dialog_vector_brief.inc'
 include 'scenario_memory_run.inc'
 include 'scenario_memory_draw.inc'
 include 'scenario_vector_brief.inc'
+;---------- Save text report --------------------------------------------------;
+include 'scenario_save_report.inc'
 
 
 

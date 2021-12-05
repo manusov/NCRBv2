@@ -2,8 +2,14 @@
 ;                                                                              ;
 ; INPUT  : None                                                                ;
 ;                                                                              ;
-; OUTPUT : Structure VECBR_OPB, output parameters block, binary data           ; 
-;          Structure BIND_LIST, output text strings for visual                 ;
+; OUTPUT :  CF = status flag, 0(NC)=No errors, 1(C)=Error                      ;
+;           AL = error status, valid only if error detected (when CF=1)        ;
+;           Status decode:                                                     ;
+;           see file "ncrb64.asm", application runtime errors identifiers      ;
+;           see file "threads_manager\sessionstart.inc"                        ;
+;                                                                              ;
+;           Structure VECBR_OPB, output parameters block, binary data          ; 
+;           Structure BIND_LIST, output text strings for visual                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------; 
 ScenarioVectorBrief:
