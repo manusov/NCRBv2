@@ -6,7 +6,7 @@
 ;                                                                              ;
 ;------------------------------------------------------------------------------; 
 
-; TODO. Warning if file exists.
+; TODO. Check disk full.
 ; TODO. Results for system information, vector brief, simple run, 
 ;       table for drawings data.
 
@@ -14,6 +14,7 @@ ScenarioSaveReport:
 pushad
 cld
 ;---------- Initializing parameters and run dialogue for save report ----------;
+.restartDialogue:
 mov ax,STR_REPORT_FILE_NAME
 lea edi,[FILE_PATH_BUFFER]
 mov edx,edi                    ; EDX = Pointer to file name string
@@ -40,24 +41,52 @@ call [GetSaveFileName]
 test eax,eax
 jz .noSelections             ; Go skip if operation cancelled by user or error
 ;---------- Save report operation selected by user, create report file --------; 
+mov edx,CREATE_NEW
+.createReport:
 mov ecx,[ebx + OPENFILENAME.lpstrFile]
 test ecx,ecx
 jz .reportError 
 xor eax,eax                  ; RAX = 0 for compact push
 push eax                     ; Parm #7 = Template file, not used
 push FILE_ATTRIBUTE_NORMAL   ; Parm #6 = File attributes
-push CREATE_ALWAYS           ; Parm #5 = Creation disposition
+push edx                     ; Parm #5 = Creation disposition
 push eax                     ; Parm #4 = Security attributes, not used
 push eax                     ; Parm #3 = Share mode, not used
 push GENERIC_WRITE           ; Parm #2 = Desired access
 push ecx                     ; Parm #1 = Pointer to file name
 call [CreateFileA]
-test eax,eax
-jz .reportError
 cmp eax,INVALID_HANDLE_VALUE
-je .reportError 
+je .createFailed 
+test eax,eax
+jnz .createOk
+.createFailed:
+call [GetLastError]
+cmp eax,ERROR_FILE_EXISTS
+jne .reportError 
+;---------- Support situation File exists -------------------------------------;
+push MB_YESNOCANCEL + MB_ICONWARNING   ; Parm#4 = Message type
+push PROGRAM_NAME                ; Parm#3 = Pointer to caption string
+lea edi,[FILE_WORK_BUFFER]
+push edi                         ; Parm#2 = Pointer to message string
+mov ax,STR_REPORT_EXISTS_1
+call PoolStringWrite
+lea esi,[FILE_PATH_BUFFER]
+call StringWrite
+mov ax,STR_REPORT_EXISTS_2
+call PoolStringWrite
+mov al,0
+stosb
+push 0                 ; Parm#1 = Owner window handle, 0 means no owner 
+call [MessageBox]  
+mov edx,CREATE_ALWAYS  ; EDX = Creation disposition for create file operation 
+cmp eax,IDYES
+je .createReport       ; Go save report if "Yes" 
+cmp eax,IDNO
+je .restartDialogue    ; Go restart dialogue if "No"
+jmp .noSelections      ; Otherwise, go exit dialogue by "Cancel" (IDCANCEL) 
+;---------- Report file create OK, save report file header --------------------;
+.createOk:
 xchg ebx,eax                 ; EBX = Report file handle
-;---------- Save report file header -------------------------------------------;
 lea esi,[ABOUT_NAME]
 call HelperFileStringWrite 
 jz .closeAfterError 
@@ -135,7 +164,7 @@ push ebx                     ; Parm #1 = File handle
 call [CloseHandle]
 test eax,eax
 jz .reportError 
-;---------- Message about report saved OK or failed ---------------------------;
+;---------- Build message about report saved OK -------------------------------;
 push MB_OK              ; Parm#4 = Message type
 push PROGRAM_NAME       ; Parm#3 = Pointer to caption string 
 mov esi,[APP_DATA.lockedStrings]
@@ -145,9 +174,10 @@ mov ax,STR_REPORT_SAVED
 call PoolStringWrite
 lea esi,[FILE_PATH_BUFFER]
 call StringWrite
-mov al,0
-stosb
+mov ax,0000h + '.'
+stosw
 jmp .reportStatus
+;---------- Build message about report failed ---------------------------------;
 .reportError:
 push MB_ICONERROR    ; Parm#4 = Message type 
 push 0               ; Parm#3 = Pointer to caption string, 0 = "error"    
@@ -155,6 +185,7 @@ mov esi,[APP_DATA.lockedStrings]
 mov ax,STR_REPORT_FAILED
 call IndexString
 push esi             ; Parm#2 = Pointer to message string 
+;---------- Message output ----------------------------------------------------;
 .reportStatus:
 push 0               ; Parm#1 = Owner window handle, 0 means no owner 
 call [MessageBox]  

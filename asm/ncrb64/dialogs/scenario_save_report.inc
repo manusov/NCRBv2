@@ -6,7 +6,7 @@
 ;                                                                              ;
 ;------------------------------------------------------------------------------; 
 
-; TODO. Warning if file exists.
+; TODO. Check disk full.
 ; TODO. Results for system information, vector brief, simple run, 
 ;       table for drawings data.
 
@@ -17,6 +17,7 @@ and rsp,0FFFFFFFFFFFFFFF0h   ; Stack alignment required because WinAPI used
 sub rsp,32                   ; Parameters shadow required because WinAPI used
 cld
 ;---------- Initializing parameters and run dialogue for save report ----------;
+.restartDialogue:
 mov ax,STR_REPORT_FILE_NAME
 lea rdi,[FILE_PATH_BUFFER]
 mov rdx,rdi                    ; RDX = Pointer to file name string
@@ -43,6 +44,8 @@ call [GetSaveFileName]
 test rax,rax
 jz .noSelections             ; Go skip if operation cancelled by user or error
 ;---------- Save report operation selected by user, create report file --------; 
+mov edx,CREATE_NEW
+.createReport:
 mov rcx,[rbx + OPENFILENAME.lpstrFile]
 test rcx,rcx
 jz .reportError 
@@ -50,7 +53,7 @@ xor eax,eax                  ; RAX = 0 for compact push
 push rax                     ; This push for alignment
 push rax                     ; Parm #7 = Template file, not used
 push FILE_ATTRIBUTE_NORMAL   ; Parm #6 = File attributes
-push CREATE_ALWAYS           ; Parm #5 = Creation disposition
+push rdx                     ; Parm #5 = Creation disposition
 xor r9d,r9d                  ; R9  = Parm #4 = Security attributes, not used
 xor r8d,r8d                  ; R8  = Parm #3 = Share mode, not used
 mov edx,GENERIC_WRITE        ; RDX = Parm #2 = Desired access
@@ -58,12 +61,38 @@ mov edx,GENERIC_WRITE        ; RDX = Parm #2 = Desired access
 sub rsp,32
 call [CreateFileA]
 add rsp,32
-test rax,rax
-jz .reportError
 cmp rax,INVALID_HANDLE_VALUE
-je .reportError 
+je .createFailed 
+test rax,rax
+jnz .createOk
+.createFailed:
+call [GetLastError]
+cmp eax,ERROR_FILE_EXISTS
+jne .reportError 
+;---------- Support situation File exists -------------------------------------;
+mov r9d,MB_YESNOCANCEL + MB_ICONWARNING   ; R9  = Parm#4 = Message type
+lea r8,[PROGRAM_NAME]               ; R8  = Parm#3 = Pointer to caption string
+lea rdi,[FILE_WORK_BUFFER]
+mov rdx,rdi                         ; RDX = Parm#2 = Pointer to message string
+mov ax,STR_REPORT_EXISTS_1
+call PoolStringWrite
+lea rsi,[FILE_PATH_BUFFER]
+call StringWrite
+mov ax,STR_REPORT_EXISTS_2
+call PoolStringWrite
+mov al,0
+stosb
+xor ecx,ecx            ; RCX = Parm#1 = Owner window handle, 0 means no owner 
+call [MessageBox]  
+mov edx,CREATE_ALWAYS  ; RDX = Creation disposition for create file operation 
+cmp eax,IDYES
+je .createReport       ; Go save report if "Yes" 
+cmp eax,IDNO
+je .restartDialogue    ; Go restart dialogue if "No"
+jmp .noSelections      ; Otherwise, go exit dialogue by "Cancel" (IDCANCEL) 
+;---------- Report file create OK, save report file header --------------------;
+.createOk:
 xchg rbx,rax                 ; RBX = Report file handle
-;---------- Save report file header -------------------------------------------;
 lea rsi,[ABOUT_NAME]
 call HelperFileStringWrite 
 jz .closeAfterError 
@@ -137,7 +166,7 @@ mov rcx,rbx                  ; RCX = Parm #1 = File handle
 call [CloseHandle]
 test rax,rax
 jz .reportError 
-;---------- Message about report saved OK or failed ---------------------------;
+;---------- Build message about report saved OK -------------------------------;
 mov r9d,MB_OK           ; R9  = Parm#4 = Message type
 lea r8,[PROGRAM_NAME]   ; R8  = Parm#3 = Pointer to caption string 
 mov rsi,[APP_DATA.lockedStrings]
@@ -147,9 +176,10 @@ mov ax,STR_REPORT_SAVED
 call PoolStringWrite
 lea rsi,[FILE_PATH_BUFFER]
 call StringWrite
-mov al,0
-stosb
+mov ax,0000h + '.'
+stosw
 jmp .reportStatus
+;---------- Build message about report failed ---------------------------------;
 .reportError:
 mov r9d,MB_ICONERROR ; R9  = Parm#4 = Message type 
 xor r8d,r8d          ; R8  = Parm#3 = Pointer to caption string, 0 = "error"    
@@ -157,6 +187,7 @@ mov rsi,[APP_DATA.lockedStrings]
 mov ax,STR_REPORT_FAILED
 call IndexString
 mov rdx,rsi          ; RDX = Parm#2 = Pointer to message string 
+;---------- Message output ----------------------------------------------------;
 .reportStatus:
 xor ecx,ecx          ; RCX = Parm#1 = Owner window handle, 0 means no owner 
 call [MessageBox]  

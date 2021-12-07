@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.13.0'
+RESOURCE_VERSION      EQU  '2.0.14.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -957,13 +957,15 @@ DB  'Benchmarks buffer memory release error.'       , 0
 DB  'Benchmarks timings measurement error.'         , 0 
 DB  'Benchmarks address arithmetic error.'          , 0
 ;---------- Strings for support save text report ------------------------------;
-DB  'report.txt'          , 0
-DB  'Text files '         , 0
-DB  '*.txt'               , 0
-DB                          0  
-DB  'Save report failed.' , 0
-DB  'Report saved: '      , 0 
-DB  'txt'                 , 0
+DB  'report.txt'           , 0
+DB  'Text files '          , 0
+DB  '*.txt'                , 0
+DB                           0  
+DB  'Save report failed.'  , 0
+DB  'File '                , 0
+DB  ' exists. Overwrite?'  , 0
+DB  'Report saved: '       , 0 
+DB  'txt'                  , 0
 ;---------- Strings for Kernel Mode Driver and Service Control Program --------;
 DB  'KMD32.SYS'  , 0
 DB  'KMD64.SYS'  , 0

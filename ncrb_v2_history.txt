@@ -1,3 +1,7 @@
+07.12.2021. v2.00.14. Changes for x64 and ia32 versions.
+Updated save report dialogue.
+
+
 05.12.2021. v2.00.13. Changes for x64 and ia32 versions.
 Fixed bug with report file default extension (txt).
 
