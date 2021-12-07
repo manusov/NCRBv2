@@ -1,3 +1,9 @@
+08.12.2021. v2.00.15. Changes for x64 and ia32 versions.
+Updated constants for L1 timings measurement:
+L1_REPEATS_FAST : old value = 100000  , new value = 2000000
+L1_REPEATS_SLOW : old value = 2000000 , new value = 2500000.
+
+
 07.12.2021. v2.00.14. Changes for x64 and ia32 versions.
 Updated save report dialogue.
 

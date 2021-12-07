@@ -19,7 +19,7 @@ THREAD_TIME_LIMIT       =  10000
 ; Benchmarks repeat parameters, precision=f(repeats), for Cache&RAM mode
 ; Calibrate iterations for objects, normal mode
 ; this constants must be multiple of LATENCY DIVISOR (50)
-L1_REPEATS_FAST         =  100000
+L1_REPEATS_FAST         =  2000000  ;  old = 100000
 L2_REPEATS_FAST         =  50000
 L3_REPEATS_FAST         =  1000
 L4_REPEATS_FAST         =  200
@@ -27,7 +27,7 @@ DRAM_REPEATS_FAST       =  100
 CUSTOM_REPEATS_FAST     =  100000
 ; Calibrate iterations for objects, slow mode
 ; this constants must be multiple of LATENCY DIVISOR (50)
-L1_REPEATS_SLOW         =  2000000
+L1_REPEATS_SLOW         =  2500000  ;  old = 2000000
 L2_REPEATS_SLOW         =  500000
 L3_REPEATS_SLOW         =  10000
 L4_REPEATS_SLOW         =  2000
