@@ -45,13 +45,13 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition'
-RESOURCE_VERSION        EQU '2.0.15.0'
+RESOURCE_VERSION        EQU '2.0.16.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2021 Ilya Manusov'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32'
 ABOUT_CAP_TEXT          EQU 'Program info'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.00.15 for Windows ia32'
+ABOUT_TEXT_2            EQU 'v2.00.16 for Windows ia32'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -812,6 +812,109 @@ stosb
 mov [esp],edi
 popad
 ret
+;--- Check user-defined block size for min/max/alignment restrictions ---------;
+;                                                                              ;
+; INPUT:   EAX = Block size for verification                                   ;
+;                                                                              ;
+; OUTPUT:  CF = Status flag, 0(NC)=No restrictions, original block size valid  ;
+;                            1(C)=Block size updated by restrictions           ;
+;          EAX = Block size, conditionally corrected                           ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+CustomBlockSizeRestrictions:
+mov cl,0      ; CL = 0 means no updates by restrictions
+mov edx,CUSTOM_BLOCK_ALIGN - 1
+test eax,edx
+jz @f
+not edx
+and eax,edx
+mov cl,1      ; Set CL = 1 if EAX updated by alignment restriction
+@@:
+cmp eax,CUSTOM_BLOCK_MIN
+jae @f
+mov eax,CUSTOM_BLOCK_MIN
+mov cl,1      ; Set CL = 1 if EAX updated by minimum block size restriction
+@@:
+cmp eax,CUSTOM_BLOCK_MAX
+jbe @f
+mov eax,CUSTOM_BLOCK_MAX
+mov cl,1      ; Set CL = 1 if EAX updated by maximum block size restriction
+@@:
+rcr cl,1      ; Set flag CF = 1 if block size updated by restrictions
+ret
+;---------- Correct custom block size and show message if corrected -----------;
+;           Check user-defined block size for min/max/alignment restrictions   ;
+;                                                                              ;
+; INPUT:   None at registers, variable at Input Parameters Block (IPB)         ;
+;          MEMIPB.startBlockSize                                               ;
+;                                                                              ;
+; OUTPUT:  None at registers, can update variable at                           ;
+;          Input Parameters Block (IPB), MEMIPB.startBlockSize                 ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+CustomBlockSizeMessage:
+push ebx esi edi
+test [BIND_LIST.getMemObject],00100000b  ; Check selected object = custom
+jz .exit                                 ; Go skip if other selected object 
+cmp dword [BIND_LIST.getBlkCustom + 4],0
+jne .overflow
+mov eax,dword [BIND_LIST.getBlkCustom]
+call CustomBlockSizeRestrictions
+jnc .exit                                ; Go skip if no restriction checks
+.overflow:
+mov dword [BIND_LIST.getBlkCustom],eax
+mov ax,STR_CUSTOM_ERROR
+lea edi,[TEMP_BUFFER]  ; EDI = Pointer to buffer for build message
+push edi               ; Pointer to message string, copy
+call PoolStringWrite
+mov ax,0A0Dh
+stosw
+mov ax,STR_CUSTOM_ERROR_MIN
+mov ecx,CUSTOM_BLOCK_MIN
+call HelperCustomSize
+mov ax,STR_CUSTOM_ERROR_MAX
+mov ecx,CUSTOM_BLOCK_MAX
+call HelperCustomSize
+mov ax,STR_CUSTOM_ERROR_ALIGN
+mov ecx,CUSTOM_BLOCK_ALIGN
+call HelperCustomSize
+mov ax,0000h + '.'
+stosw
+pop edi
+push MB_ICONWARNING     ; Parm#4 = Message type 
+push PROGRAM_NAME       ; Parm#3 = Pointer to caption string
+push edi                ; Parm#2 = Pointer to message string     
+push 0                  ; Parm#1 = Owner window handle, 0 means no owner 
+call [MessageBox]  
+.exit:
+pop edi esi ebx
+ret
+;---------- Helper for write block size parameter for error message -----------;
+;                                                                              ;
+; INPUT:   AX  = Message string ID                                             ;
+;          RCX = Parameter restriction limit                                   ;
+;          RDI = Destination address                                           ;
+;                                                                              ;
+; OUTPUT:  RDI updated by string write                                         ;
+;                                                                              ;
+;------------------------------------------------------------------------------; 
+HelperCustomSize:
+push ecx ecx eax
+mov ax,0A0Dh
+stosw
+pop eax
+call PoolStringWrite
+pop eax
+call HexPrint32
+mov eax,'h ( '
+stosd
+pop eax
+xor edx,edx
+mov bl,0FFh
+call SizePrint64
+mov ax,' )'
+stosw
+ret
 ;---------- Execute binder in the binders pool by index -----------------------;
 ;                                                                              ;
 ; INPUT:   EBX = Current window handle for get dialogue items                  ;
@@ -1083,59 +1186,93 @@ mov bp,2
 BindGetNumberEntry:
 lea esi,[TEMP_BUFFER]
 lea edi,[BIND_LIST + eax]
-push edx           ; Parm#2 = Resource ID for GUI item 
-push ebx           ; Parm#1 = Parent window handle  
-call [GetDlgItem]  ; Return handle of GUI item
+push edx               ; Parm#2 = Resource ID for GUI item 
+push ebx               ; Parm#1 = Parent window handle  
+call [GetDlgItem]      ; Return handle of GUI item
 test eax,eax
-jz .exit           ; Go skip if error, item not found
-push esi
-push 17
-push WM_GETTEXT
-push eax
+jz .error              ; Go if error, item not found
+push esi               ; Parm#4 = Pointer to buffer
+push 17                ; Parm#3 = Maximum length
+push WM_GETTEXT        ; Parm#2 = Message
+push eax               ; Parm#1 = GUI item handle
 call [SendMessage]
 test eax,eax
-jz .exit           ; Go skip if error, can't read string
+jz .error              ; Go if error, can't read string
+mov byte [esi + 16],0  ; Safe terminator byte, limit scan pointer position
+xor ecx,ecx            ; EDX:ECX = 0, used for accumulate extracted value
+xor edx,edx
 test bp,bp
 jz .parseDec
-xor ecx,ecx
-xor edx,edx
-.parseHex:
+.parseHex:         ; Cycle for parse hexadecimal string
 xor eax,eax
 lodsb
+cmp al,0
+je .parseDone       ; Normal termination if zero
+cmp al,' '
+je .parseDone       ; Normal termination if space, ignore chars after space
 cmp al,'0'
-jb .parseDone
+jb .error           ; Error if unexpected char, below '0"
 cmp al,'9'
-ja .tryHex 
+ja .tryHex          ; Try hex char if above '9' 
 and al,0Fh 
 jmp .tryDone
 .tryHex:
 and al,0DFh
 sub al,'A' - 10
 cmp al,10
-jb .parseDone 
+jb .error          ; Error if invalid hex char (redundant, see previous checks) 
+cmp al,0Fh
+ja .error          ; Error if invalid hex char 
 .tryDone:
 shld edx,ecx,4
 shl ecx,4
 or ecx,eax
-jmp .parseHex
-.parseDec:
+jmp .parseHex      ; Go to cycle for parse hexadecimal string
+.parseDec:         ; Cycle for parse decimal string
 xor eax,eax
 lodsb
+cmp al,0
+je .parseDone      ; Normal termination if zero
+cmp al,' '
+je .parseDone      ; Normal termination if space, ignore chars after space
 sub al,'0'
-jb .parseDone
+jb .error          ; Error if invalid decimal char
 cmp al,9
-ja .parseDone
+ja .error          ; Error if invalid decimal char
 imul ecx,ecx,10
 add ecx,eax
-.parseDone:
+jmp .parseDec       ; Go to cycle for parse decimal string
+.parseDone:         ; Save extracted value (32 or 64 bit) if parse OK
 xchg eax,ecx
-cmp bp,2
+cmp bp,2            ; Detect 32 or 64-bit store required
 jb .store32
 stosd
 xchg eax,edx
 .store32:
 stosd
 .exit:
+ret
+;---------- Errors handlers for invalid decimal or hexadecimal strings --------;
+.error:
+mov ax,STR_PARSING_DECIMAL
+test bp,bp             ; Detect decimal or hexadecimal mode 
+jz .errorMessage 
+mov ax,STR_PARSING_HEX
+.errorMessage:
+lea edi,[TEMP_BUFFER]  ; EDI = Pointer to buffer for build message
+mov edx,edi            ; EDX = Pointer to message string, copy
+call PoolStringWrite
+mov ax,0A0Dh
+stosw
+mov ax,STR_PARSING_PREVIOUS
+call PoolStringWrite
+mov al,0
+stosb
+push MB_ICONWARNING  ; Parm#4 = Message type 
+push PROGRAM_NAME    ; Parm#3 = Pointer to caption string    
+push edx             ; Push#2 = Pointer to message string 
+push 0               ; Parm#1 = Owner window handle, 0 means no owner 
+call [MessageBox]  
 ret
 ;---------- Helper for add string to combo box list ---------------------------;
 ;                                                                              ;

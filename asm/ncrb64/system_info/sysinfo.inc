@@ -473,37 +473,37 @@ mov ebx,010100000000b      ; Custom block, DRAM
 xor eax,eax
 mov rcx,[rsi + SUMMARYCACHE.sizeL1D]
 jrcxz @f 
-or bl,00000011b            ; L1 data cache
+or bl,00000011b            ; L1 data cache, presence and select
 xchg rax,rcx
 @@:
 mov rcx,[rsi + SUMMARYCACHE.sizeL2U]
 jrcxz @f
-or bl,00000100b            ; L2 unified cache
+or bl,00000100b            ; L2 unified cache presence
 test rax,rax
 jnz @f
 xchg rax,rcx
-or bl,00001000b
+or bl,00001000b            ; L2 unified cache select
 @@:
 mov rcx,[rsi + SUMMARYCACHE.sizeL3U]
 jrcxz @f
-or bl,00010000b            ; L3 unified cache
+or bl,00010000b            ; L3 unified cache presence
 test rax,rax
 jnz @f
 xchg rax,rcx
-or bl,00100000b
+or bl,00100000b            ; L3 unified cache select
 @@:
 mov rcx,[rsi + SUMMARYCACHE.sizeL4U]
 jrcxz @f
-or bl,00010000b            ; L4 unified cache
+or bl,01000000b            ; L4 unified cache presence
 test rax,rax
 jnz @f
 xchg rax,rcx
-or bl,10000000b
+or bl,10000000b            ; L4 unified cache select
 @@:
 test rax,rax
 jnz @f
 or bh,00001000b
-mov eax,32768
+mov eax,DEFAULT_CACHE_BLOCK
 @@:
 mov dword [rdi + BINDLIST.setMemObject],ebx
 mov [rdi + BINDLIST.setBlkCustom],rax

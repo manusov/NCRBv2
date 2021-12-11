@@ -215,8 +215,8 @@ mov eax,[ecx + eax * REPEAT_ENTRY_BYTES]
 cmp [edi + MEMIPB.updatedAsm],LATENCY_MODE
 jb .L13
 xor edx,edx
-mov ecx,50     ; Important DIVISOR CONSTANT for latency mode
-div ecx        ; If Latency mode, make measurement repeats / 50 ,
+mov ecx,LATENCY_DIVISOR  ; Important DIVISOR CONSTANT for latency mode
+div ecx        ; If Latency mode, make measurement repeats / LATENCY_DIVISOR,
 .L13:          ; note after this, bits RAX.63-32 = 0
 mov dword [edi + MEMIPB.measureRepeats + 0],eax  ; Setup number of measurement repeats
 mov dword [edi + MEMIPB.measureRepeats + 4],0
@@ -251,20 +251,8 @@ cmp al,TARGET_DRAM
 je .doneCalc
 ;---------- Support Custom block ----------------------------------------------;
 mov eax,[esi + MEMUPB.customBlockStart]  ; Note requir. check for wrong block size
-;---------- Restrictions for custom block size --------------------------------;
-mov ecx,CUSTOM_BLOCK_ALIGN
-xor edx,edx
-div ecx
-mul ecx
-cmp eax,CUSTOM_BLOCK_MIN
-jae @f
-mov eax,CUSTOM_BLOCK_MIN
-@@:
-cmp eax,CUSTOM_BLOCK_MAX
-jbe @f
-mov eax,CUSTOM_BLOCK_MAX
-@@:
-;---------- Restrictions done, set result at ECX ------------------------------; 
+;---------- Restrictions for custom block size, set result at ECX -------------;
+call CustomBlockSizeRestrictions
 xchg ecx,eax
 jmp .doneCalc
 ;---------- Block size arithmetic for cache -----------------------------------;

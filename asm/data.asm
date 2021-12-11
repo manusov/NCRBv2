@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.15.0'
+RESOURCE_VERSION      EQU  '2.0.16.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -956,6 +956,14 @@ DB  'Benchmarks buffer memory allocation error.'    , 0
 DB  'Benchmarks buffer memory release error.'       , 0
 DB  'Benchmarks timings measurement error.'         , 0 
 DB  'Benchmarks address arithmetic error.'          , 0
+;---------- Strings for input parsing errors and block size restrictions ------;
+DB  'Bad decimal char input, must be 0-9.'             , 0
+DB  'Bad hexadecimal char input, must be 0-9 or A-F.'  , 0
+DB  'Continue with previous value.'                    , 0
+DB  'Custom block restriction check, continue with changes.' , 0
+DB  'Minimum = '                                       , 0
+DB  'Maximum = '                                       , 0
+DB  'Minimum alignment = '                             , 0
 ;---------- Strings for support save text report ------------------------------;
 DB  'report.txt'           , 0
 DB  'Text files '          , 0
@@ -1652,6 +1660,10 @@ GET_SWITCH  IDB_MEMORY_ALL_P    , BINDLIST.getMemPix    + 0 , 0
 GET_SWITCH  IDB_MEMORY_X_16     , BINDLIST.getMemPix    + 0 , 1 
 GET_SWITCH  IDB_MEMORY_X_32     , BINDLIST.getMemPix    + 0 , 2 
 GET_SWITCH  IDB_MEMORY_3D_DRAW  , BINDLIST.getMem3d     + 0 , 0
+BIND_STOP
+;---------- Continue, binders for GUI scripts ---------------------------------;
+; Separate binder for editable strings custom parameters get,
+; because errors messages generated. 
 GET_HEX64   IDE_MEMORY_B_SIZE   , BINDLIST.getBlkCustom
 GET_HEX64   IDE_MEMORY_F_SIZE   , BINDLIST.getBlkMmf
 GET_HEX64   IDE_MEMORY_G_SIZE   , BINDLIST.getBlkGpu

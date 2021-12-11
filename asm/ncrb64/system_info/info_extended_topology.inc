@@ -240,8 +240,8 @@ mov r8,r13                   ; R8  = Parm#3 = Pointer to size
 lea rdx,[rbp + r14]          ; RDX = Parm#2 = Pointer to buffer
 mov ecx,edi                  ; RCX = Parm#1 = Relation type
 call rbx
-test rax,rax
-jnz .error
+test rax,rax              ; check RAX plus clear CF, required if return
+jnz .exit  ;  jnz .error  ; this variant means no data return, but no errors
 call [GetLastError]
 cmp rax,ERROR_BUFFER_LIMIT
 jne .error                   ; Go if other errors detected

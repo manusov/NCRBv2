@@ -890,8 +890,16 @@ STR_RUNTIME_ALLOC      = STR_WARNING_WOW + 1
 STR_RUNTIME_RELEASE    = STR_RUNTIME_ALLOC + 1
 STR_RUNTIME_TIMINGS    = STR_RUNTIME_ALLOC + 2
 STR_RUNTIME_ADDRESS    = STR_RUNTIME_ALLOC + 3
+;---------- Strings for input parsing errors and block size restrictions ------;
+STR_PARSING_DECIMAL    = STR_RUNTIME_ADDRESS + 1
+STR_PARSING_HEX        = STR_PARSING_DECIMAL + 1
+STR_PARSING_PREVIOUS   = STR_PARSING_DECIMAL + 2
+STR_CUSTOM_ERROR       = STR_PARSING_DECIMAL + 3
+STR_CUSTOM_ERROR_MIN   = STR_PARSING_DECIMAL + 4
+STR_CUSTOM_ERROR_MAX   = STR_PARSING_DECIMAL + 5
+STR_CUSTOM_ERROR_ALIGN = STR_PARSING_DECIMAL + 6
 ;---------- Strings for support save text report ------------------------------;
-STR_REPORT_FILE_NAME   = STR_RUNTIME_ADDRESS + 1
+STR_REPORT_FILE_NAME   = STR_CUSTOM_ERROR_ALIGN + 1 
 STR_REPORT_FILTER_1    = STR_REPORT_FILE_NAME + 1
 STR_REPORT_FILTER_2    = STR_REPORT_FILE_NAME + 2
 STR_REPORT_FILTER_3    = STR_REPORT_FILE_NAME + 3
@@ -934,14 +942,17 @@ BINDER_BUILD_VECTOR_BRIEF  = 16
 BINDER_SET_MEMORY          = 17
 ;---------- Binders numbers for GUI scripts: get widgets state ----------------;
 ; This binders for read data from GUI objects (widgets) to buffer (bindlist).
+; Separate binder for editable strings custom parameters get,
+; because errors messages generated. 
 BINDER_GET_MEMORY          = 18
+BINDER_GET_MEMORY_CUSTOM   = 19
 ;---------- Binders numbers for make widgets dependency -----------------------;
-BINDER_WIDGET_NONTEMPORAL  = 19
-BINDER_WIDGET_FORCE32X2    = 20
-BINDER_WIDGET_PREFETCH     = 21
-BINDER_WIDGET_CUSTOM_SIZE  = 22
+BINDER_WIDGET_NONTEMPORAL  = 20
+BINDER_WIDGET_FORCE32X2    = 21
+BINDER_WIDGET_PREFETCH     = 22
+BINDER_WIDGET_CUSTOM_SIZE  = 23
 ;--- Binder for disable buttons when run benchmarks and enable after ----------;
-BINDER_BUTTONS_ON_OFF      = 23 
+BINDER_BUTTONS_ON_OFF      = 24 
 ;---------- List of pointers to strings used by GUI binders -------------------;
 ; This structures used as template for offsets in the bind buffer.
 ; For ia32/x64 unification, pointers always 64-bit, high dword = 0 for ia32. 

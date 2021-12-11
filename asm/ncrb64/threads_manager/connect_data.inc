@@ -8,10 +8,11 @@
 ; Block size for DRAM benchmarks, default values 
 ; must be corrected by platform configuration checks
 DEFAULT_DRAM_BLOCK      =  32 * 1024 * 1024
+DEFAULT_CACHE_BLOCK     =  32 * 1024
 ; Constants for custom block size restrictions
-CUSTOM_BLOCK_MIN        =  16 * 1024
-CUSTOM_BLOCK_MAX        =  64 * 1024 * 1024
-CUSTOM_BLOCK_ALIGN      =  16 * 1024
+CUSTOM_BLOCK_MIN        =  16 * 1024  
+CUSTOM_BLOCK_MAX        =  1024 * 1024 * 1024  ;  old = 64 * 1024 * 1024
+CUSTOM_BLOCK_ALIGN      =  512                 ;  old = 16 * 1024
 ;---------- Memory timings constants ------------------------------------------;
 ; 10000 milliseconds = 10 seconds, events wait time for
 ; communication with child thread
@@ -24,7 +25,7 @@ L2_REPEATS_FAST         =  50000
 L3_REPEATS_FAST         =  1000
 L4_REPEATS_FAST         =  200
 DRAM_REPEATS_FAST       =  100
-CUSTOM_REPEATS_FAST     =  100000
+CUSTOM_REPEATS_FAST     =  100      ;  old = 100000 
 ; Calibrate iterations for objects, slow mode
 ; this constants must be multiple of LATENCY DIVISOR (50)
 L1_REPEATS_SLOW         =  2500000  ;  old = 2000000  
@@ -33,6 +34,10 @@ L3_REPEATS_SLOW         =  10000
 L4_REPEATS_SLOW         =  2000
 DRAM_REPEATS_SLOW       =  200
 CUSTOM_REPEATS_SLOW     =  1000000
+; Divisor constant for latency mode,
+; if Latency mode, make measurement repeats / LATENCY_DIVISOR
+; if Bandwidth mode, no divide
+LATENCY_DIVISOR         =  50
 ; Repeats options definitions: 
 ; objects entries count (L1-L4, DRAM, Custom),
 ; bytes per entry (dword=4 bytes), 

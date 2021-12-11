@@ -1,0 +1,127 @@
+NUMA CPU&RAM Benchmarks
+v2.00.16 for Windows ia32
+(C) 2021 Ilya Manusov
+
+
+ System information by WinAPI.
+-------------------------------------------------------------------------------
+ Parameter                     | Value                      | Hex
+-------------------------------------------------------------------------------
+ Memory load                     23 %                         00000017          
+ Total physical memory           1535.5 MB                    000000005FF8A000  
+ Available physical memory       1170.8 MB                    00000000492E2000  
+ Total page file                 3071.0 MB                    00000000BFF14000  
+ Available page file             2697.9 MB                    00000000A89F5000  
+ Total virtual user space        2047.8 MB                    000000007FFE0000  
+ Available virtual user space    2008.1 MB                    000000007D824000  
+ Extended virtual                -                            0000000000000000  
+
+ Application minimum address     64 KB                        00010000          
+ Application maximum address     2147418111 Bytes             7FFEFFFF          
+ Active processor mask           -                            00000001          
+ Processor type                  586                          0000024A          
+ Allocation granularity          64 KB                        00010000          
+ Processor level                 15                           000F              
+ Processor revision              519                          0207              
+
+ Processors at current group     1                            00000001          
+ Processors total                1                            00000001          
+ Processor groups                1                            00000001          
+ NUMA domains                    1                            00000001          
+ Normal page size                4 KB                         00001000          
+ Minimum large page size         4 MB ( ENABLED )             0000000000400000
+
+
+ Native OS information for ia32 application under x64 OS.
+-------------------------------------------------------------------------------
+ Parameter                     | Value                      | Hex
+-------------------------------------------------------------------------------
+ Application minimum address     64 KB                        00010000          
+ Application maximum address     2147418111 Bytes             7FFEFFFF          
+ Active processor mask           -                            00000001          
+ Processor type                  586                          0000024A          
+ Allocation granularity          64 KB                        00010000          
+ Processor level                 15                           000F              
+ Processor revision              519                          0207
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformation().
+-------------------------------------------------------------------------------
+ Topology unit  | Logical CPU affinity | Comments
+-------------------------------------------------------------------------------
+ CPU package      0                                                             
+ CPU core         0                      ht=0                                   
+ NUMA node        0                      node=0                                 
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformation().
+-------------------------------------------------------------------------------
+ Cache          | Size                 | Count
+-------------------------------------------------------------------------------
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformationEx().
+-------------------------------------------------------------------------------
+ Topology unit  | Logical CPU affinity | Comments
+-------------------------------------------------------------------------------
+ CPU core         0000.0                 smt=0    efficiency=0                  
+ CPU package      0000.0                 smt=0    efficiency=0                  
+ NUMA node        0000.0                 node=0                                 
+ Processor group  0000                                                          
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformationEx().
+-------------------------------------------------------------------------------
+ Cache          | Size                 | Count
+-------------------------------------------------------------------------------
+
+
+
+ NUMA domains list by WinAPI GetNumaHighestNodeNumber() and other.
+-------------------------------------------------------------------------------
+ NUMA domain  | Affinity (hex)           | Available memory at node
+-------------------------------------------------------------------------------
+ 0              0000.0                     1170.6 MB
+
+
+ Processor groups list by WinAPI GetActiveProcessorGroupCount() and other.
+-------------------------------------------------------------------------------
+ Group  | Processors count
+-------------------------------------------------------------------------------
+ 0        1
+
+
+ ACPI tables list by WinAPI EnumSystemFirmwareTables() and other.
+-------------------------------------------------------------------------------
+ Sign | OEM ID | OEM Table ID | Creator ID | OEM Rev   | Creator Rev | Rev
+-------------------------------------------------------------------------------
+ APIC   ASUS     P4T533-C       MSFT         42302E31h   31313031h     1        
+ FACP   ASUS     P4T533-C       MSFT         42302E31h   31313031h     1        
+ BOOT   ASUS     P4T533-C       MSFT         42302E31h   31313031h     1
+
+
+ ACPI tables list by WinAPI EnumSystemFirmwareTables() and other.
+-------------------------------------------------------------------------------
+ Summary
+-------------------------------------------------------------------------------
+ APIC, Multiple APIC Description                                                
+ FACP, Fixed ACPI Description                                                   
+ BOOT, Simple Boot Flag
+
+
+ CPUID per each thread affinized by WinAPI SetThreadAffinityMask().
+-------------------------------------------------------------------------------
+ Thread   | Function   | EAX      | EBX      | ECX      | EDX
+-------------------------------------------------------------------------------
+  0         00000000     00000002   756E6547   6C65746E   49656E69              
+            00000001     00000F27   00010809   00004400   BFEBFBFF              
+            00000002     665B5101   00000000   00000000   007B7040              
+            80000000     80000004   00000000   00000000   00000000              
+            80000001     00000000   00000000   00000000   00000000              
+            80000002     20202020   20202020   20202020   6E492020              
+            80000003     286C6574   50202952   69746E65   52286D75              
+            80000004     20342029   20555043   30342E32   007A4847              
+

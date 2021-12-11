@@ -501,48 +501,48 @@ cdq
 mov ebp,dword [ecx + SUMMARYCACHE.sizeL1D + 0]
 or ebp,dword [ecx + SUMMARYCACHE.sizeL1D + 4]
 jz @f 
-or bl,00000011b            ; L1 data cache
+or bl,00000011b            ; L1 data cache, presence and select
 mov eax,dword [ecx + SUMMARYCACHE.sizeL1D + 0]
 mov edx,dword [ecx + SUMMARYCACHE.sizeL1D + 4]
 @@:
 mov ebp,dword [ecx + SUMMARYCACHE.sizeL2U + 0]
 or ebp,dword [ecx + SUMMARYCACHE.sizeL2U + 4]
 jz @f
-or bl,00000100b            ; L2 unified cache
+or bl,00000100b            ; L2 unified cache presence
 mov ebp,eax
 or ebp,edx
 jnz @f
 mov eax,dword [ecx + SUMMARYCACHE.sizeL2U + 0]
 mov edx,dword [ecx + SUMMARYCACHE.sizeL2U + 4]
-or bl,00001000b
+or bl,00001000b            ; L2 unified cache select
 @@:
 mov ebp,dword [ecx + SUMMARYCACHE.sizeL3U + 0]
 or ebp,dword [ecx + SUMMARYCACHE.sizeL3U + 4]
 jz @f
-or bl,00010000b            ; L3 unified cache
+or bl,00010000b            ; L3 unified cache presence
 mov ebp,eax
 or ebp,edx
 jnz @f
 mov eax,dword [ecx + SUMMARYCACHE.sizeL3U + 0]
 mov edx,dword [ecx + SUMMARYCACHE.sizeL3U + 4]
-or bl,00100000b
+or bl,00100000b            ; L3 unified cache select
 @@:
 mov ebp,dword [ecx + SUMMARYCACHE.sizeL4U + 0]
 or ebp,dword [ecx + SUMMARYCACHE.sizeL4U + 4]
 jz @f
-or bl,00010000b            ; L4 unified cache
+or bl,01000000b            ; L4 unified cache presence
 mov ebp,eax
 or ebp,edx
 jnz @f
 mov eax,dword [ecx + SUMMARYCACHE.sizeL4U + 0]
 mov edx,dword [ecx + SUMMARYCACHE.sizeL4U + 4]
-or bl,10000000b
+or bl,10000000b            ; L4 unified cache select
 @@:
 mov ebp,eax
 or ebp,edx
 jnz @f
 or bh,00001000b
-mov eax,32768
+mov eax,DEFAULT_CACHE_BLOCK
 @@:
 mov dword [edi + BINDLIST.setMemObject],ebx
 mov dword [edi + BINDLIST.setBlkCustom + 0],eax

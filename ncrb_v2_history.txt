@@ -1,4 +1,57 @@
-08.12.2021. v2.00.15. Changes for x64 and ia32 versions.
+11.12.2021. v2.00.16. Changes for x64 and ia32 versions.
+1)  Custom block size mode maked more useable. 
+    Changed constants for timings adaptive measurements.
+2)  Added check for custom block size edit.
+    Must be correct hexadecimal chars and value check for minimum, maximum, alignment.
+3)  Bug fixed in the support topological WinAPI procedure.
+    Caused topological errors at Win7 32-bit for some platforms.
+Code changes details.
+1)  LATENCY_DIVISOR = 50, defined as symbolic constant, 
+    DEFAULT_CACHE_BLOCK = 32 * 1024, defined as symbolic constant, 
+    both for ia32 and x64 versions, threads_manager\sessionstart.inc.
+2)  CUSTOM_BLOCK_MAX = 64 * 1024 * 1024, change to 256 * 1024 * 1024, for ia32 version,
+    threads_manager\connect_data.inc.
+3)  CUSTOM_BLOCK_MAX = 64 * 1024 * 1024, change to 1024 * 1024 * 1024, for x64 version,
+    threads_manager\connect_data.inc.
+4)  CUSTOM_BLOCK_ALIGN = 16 * 1024 , change to 512, both for ia32 and x64 versions,
+    threads_manager\connect_data.inc.
+5)  CUSTOM_REPEATS_FAST = 100000 , change to 100, both for ia32 and x64 versions,
+    threads_manager\connect_data.inc.
+6)  CUSTOM_REPEATS_SLOW = 1000000, not changed, threads_manager\connect_data.inc.
+7)  Restrictions for custom block size, maked subroutine CustomBlockRestrictions,
+    include return status accepted/corrected , both for ia32 and x64 versions,
+    threads_manager\sessionstart.inc, ncrb32.asm, ncrb64.asm.
+8)  Warning message if wrong hexadecimal input for custom block,
+    both for ia32 and x64 versions, subroutine Binder at ncrb32.asm, ncrb64.asm.
+9)  Warning message if min/max/alignment restrictions for custom block size,
+    both for ia32 and x64 versions, labels .memoryRun, .memoryDraw at
+    dialogs\dialog_main_tabs.inc.
+10) Bug if small block (below 4KB) for SSE/AVX/AVX512.
+    Fixed by select checks for user-defined block only.
+11) Bug in the 32-bit version if custom block size above 4GB, bits A[63-32] is not
+    checked, but editable. Fixed by check high dword.
+12) Bug fixed with L4 cache checkbox logic (but yet not verified at platforms with L4).
+13) Bug with string size limit, for decimal and hex, for differrent sizes.
+    Yet for one size (16 chars) because yet used only hex 64-bit edit fields.
+    Fixed by write termination byte 00h.
+14) Bug with empty string input. Fixed by check string length returned by WinAPI.
+15) Set defaults must correct all input errors. Verified.
+16) If extended topological API returns no data without error, maked return silently,
+    without error signaling, both for ia32 and x64 versions,
+    subroutine HelperTopologyEx, system_info\info_extended_topology.inc.
+    Yet change for extended topology method only.
+    Fixed bug occurred at Win7 32-bit at some platforms.
+Verification details:     
+1)  Re-test Windows XP/7/10 both for ia32 and x64.
+    XP-32, XP-64, 7-32, 7-64, 10-32, 10-64.
+2)  Experiments with custom block size, min, max and alignment values.
+    Use big blocks, 512-1024 MB at x64 mode. 
+3)  Platform with 8KB L1 data cache. Differentiate limits. Re-test ASUS P4T.
+    Use big blocks, 128-256 MB at ia32 mode.
+4)  Re-test Large Pages.
+
+
+07.12.2021. v2.00.15. Changes for x64 and ia32 versions.
 Updated constants for L1 timings measurement:
 L1_REPEATS_FAST : old value = 100000  , new value = 2000000
 L1_REPEATS_SLOW : old value = 2000000 , new value = 2500000.
@@ -45,7 +98,4 @@ Fixed bugs with NUMA support.
 14.11.2021. 
 Create this repository.
 Commit engineering release v2.00.07.
-
-
-
 
