@@ -75,6 +75,10 @@ stosb
 lea edi,[ebp + BINDLIST.mdObject]
 mov eax,[ebx + MEMIPB.updatedTarget]
 add ax,STR_MEMORY_L1
+cmp ax,STR_MEMORY_CUSTOM
+jne @f
+mov ax,STR_MEMORY_CUSTOM_DRAW
+@@:
 call PoolStringWrite
 mov al,0
 stosb

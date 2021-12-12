@@ -47,7 +47,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.16.0'
+RESOURCE_VERSION      EQU  '2.0.17.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -398,7 +398,7 @@ dialog      childMemoryDraw,   '',                     28,  10, 387, 278, WS_CAP
 dialogitem  'STATIC'      , '', IDC_MD_ASM          ,   5, 257, 250,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_PREFETCH     , 230, 257,  50,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_OBJECT       ,   5, 265,  50,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MD_THREADS      ,  53, 265,  50,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MD_THREADS      ,  56, 265,  50,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_REPEATS      , 111, 265,  60,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_PAGES        , 180, 265,  50,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_NUMA         , 230, 265,  50,  10, WS_VISIBLE
@@ -678,10 +678,11 @@ DB  'L2 cache'                 , 0
 DB  'L3 cache'                 , 0
 DB  'L4 cache'                 , 0
 DB  'DRAM'                     , 0
-DB  'Custom block size'        , 0
+DB  'Custom block size'        , 0   ; This for Simple run screen
 DB  'Memory mapped file size'  , 0 
 DB  'GPU memory block size'    , 0
 DB  'Physical map start-stop'  , 0
+DB  'Custom block'             , 0   ; This for Draw screen  
 ;---------- Memory status names -----------------------------------------------;
 DB  'Write back'               , 0
 DB  'Write through'            , 0

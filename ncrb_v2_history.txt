@@ -1,3 +1,8 @@
+12.12.2021. v2.00.17. Changes for x64 and ia32 versions.
+Bug fixed at drawings window. Separated "Custom block size" and "Custom block" strings
+(extra size strings cause wrong pixels).
+
+
 11.12.2021. v2.00.16. Changes for x64 and ia32 versions.
 1)  Custom block size mode maked more useable. 
     Changed constants for timings adaptive measurements.
