@@ -45,13 +45,13 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition'
-RESOURCE_VERSION        EQU '2.0.17.0'
+RESOURCE_VERSION        EQU '2.0.18.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
-RESOURCE_COPYRIGHT      EQU '(C) 2021 Ilya Manusov'
+RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32'
 ABOUT_CAP_TEXT          EQU 'Program info'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.00.17 for Windows ia32'
+ABOUT_TEXT_2            EQU 'v2.00.18 for Windows ia32'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -1967,7 +1967,7 @@ DYNA_PTR DYNAPTR ?
 FILE_PATH_BUFFER  = TEMP_BUFFER
 FILE_PATH_MAXIMUM = 4096
 FILE_WORK_BUFFER  = TEMP_BUFFER + FILE_PATH_MAXIMUM
-FILE_WORK_MAXIMUM = 65536
+FILE_WORK_MAXIMUM = 131072
 REPORT_TEXT_COUNT = 11
 ERROR_FILE_EXISTS = 050h
 align 8

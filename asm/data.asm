@@ -47,9 +47,9 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.17.0'
+RESOURCE_VERSION      EQU  '2.0.18.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
-RESOURCE_COPYRIGHT    EQU  '(C) 2021 Ilya Manusov'
+RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                            Resources section.                                ;        
@@ -2020,6 +2020,7 @@ DB  'CPEP' , 'Corrected Platform Error Polling'                 , 0
 DB  'CRAT' , 'Component Resource Attribute'                     , 0
 DB  'CSRT' , 'Core System Resource'                             , 0
 DB  'DBGP' , 'Debug Port'                                       , 0
+DB  'DBG2' , 'Microsoft Debug Port Type 2 Description'          , 0
 DB  'DMAR' , 'DMA Remapping'                                    , 0
 DB  'DSDT' , 'Differentiated System Description'                , 0
 DB  'DPPT' , 'DMA Protection Policy'                            , 0
@@ -2030,7 +2031,9 @@ DB  'ERST' , 'Error Record Serialization'                       , 0
 DB  'ETDT' , 'Event Timer Description'                          , 0
 DB  'FACP' , 'Fixed ACPI Description'                           , 0
 DB  'FACS' , 'Firmware ACPI Control Structure'                  , 0
+DB  'FIDT' , 'Firmware Identification'                          , 0
 DB  'FPDT' , 'Firmware Performance Data'                        , 0
+DB  'GSCI' , 'GMCH SCI Information'                             , 0 
 DB  'GTDT' , 'Generic Timer Description'                        , 0
 DB  'HEST' , 'Hardware Error Source'                            , 0
 DB  'HPET' , 'High Precision Event Timer'                       , 0
@@ -2045,12 +2048,15 @@ DB  'MSDM' , 'Microsoft Data Management'                        , 0
 DB  'MSCT' , 'Maximum System Characteristics'                   , 0
 DB  'MPST' , 'Memory Power State'                               , 0
 DB  'NFIT' , 'NVDIMM Firmware Interface'                        , 0
+DB  'NHLT' , 'Non-HD Audio Link/Endpoint Description'           , 0
 DB  'OEMx' , 'OEM Specific Information'                         , 0
+DB  'OEMB' , 'OEM Specific Information'                         , 0
 DB  'PHAT' , 'Platform Health Assessment'                       , 0
 DB  'PCCT' , 'Platform Communications Channel'                  , 0
 DB  'PMTT' , 'Platform Memory Topology'                         , 0
 DB  'PSDT' , 'Persistent System Description'                    , 0
 DB  'PRMT' , 'Platform Runtime Mechanism Table'                 , 0
+DB  'PTDT' , 'Platform Telemetry Data Table'                    , 0
 DB  'RASF' , 'ACPI RAS Feature'                                 , 0
 DB  'RGRT' , 'Regulatory Graphics Resource Table'               , 0
 DB  'RSDT' , 'Root System Description'                          , 0

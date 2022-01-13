@@ -482,7 +482,8 @@ or ebx,ecx            ; Select default ASM method by CPU features support check
 ; UNDER CONSTRUCTION RESTRICTIONS
 ; TODO. VERIFY GATHER/SCATTER/CLZERO PATTERNS AND UNLOCK IT
 ; and ebp,0FFFF00FFh
-  and ebp,0FFFF03FFh
+; and ebp,0FFFF03FFh
+  and ebp,0FFFF3FFFh  ; THIS LOCK CLZERO ONLY
 ; UNDER CONSTRUCTION RESTRICTIONS
 
 mov [edi + BINDLIST.setMemMethod + 0],ebx

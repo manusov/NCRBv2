@@ -1,3 +1,29 @@
+13.01.2022. v2.00.18. Changes for x64 and ia32 versions.
+1) Unlock benchmark modes: Gather read AVX512, Scatter write AVX512.
+2) Add ACPI tables signatures to data base.
+   2.1) OEMB, OEM-specific table.
+        https://uefi.org/specs/ACPI/6.4/21_ACPI_Data_Tables_and_Table_Def_Language/ACPI_Data_Tables.html 
+        https://github.com/Azure/WALinuxAgent/issues/1946
+   2.2) GSCI, GMCH SCI table
+        http://web.mit.edu/custer/Desktop/custer/MacData/afs/sipb/project/freebsd/head/sys/contrib/dev/acpica/include/actbl2.h
+        https://github.com/intel/linux-intel-lts/blob/master/include/acpi/actbl1.h
+   2.3) FIDT, Firmware ID Table
+        https://patents.justia.com/patent/10891139
+        https://patents.justia.com/inventor/oleksiy-yakovlev
+   2.4) NHLT, Non-HD Audio Endpoint Description Table
+        https://01.org/sites/default/files/595976_intel_sst_nhlt.pdf
+        https://review.coreboot.org/c/coreboot/+/12935/
+        Intel Smart Sound Technology NHLT Specification
+        Architecture Guide/Overview. January 2020. Revision 0.8.1
+   2.5) DBG2, Debug Port Table 2
+        https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/acpi-debug-port-table
+        https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/acpi-debug-port-table?redirectedfrom=MSDN
+   2.6) PTDT, Platform Telemetry Data Table
+        https://twitter.com/NikolajSchlej/status/1411469135574278145
+3) Report file size limit changed.
+4) Add results for ASUS TUF Gaming Z590-Plus WiFi.
+
+
 12.12.2021. v2.00.17. Changes for x64 and ia32 versions.
 Bug fixed at drawings window. Separated "Custom block size" and "Custom block" strings
 (extra size strings cause wrong pixels).
