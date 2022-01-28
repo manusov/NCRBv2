@@ -1,7 +1,7 @@
 ;=========================================================================================================;
 ;                                                                                                         ;
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
-; (C)2021 Ilya Manusov.                                                                                   ;
+; (C)2022 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
 ; Previous version v1.xx.xx                                                                               ; 
 ; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
@@ -13,10 +13,10 @@
 ; See also other components:                                                                              ;
 ; NCRB64.ASM, DATA.ASM, KMD32.ASM, KMD64.ASM.                                                             ;
 ;                                                                                                         ;
-; Translation by Flat Assembler version 1.73.27 ( Jan 27, 2021 ).                                         ;
+; Translation by Flat Assembler version 1.73.29 ( Dec 18, 2021 ).                                         ;
 ; http://flatassembler.net/                                                                               ;
 ;                                                                                                         ;
-; Edit by FASM Editor 2.0.                                                                                ; 
+; Edit by FASM Editor 2.0.                                                                                ;
 ; Use this editor for correct source file tabulations and format. (!)                                     ;
 ; https://fasmworld.ru/instrumenty/fasm-editor-2-0/                                                       ;
 ;                                                                                                         ;
@@ -26,6 +26,9 @@
 ; User mode debug by FDBG ( 64-bit, actual for other module NCRB64.EXE )                                  ;
 ; https://board.flatassembler.net/topic.php?t=9689&postdays=0&postorder=asc&start=180                     ;
 ; ( Search for archive fdbg0025.zip )                                                                     ;
+;                                                                                                         ;
+; User mode debug by x64dbg ( 32 and 64-bit, actual for modules NCRB32.EXE, NCRB64.EXE )                  ;
+; https://x64dbg.com/                                                                                     ;
 ;                                                                                                         ;
 ; Intel Software Development Emulator ( SDE ) used for debug                                              ;
 ; https://software.intel.com/content/www/us/en/develop/articles/intel-software-development-emulator.html  ;
@@ -45,13 +48,13 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition'
-RESOURCE_VERSION        EQU '2.0.18.0'
+RESOURCE_VERSION        EQU '2.1.0.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32'
 ABOUT_CAP_TEXT          EQU 'Program info'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.00.18 for Windows ia32'
+ABOUT_TEXT_2            EQU 'v2.01.00 for Windows ia32'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -1340,6 +1343,7 @@ RAW_LIST       DW  IDS_STRINGS_POOL
                DW  IDS_CPU_AVX512_POOL
                DW  IDS_OS_CONTEXT_POOL
                DW  IDS_INTEL_CACHE
+               DW  IDS_SMBIOS_DATA_POOL
                DW  IDS_ACPI_DATA_POOL
                DW  IDS_IMPORT_POOL
                DW  IDS_FONTS_POOL
@@ -1631,6 +1635,7 @@ lockedDataCpuCommon        dd ?     ; Data for build common CPU feature bitmap
 lockedDataCpuAvx512        dd ?     ; Data for build AVX512 feature bitmap
 lockedDataOsContext        dd ?     ; Data for build OS context bitmap
 lockedDataIntelCache       dd ?     ; Data for Intel cache descriptors decode
+lockedDataSmbios           dd ?     ; Data base for SMBIOS structures detection
 lockedDataAcpi             dd ?     ; Data base for ACPI tables detection
 lockedImportList           dd ?     ; List for WinAPI dynamical import
 lockedFontList             dd ?     ; List of fonts names
@@ -1816,7 +1821,7 @@ DYNA_IMPORT DYNAIMPORT ?
 ;---------- GUI objects list --------------------------------------------------;
 align 8
 BIND_LIST BINDLIST ?
-;---------- Benchmarks deault Y-sizing parameters -----------------------------;
+;---------- Benchmarks default Y-sizing parameters ----------------------------;
 ; This parameters set for first pass, 
 ; auto adjusted as F(Maximum Detected Speed or Latency) for next passes,
 ; if don't close Window 1 and press Run (Resize) button 
@@ -1945,9 +1950,10 @@ listTopology     ALLOCATOR ?
 listTopologyEx   ALLOCATOR ?
 listNuma         ALLOCATOR ?
 listGroup        ALLOCATOR ?
+listSmbios       ALLOCATOR ?
 listAcpi         ALLOCATOR ?
 listAffCpuid     ALLOCATOR ?
-; This 11 pointers MUST BE SEQUENTAL, because accessed in the cycle
+; This 12 pointers MUST BE SEQUENTAL, because accessed in the cycle
 textOs           ALLOCATOR ?
 textNativeOs     ALLOCATOR ?
 textTopology1    ALLOCATOR ?
@@ -1956,6 +1962,7 @@ textTopologyEx1  ALLOCATOR ?
 textTopologyEx2  ALLOCATOR ?
 textNuma         ALLOCATOR ?
 textGroup        ALLOCATOR ?
+textSmbios       ALLOCATOR ?
 textAcpi1        ALLOCATOR ?
 textAcpi2        ALLOCATOR ?
 textAffCpuid     ALLOCATOR ?
@@ -1968,7 +1975,7 @@ FILE_PATH_BUFFER  = TEMP_BUFFER
 FILE_PATH_MAXIMUM = 4096
 FILE_WORK_BUFFER  = TEMP_BUFFER + FILE_PATH_MAXIMUM
 FILE_WORK_MAXIMUM = 131072
-REPORT_TEXT_COUNT = 11
+REPORT_TEXT_COUNT = 12
 ERROR_FILE_EXISTS = 050h
 align 8
 OPEN_FILE_NAME OPENFILENAME ?
@@ -2039,5 +2046,3 @@ versioninfo  version_info, \
 'FileVersion'     , RESOURCE_VERSION     ,\
 'CompanyName'     , RESOURCE_COMPANY     ,\
 'LegalCopyright'  , RESOURCE_COPYRIGHT
-
-

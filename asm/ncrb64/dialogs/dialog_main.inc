@@ -38,7 +38,12 @@ je .tabproc                    ; Go if notification message from child window
 .skip:
 xor eax,eax
 jmp .finish                    ; Go exit if unknown event
-;---------- WM_INITDIALOG handler: create main window -------------------------; 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                WM_INITDIALOG handler: create main window.                    ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wminitdialog: 
 mov rax,PARM_HWNDDLG
 mov [r15 + APPDATA.hMain],rax
@@ -181,8 +186,14 @@ lea rdx,[PROGRAM_NAME]               ; RDX = Parm#2 = Pointer to text string
 mov rcx,PARM_HWNDDLG                 ; RCX = Parm#1 = Window handle
 call [SetWindowText]                 ; Set main window text title
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
-.wmcommand:                       ; User input: cancel button or close window
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                 WM_COMMAND handler: interpreting user input,                 ; 
+;              include user input: cancel button or close window.              ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.wmcommand:
 ;---------- Detect click "About" item in the main menu ------------------------;
 mov eax,LOW_WPARAM
 cmp ax,IDM_ABOUT
@@ -205,8 +216,14 @@ jmp .processed
 cmp ax,IDM_EXIT
 je .wmclose
 jmp .processed
-;---------- WM_NOTIFY handler: events from child GUI objects ------------------;
-.tabproc:                         ; Change sheet selection
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;             WM_NOTIFY handler: events from child GUI objects.                ;  
+;                         Change sheet selection.                              ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.tabproc:
 cmp LOW_WPARAM,IDC_TAB
 jne .skip
 mov rax,PARM_LPARAM
@@ -226,7 +243,12 @@ mov edx,SW_SHOWDEFAULT            ; RDX = Parm#2 = Window activity mode
 mov rcx,[rsi + rax*8]             ; RCX = Parm#1 = Window handle
 call [ShowWindow]                 ; Show current selected sheet
 jmp .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 mov edx,1                         ; RDX = Parm#2 = Result for return
 mov rcx,PARM_HWNDDLG              ; RCX = Parm#1 = Window handle

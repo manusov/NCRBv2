@@ -210,8 +210,11 @@ stc
 ret
 
 ;---------- Align memory pointer, required for WinAPI calls -------------------;
+;                                                                              ;
 ; INPUT:   EBP = Pointer                                                       ;
+;                                                                              ;
 ; OUTPUT:  EBP = Aligned pointer, updated if required                          ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAlignment:
 test bp,00001111b
@@ -222,9 +225,12 @@ add ebp,010h
 ret
 
 ;--- Write relation name string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          AX  = String ID at application strings pool                         ;
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperRelationName:
 lea edi,[edx + 01]
@@ -235,9 +241,12 @@ pop esi ecx
 ret
 
 ;--- Write affinity mask string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   EDX = Destination base address                                      ;
 ;          ESI = Pointer to parsed topology entry: affinity mask               ;
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinity:
 push ecx edx esi ebp
@@ -303,12 +312,15 @@ ret
 
 ;--- Write number value string for text generation by topology parsing --------;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   EDX = Destination base address                                      ;
 ;          ESI = Pointer to parsed topology entry                              ;
 ;          AL          = Parameter offset in the topology entry structure      ; 
 ;          AH          = Text string position offset at destination            ;   
 ;          EAX.[31-16] = Parameter name String ID at application strings pool  ;  
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperParameter8:         ; Entry point for addressed 8-bit parameter
 shld ebx,eax,16
@@ -341,12 +353,15 @@ jmp ParameterEntry
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   ESI = Pointer to topology information buffer                        ;
 ;          EDI = Destination text buffer                                       ;
 ;          ECX = Entries count at topology information buffer                  ;  
 ;          AL  = Cache level                                                   ;  
 ;          AH  = Cache type                                                    ;    
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCacheSummary:
 push ecx esi 0 0 ebp

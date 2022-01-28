@@ -27,7 +27,6 @@
 
 ; TODO. PRE-BLANK RESULTS, OTHERWISE CAN SHOW PREVIOUS RESULTS WHEN ERROR.
 ; TODO. RUNTIME ERROR REPORTING.
-; TODO. SOURCE STYLE: ".exit:", no ".Exit:", "L" labels names change.
 ; TODO. CPU UTILIZATION AFTER DRAW CHART DONE.
 
 DrawSessionStart:
@@ -112,24 +111,24 @@ stosb
 lea rsi,[ADAPTIVE_REPEATS]
 mov eax,[rbx + MEMIPB.updatedMeasure]
 sub eax,MEASURE_B_ADAPTIVE
-jc .L20
+jc .skipAdaptive
 cmp eax,1
-ja .L20
+ja .skipAdaptive
 mov rax,[rsi + rax*8]
 mov [rbx + MEMIPB.adaptiveSeconds],rax
 ;---------- Select Bandwidth or Latency measurement mode ----------------------;
 lea rsi,[THREAD_LIST]  ; RSI = storage for RCX reloads
 mov rcx,rsi
 cmp [rbx + MEMIPB.updatedAsm],LATENCY_MODE
-jae .L22
+jae .latencyAdaptive
 ;---------- Run with default recommended repeats count: Bandwidth mode --------;
 mov edx,[rbx + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .error02                  ; If error, go to error handling branch
-jmp .L21
+jc .errorTimings             ; If error, go to error handling branch
+jmp .calcAdaptive
 ;---------- Run with default recommended repeats count: Latency mode ----------;
 ; Setup pattern for prepare walk list
-.L22:
+.latencyAdaptive:
 mov r8d,[rbx + MEMIPB.updatedThreads]
 mov r9,[rbx + MEMIPB.patternRoutine]    ; for first call, prepare list for walk
 call ThreadsUpdatePattern
@@ -137,7 +136,7 @@ call ThreadsUpdatePattern
 mov rcx,rsi
 mov edx,[rbx + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .error02                  ; If error, go to error handling branch
+jc .errorTimings             ; If error, go to error handling branch
 ;---------- Setup pattern for walk --------------------------------------------;
 mov rcx,rsi
 mov r8d,[rbx + MEMIPB.updatedThreads]
@@ -148,11 +147,11 @@ call ThreadsUpdatePattern
 mov rcx,rsi
 mov edx,[rbx + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .error02                  ; If error, go to error handling branch
+jc .errorTimings                    ; If error, go to error handling branch
 ;--------- Done point for adaptive modes ( bandwidth and latency branches ) ---;
-; Pre-measurements executed, next, test control = f ( results )
-; must be calculated
-.L21:
+; Pre-measurements executed, 
+; next, test control = f ( results ) must be calculated
+.calcAdaptive:
 ;---------- Calculate timings -------------------------------------------------;
 ; Calculate seconds and ratio after run with default recommended repeats count
 ; for measurements calibration 
@@ -187,7 +186,7 @@ fmulp st1,st0                         ; ST0 = Corrected product for divide per b
 fistp [rbx + MEMIPB.adaptiveProduct]
 pop rax                               ; This for release stack only
 ;---------- Skip point for non-adaptive modes ---------------------------------;
-.L20:
+.skipAdaptive:
 ;---------- Note option: X-approximation modes --------------------------------; 
 ; interpreted and supported at drawsessionthread.inc module. 
 ; Load pointer to drawings parameters
@@ -203,12 +202,12 @@ shl eax,cl   ; RAX = Target block size, note example here RAX=8K for L1=32K
 ;---------- Special support for DRAM and Custom modes -------------------------;
 mov ecx,[rbx + MEMIPB.updatedTarget]
 cmp ecx,TARGET_DRAM
-je .L1                  ; Go for size / 8 if target = DRAM
+je .slowObject          ; Go for size / 8 if target = DRAM
 cmp ecx,TARGET_CUSTOM
-jne .L2                 ; Go skip without size / 8 if target = not a Custom
-.L1:
+jne .fastObject         ; Go skip without size / 8 if target = not a Custom
+.slowObject:
 shr eax,3               ; size / 8 , for DRAM and Custom modes
-.L2:
+.fastObject:
 ;---------- Set Xstart, Xdelta for drawings -----------------------------------;
 push rax                ; RAX = Block size per X-grid
 xor edx,edx             ; RDX = Dividend high 64 bits, =0
@@ -246,8 +245,8 @@ mov [rdi + DRPM.selectMode],edx
 ; Note same operation at win1.inc for re-scaling, 
 finit
 push rax -GRIDSTEPY
-fild dword [rsp]      ; ST0 = - grid step, pixels
-fidiv dword [rsp+8]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
+fild dword [rsp]        ; ST0 = - grid step, pixels
+fidiv dword [rsp + 8]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
 fstp [rdi + DRPM.yMultiplier]
 pop rax rax
 ;--- Align stack and create parameters shadow, required for use WinAPI --------;
@@ -265,7 +264,7 @@ xor r8d,r8d          ; R8  = Parm#3 = bInitialState
 xor r9d,r9d          ; R9  = Parm#4 = Name, 0=None
 call [CreateEvent]   ; Call WinAPI function
 test rax,rax         ; Status=0 means error
-jz .error00          ; Go if error creating event
+jz .errorAlloc       ; Go if error creating event
 stosq                ; Store handle in the thread parameters, EventStart 
 ;---------- Create event for thread done, store event handle ------------------;
 xor ecx,ecx          ; RCX = Parm#1 = lpEventAttributes  
@@ -274,7 +273,7 @@ xor r8d,r8d          ; R8  = Parm#3 = bInitialState
 xor r9d,r9d          ; R9  = Parm#4 = Name, 0=None
 call [CreateEvent]   ; Call WinAPI function
 test rax,rax         ; Status=0 means error
-jz .error00          ; Go if error creating event
+jz .errorAlloc       ; Go if error creating event
 stosq                ; Store handle in the thread parameters, EventDone 
 ;---------- Create thread, store event handle ---------------------------------;
 xor ecx,ecx                 ; RCX = Parm#1 = Security
@@ -287,7 +286,7 @@ sub rsp,32                  ; Make parameters shadow
 call [CreateThread]         ; Call WinAPI function
 add rsp,32+16               ; Remove parameters shadow + 2 parameters
 test rax,rax                ; Status=0 means error
-jz .error00                 ; Go if error creating thread
+jz .errorAlloc              ; Go if error creating thread
 stosq                       ; Store handle in the thread parameters, ThreadHandle 
 ;---------- Clear measurement counter and array of measurement results --------;
 mov ecx,DRAW_POINTS_COUNT + 20 - 3   ; OLD: + 4 dwords: 2 counters + break flag + align
@@ -296,19 +295,19 @@ rep stosq
 ;---------- Done, no errors ---------------------------------------------------; 
 ; parallel thread with  DrawSessionThread  subroutine RUNNING
 clc
-.L90:
+.exitStack:
 mov rsp,rbp
 .exit:                 ; Note AL = error status must be valid at this point
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 ret
 ;---------- Exit point for errors detected ------------------------------------;
-.error00:
+.errorAlloc:
 mov al,MSG_RUNTIME_ALLOC
 stc
-jmp .L90
+jmp .exitStack
 ;---------- CF=1 with AL=2  means timings measurement error -------------------; 
 ; note this branch without valid RBP
-.error02:
+.errorTimings:
 mov al,MSG_RUNTIME_TIMINGS
 stc
 jmp .exit
@@ -380,7 +379,7 @@ jz .error                           ; Go exit if error
 ;---------- Done --------------------------------------------------------------; 
 ; parallel thread with DrawSessionThread subroutine HALTED and REMOVED
 clc
-.L90:
+.exitStack:
 mov rsp,rbp
 .exit:                 ; Note AL = error status must be valid at this point
 pop r15 r14 r13 r12 rbp rdi rsi rbx
@@ -389,7 +388,7 @@ ret
 .error:
 mov al,MSG_RUNTIME_RELEASE
 stc
-jmp .L90
+jmp .exitStack
 
 ;--- This subroutine runs as parallel background thread, make measurements ----; 
 ;    and store results. Used for draw performance = f( block size ) function.  ;
@@ -411,13 +410,13 @@ push rbp
 sub rsp,32+8
 ;--- Drawings window invalidation for silent mode: show at drawings start -----; 
 cmp [GUI_PARMS.silentMode],0
-je .SkipSilent
+je .skipSilent
 mov rcx,[GUI_PARMS.childWinHandle]  ; RCX = Parm#1 = Window handle
-jrcxz .SkipSilent
+jrcxz .skipSilent
 xor edx,edx            ; RDX = Parm#2 = Pointer to invalidated region, 0=All window
 xor r8d,r8d            ; R8  = Parm#3 = Background erase flag, 0=Background unchanged
 call [InvalidateRect]  ; This cause callback WM_PAINT operation
-.SkipSilent:
+.skipSilent:
 ;---------- Load pointer to thread control structure --------------------------;
 lea r15,[DRAW_THREAD_PARMS]
 ;---------- Signaling thread START --------------------------------------------;
@@ -428,12 +427,12 @@ lea rsi,[MEM_IPB]
 lea rcx,[THREAD_LIST]
 mov edx,[rsi + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .BackgroundSkip  ; Go skip operations if error, note this is separate thread
+jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 ;---------- Measurement cycle -------------------------------------------------;
-.BackgroundProcess:
+.backgroundProcess:
 cmp [r15 + DTHP.measureCounter],DRAW_POINTS_COUNT
-je .SilentBranch
-ja .BackgroundSkip    ; Can replace this to wait with minimum utilization ?
+je .silentBranch
+ja .backgroundSkip    ; Can replace this to wait with minimum utilization ?
 lea rsi,[MEM_IPB]
 lea rdi,[MEM_OPB]
 ;---------- Update block size at threads control block ------------------------;
@@ -443,23 +442,23 @@ mov r8d,[rsi + MEMIPB.updatedThreads]
 mov r9,[rsi + MEMIPB.startBlockSize]
 call ThreadsUpdateBlockSize
 cmp [rsi + MEMIPB.updatedMeasure],MEASURE_B_ADAPTIVE
-jb .NoAdaptive
+jb .noAdaptive
 lea rcx,[THREAD_LIST]
 mov rdx,rsi
 mov r8d,[rsi + MEMIPB.updatedThreads]
 call ThreadsUpdateAdaptive
-.NoAdaptive:
+.noAdaptive:
 ;---------- Select Bandwidth or Latency measurement mode ----------------------;
 cmp [rsi + MEMIPB.updatedAsm],LATENCY_MODE
-jae .LatencyMode 
-.BandwidthMode:
+jae .latencyMode 
+.bandwidthMode:
 ;---------- Measurement pattern -----------------------------------------------;
 lea rcx,[THREAD_LIST]
 mov edx,[rsi + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .BackgroundSkip  ; Go skip operations if error, note this is separate thread
-jmp .DoneBandwidthOrLatency
-.LatencyMode:
+jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
+jmp .doneBandwidthOrLatency
+.latencyMode:
 ;---------- Setup pattern for prepare walk list -------------------------------;
 lea rcx,[THREAD_LIST]
 mov r8d,[rsi + MEMIPB.updatedThreads]
@@ -469,7 +468,7 @@ call ThreadsUpdatePattern
 lea rcx,[THREAD_LIST]
 mov edx,[rsi + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .BackgroundSkip  ; Go skip operations if error, note this is separate thread
+jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 ;---------- Setup pattern for walk --------------------------------------------;
 lea rcx,[THREAD_LIST]
 mov r8d,[rsi + MEMIPB.updatedThreads]
@@ -480,8 +479,8 @@ call ThreadsUpdatePattern
 lea rcx,[THREAD_LIST]
 mov edx,[rsi + MEMIPB.updatedThreads]
 call ThreadsReStart
-jc .BackgroundSkip  ; Go skip operations if error, note this is separate thread
-.DoneBandwidthOrLatency:
+jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
+.doneBandwidthOrLatency:
 ;---------- Calculte and store CPI = Clocks per Instruction -------------------;
 ; CPI = f ( Delta TSC, Instructions count )
 mov edx,[r15 + DTHP.measureCounter]
@@ -512,23 +511,23 @@ inc [r15 + DTHP.measureCounter]
 ; it copy  16-1=15  or  32-1=31  times.
 mov eax,[rsi + MEMIPB.updatedApprox]
 test eax,eax
-jz .NoApproxMode       ; go if no approximation mode
+jz .noApproxMode       ; go if no approximation mode
 mov ecx,15             ; 1 already + 15 duplicated = 16 total stores
 cmp eax,APPROX_X16
-je .YesApproxMode
+je .yesApproxMode
 mov cl,31              ; 1 already + 31 duplicated = 32 total stores
-.YesApproxMode:        ; approximation duplication cycle
+.yesApproxMode:        ; approximation duplication cycle
 mov rax,[rdi-8]
 stosq                  ; one duplication per loop
 mov r8,[rsi + MEMIPB.deltaBlockSize]
 add [rsi + MEMIPB.startBlockSize],r8
 inc [r15 + DTHP.measureCounter]
-loop .YesApproxMode    ; approximation duplication cycle
-.NoApproxMode:
+loop .yesApproxMode    ; approximation duplication cycle
+.noApproxMode:
 ;---------- Cycle with support termination by break ---------------------------;
-.BackgroundSkip:
+.backgroundSkip:
 cmp [r15 + DTHP.measureBreak],0
-je .BackgroundProcess
+je .backgroundProcess
 ;---------- Signaling thread STOP ---------------------------------------------;
 mov rcx,[r15 + DTHP.eventDone]  ; RCX = Parm#1 = Handle for thread done event
 call [SetEvent]                 ; Call WinAPI function
@@ -541,14 +540,14 @@ xor eax,eax                       ; RAX = 0, return code = 0
 ret
 ;---------- Drawings window invalidation for silent mode ----------------------;
 ; show at drawings end
-.SilentBranch:
+.silentBranch:
 mov al,0
 xchg [GUI_PARMS.silentMode],al
 cmp al,0
-je .BackgroundSkip
+je .backgroundSkip
 mov rcx,[GUI_PARMS.childWinHandle]  ; Parm#1 = Window handle
-jrcxz .BackgroundSkip
+jrcxz .backgroundSkip
 xor edx,edx            ; RDX = Parm#2 = Pointer to invalidated region, 0=All window
 xor r8d,r8d            ; R8  = Parm#3 = Background erase flag, 0=Background unchanged
 call [InvalidateRect]  ; This cause callback WM_PAINT operation
-jmp .BackgroundSkip 
+jmp .backgroundSkip 

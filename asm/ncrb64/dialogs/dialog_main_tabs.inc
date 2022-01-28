@@ -34,12 +34,14 @@ jmp DialogProcEntry
 DialogProcGroups:
 mov al,BINDER_BUILD_P_GROUPS
 jmp DialogProcEntry
+DialogProcSmbios:
+mov al,BINDER_BUILD_SMBIOS
+jmp DialogProcEntry
 DialogProcAcpi:
 mov al,BINDER_BUILD_ACPI
 jmp DialogProcEntry
 DialogProcAffCpuid:
 mov al,BINDER_BUILD_AFF_CPUID
-jmp DialogProcEntry
 ;---------- Entry point with AL = Binder ID for required child window ---------;
 DialogProcEntry:
 cld
@@ -67,7 +69,12 @@ je .wmclose                    ; Go if window close message
 .skip:
 xor eax,eax
 jmp .finish                    ; Go exit if unknown event
-;---------- WM_INITDIALOG handler: create sheet window ------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                WM_INITDIALOG handler: create sheet window.                   ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wminitdialog:
 mov eax,esi
 call Binder
@@ -81,7 +88,12 @@ mov ax,BINDER_SET_MEMORY
 call Binder
 @@:
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                 WM_COMMAND handler: interpreting user input.                 ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 mov eax,r8d
 cmp ax,IDB_SYSINFO_CANCEL    ; Detect click "Exit" button in the child window
@@ -298,7 +310,12 @@ mov rdx,rsi            ; RDX = Parm#2 = Pointer to string: error name
 mov rcx,rbx            ; RCX = Parm#1 = Parent Window - this window
 call [MessageBox]  
 jmp .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 mov rcx,[r15 + APPDATA.hMain]
 jrcxz .processed

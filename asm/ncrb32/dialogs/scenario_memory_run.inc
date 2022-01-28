@@ -104,6 +104,7 @@ mov [edi + MEMUPB.optionApprox],eax
 mov eax,dword [esi + BINDLIST.getBlkCustom]
 mov [edi + MEMUPB.customBlockStart],eax
 ret
+
 ;---- Execute simple run benchmark scenario and build text data for visual ----;
 ;                                                                              ;
 ; INPUT:   None at registers                                                   ;
@@ -140,7 +141,6 @@ jc .error            ; Go if error at termination
 ;---------- Calculating results by Output Parameters Block (OPB) --------------;
 lea ebp,[BIND_LIST]
 lea ebx,[MEM_IPB]
-
 ;---------- Build application type string -------------------------------------;
 lea edi,[ebp + BINDLIST.mrApplication]
 mov ax,STR_MR_APP_TYPE_32

@@ -36,7 +36,13 @@ je .wmclose                    ; Go if window close message
 .skip:
 xor eax,eax
 jmp .finish                    ; Go exit if unknown event
-;--- WM_INITDIALOG handler: create child window: vector perf. brief report ----; 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                WM_INITDIALOG handler: create child window:                   ; 
+;                    vector performance brief report.                          ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wminitdialog:
 mov ax,BINDER_BUILD_VECTOR_BRIEF
 call Binder
@@ -52,12 +58,22 @@ mov rdx,rsi
 mov rcx,PARM_HWNDDLG
 call [SetWindowText]
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
-; Detect click "OK" button at vector brief window
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                 WM_COMMAND handler: interpreting user input.                 ; 
+;               Detect click "OK" button at vector brief window.               ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 cmp PARM_WPARAM,IDB_VB_OK
 jne .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 mov edx,1                   ; RDX = Parm#2 = Result for return
 mov rcx,PARM_HWNDDLG        ; RCX = Parm#1 = Window handle

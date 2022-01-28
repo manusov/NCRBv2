@@ -85,6 +85,7 @@ mov rsp,rax
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 xor eax,eax                   ; RAX = 0, return code = 0 
 ret
+
 ;---------- Thread routine, called by OS callback mechanism -------------------;
 ; Variant with support Processor Groups, systems with >64 logical CPUs         ;
 ;                                                                              ;
@@ -96,7 +97,6 @@ ret
 ; This subroutine must be compliant Microsoft x64 calling convention,          ;
 ; include non-volatile requirements for XMM6-XMM15 (128 low bits only if YMM). ;
 ;------------------------------------------------------------------------------;
-
 ThreadRoutineMultiGroup:  ; Entry thread with save CPU context and stack alignment
 push rbx rsi rdi rbp r12 r13 r14 r15
 mov rax,rsp

@@ -14,6 +14,7 @@ ProcDialogs   DD  DialogProcSysinfo
               DD  DialogProcTopologyEx
               DD  DialogProcNuma
               DD  DialogProcGroups
+              DD  DialogProcSmbios
               DD  DialogProcAcpi
               DD  DialogProcAffCpuid
 ;---------- Data for Vector Brief test scenario -------------------------------;

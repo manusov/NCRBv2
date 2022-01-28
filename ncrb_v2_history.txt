@@ -1,6 +1,15 @@
+28.01.2022. v2.01.00. Changes for x64 and ia32 versions.
+1) Added new sheet for view SMBIOS information.
+2) Added ACPI table signature to data base.
+   ASF!, Alert Standard Format.
+   Data source: Distributed Management Task Force (DMTF).
+   https://www.dmtf.org/sites/default/files/standards/documents/DSP0136.pdf
+3) Added results for tested platforms.
+
+
 13.01.2022. v2.00.18. Changes for x64 and ia32 versions.
-1) Unlock benchmark modes: Gather read AVX512, Scatter write AVX512.
-2) Add ACPI tables signatures to data base.
+1) Unlocked benchmark modes: Gather read AVX512, Scatter write AVX512.
+2) Added ACPI tables signatures to data base.
    2.1) OEMB, OEM-specific table.
         https://uefi.org/specs/ACPI/6.4/21_ACPI_Data_Tables_and_Table_Def_Language/ACPI_Data_Tables.html 
         https://github.com/Azure/WALinuxAgent/issues/1946
@@ -21,7 +30,7 @@
    2.6) PTDT, Platform Telemetry Data Table
         https://twitter.com/NikolajSchlej/status/1411469135574278145
 3) Report file size limit changed.
-4) Add results for ASUS TUF Gaming Z590-Plus WiFi.
+4) Added results for ASUS TUF Gaming Z590-Plus WiFi.
 
 
 12.12.2021. v2.00.17. Changes for x64 and ia32 versions.

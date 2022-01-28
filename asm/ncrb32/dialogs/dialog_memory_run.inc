@@ -28,8 +28,13 @@ je .wmclose
 .skip:
 xor eax,eax
 jmp .finish
-;--- WM_INITDIALOG handler: create child window: memory performance report ----;
-.wminitdialog:                   ; Build main window 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;    WM_INITDIALOG handler: create child window: memory performance report.    ;      
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.wminitdialog: 
 mov ax,BINDER_BUILD_MEMORY_RUN
 call Binder
 mov ax,BINDER_BUILD_MEMORY_MBPS
@@ -50,12 +55,22 @@ push esi
 push PARM_HWNDDLG
 call [SetWindowText]
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
-; Detect click "OK" button at results window
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;              WM_COMMAND handler: interpreting user input.                    ;
+;              Detect click "OK" button at results window.                     ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 cmp PARM_WPARAM,IDB_MR_OK 
 jne .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 push 1                           ; Parm#2 = Result for return
 push ebx                         ; Parm#1 = Window handle

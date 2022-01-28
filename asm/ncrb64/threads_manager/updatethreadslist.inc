@@ -37,6 +37,7 @@ ret
 .error:
 stc             ; CF = 1 means error
 ret
+
 ;--- Same operation for thread routine, ---------------------------------------;
 ;    this required for latency measurement mode,                               ;
 ;    when change fill pattern to walk pattern                                  ;
@@ -56,6 +57,7 @@ add rcx,THCTRL_SIZE                ; RCX = threads entries pointer
 dec r8d                            ; R8D = threads entries counter
 jnz .update 
 ret
+
 ;--- Same operation for adaptive mode repeats count, --------------------------;
 ;    this required for adaptive repeats mode,                                  ;
 ;    when change Repeats count = F ( Block size )                              ;

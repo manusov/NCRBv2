@@ -139,9 +139,12 @@ mov [DYNA_PTR.textNuma.objectStop],rbp
 ret
 
 ;--- Pre-blank string with CR, LF, write parameter name, set text pointers ----;
+;                                                                              ;
 ; INPUT:   RBP = Pointer to destination buffer                                 ;
 ;          EAX = Number write to string                                        ; 
+;                                                                              ;
 ; OUTPUT:  RBP = Updated pointer to destination buffer                         ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperNumberString:
 push rcx rax

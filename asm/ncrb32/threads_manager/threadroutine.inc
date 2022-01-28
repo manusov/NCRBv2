@@ -52,6 +52,7 @@ call [SetEvent]                    ; Call WinAPI function
 pop ebp edi esi ebx
 xor eax,eax                        ; EAX = 0, return code = 0
 ret 4 
+
 ;---------- Thread routine, called by OS callback mechanism -------------------;
 ; Variant with support Processor Groups, systems with >64 logical CPUs         ;
 ;                                                                              ;

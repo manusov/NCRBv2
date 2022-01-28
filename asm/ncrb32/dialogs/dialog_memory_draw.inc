@@ -37,8 +37,14 @@ mov eax,1
 .finish:
 pop edi esi ebx ebp
 ret 16
-;--- WM_INITDIALOG handler: create child window: memory performance draw ------;
-.wminitdialog:                   ; Build main window 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                           WM_INITDIALOG handler:                             ;
+;                 create child window: memory performance draw.                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.wminitdialog: 
 mov ax,BINDER_BUILD_MEMORY_DRAW
 call Binder 
 mov [GUI_PARMS.childWinHandle],ebx
@@ -118,7 +124,13 @@ call [WaitForSingleObject]
 ;---------- End of initialization, enable draw counter ------------------------;
 mov [GUI_PARMS.childWinRunning],1
 jmp .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                            WM_CLOSE handler:                                 ; 
+;                  close window, include for "Cancel" button.                  ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 ;---------- Stop measurement thread -------------------------------------------;
 mov [DRAW_THREAD_PARMS.measureBreak],1
@@ -160,7 +172,13 @@ push 1                           ; Parm#2 = Result for return
 push ebx                         ; Parm#1 = Window handle
 call [EndDialog]
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                           WM_COMMAND handler:                                ;
+;                        interpreting user input.                              ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 cmp PARM_WPARAM,IDB_MD_CANCEL  ; Detect click "Exit" button in the draw child window
 je .wmclose
@@ -208,14 +226,14 @@ mov [DRAW_PARMS.timerCount],0
 lea edi,[DRAW_THREAD_PARMS]
 finit
 cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .L40
+jae .nanoseconds
 fld [edi + DTHP.statMbpsMax]
 push 90 10
-jmp .L41
-.L40:
+jmp .scalingDone
+.nanoseconds:
 fld [edi + DTHP.statNspiMax]
 push 9 2
-.L41:
+.scalingDone:
 fidiv dword [esp + 4]
 fimul dword [esp]
 fistp dword [esp + 4]
@@ -240,28 +258,41 @@ push [DRAW_THREAD_PARMS.eventStart]  ; Parm#1 = Handle for start event
 call [WaitForSingleObject]
 mov [GUI_PARMS.childWinRunning],1
 jmp .processed
-;---------- WM_TIMER handler --------------------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                             WM_TIMER handler:                                ;
+;                 timer event handler for timer tick callback,                 ;
+;           set revisualization request by screen data invalidation.           ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmtimer:
 lea ecx,[GUI_PARMS.childWinRunning]
 lea edx,[DRAW_PARMS.timerCount]    ; For two variables: COUNT, PREVIOUS Y
 xor eax,eax
 ;--------- Check session running ----------------------------------------------;
 cmp [ecx],al               ; 0=Stop, 1=First, 2=Progress
-je .SkipTimer              ; Skip if halted
+je .skipTimer              ; Skip if halted
 inc dword [edx]            ; Counter +1
 ;---------- Check session abort -----------------------------------------------;
 cmp [DRAW_THREAD_PARMS.measureBreak],0
-je .YetNotHalt 
+je .yetNotHalt 
 mov [ecx],al               ; Running=0 means HALTED
 ;---------- Set revisualization request ---------------------------------------;
-.YetNotHalt:
-push 0         ; Parm#3 = Background erase flag, 0=Background unchanged
-push 0         ; Parm#2 = Pointer to invalidated region, 0=All window
-push ebx       ; Parm#1 = Window handle
-call [InvalidateRect]      ; This cause callback WM_PAINT operation
-.SkipTimer:
+.yetNotHalt:
+push 0                 ; Parm#3 = Background erase flag, 0=Background unchanged
+push 0                 ; Parm#2 = Pointer to invalidated region, 0=All window
+push ebx               ; Parm#1 = Window handle
+call [InvalidateRect]  ; This cause callback WM_PAINT operation
+.skipTimer:
 jmp .processed
-;---------- WM_PAINT handler --------------------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                             WM_PAINT handler:                                ;
+;  draw text strings, coordinate axises, charts performance = f( block size ). ;                                  
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmpaint:
 push ebx
 ;---------- Make paint context ------------------------------------------------;
@@ -272,9 +303,9 @@ mov [GC_PARMS.handleDC],eax
 ;---------- Prepare non-volatile parms, select handler = F (execution phase) --; 
 mov al,[GUI_PARMS.childWinRunning]
 cmp al,0                   ; 0 = Halted
-je .EndPaint
+je .endPaint
 cmp al,1                   ; 1 = First drawings (grid)
-je .FirstPaint             ; Go if this is first pass, draw axes
+je .firstPaint             ; Go if this is first pass, draw axes
 ;---------- Continue draw y=f(x), not a first pass, setup drawings ------------;
 lea ecx,[DRAW_THREAD_PARMS]            ; ECX = Pointer to draw parameters block
 lea edi,[ecx + DTHP.measureArray]      ; EDI = Pointer to measure data array
@@ -286,10 +317,10 @@ shl eax,3         ; 2^3 = 8 bytes per entry (QWORD)
 add edi,eax       ; EDI = Positioning pointer to current entry
 mov [ecx + DTHP.visualCounter],ebp
 sub ebp,ebx       ; EBP = Required number of pixels for visual now
-jbe .EndLine      ; Go if now present data already visualized
+jbe .endLine      ; Go if now present data already visualized
 add ebx,GRIDBLANKX + 1 
 ;---------- This cycle for EBP points draw per one timer tick -----------------;
-.DrawLine: 
+.drawLine: 
 ; Calculate EAX = F(measurement result)
 ; Remember about can use integer compare for floation point operands,
 ; because shifted order. Instead FCOM / FSTSW AX / SAHF.
@@ -317,26 +348,26 @@ fst [DRAW_THREAD_PARMS.statMbpsSum]  ; store average MBPS, averaging separately
 fidiv dword [esp]                    ; this access to ESI in the stack
 fstp [DRAW_THREAD_PARMS.statMbpsAverage]
 pop esi
-;--- Median ordering, also used for min/max, ordering by "bubble" method ------;
-; Note floating point values can be ordered by integer compare,
+;--- Median sorting, also used for min/max, sorting by "bubble" method --------;
+; Note floating point values can be sorted by integer compare,
 ; because shifted exponent used at FP format
 push ebx edi ebp
-.L23:
+.sortingRestart:
 lea ecx,[esi - 1]
 lea edx,[DRAW_THREAD_PARMS.measureArray]
 mov ebx,edx                ; EBX  = Pointer to array first element, used later
 lea edi,[edx + ecx*8]      ; EDI = Pointer to array last element, used later
-jecxz .L21                 
+jecxz .sortingStop                 
 xor eax,eax
-.L20:
+.sortingCycle:
 mov ebp,[edx + 0 + 4]
 cmp ebp,[edx + 8 + 4]
-jb .L22
-ja .L24
+jb .sorted
+ja .unsorted
 mov ebp,[edx + 0 + 0]
 cmp ebp,[edx + 8 + 0]
-jbe .L22
-.L24:
+jbe .sorted
+.unsorted:
 mov ebp,[edx + 0 + 0]
 xchg ebp,[edx + 8 + 0]
 mov [edx + 0 + 0],ebp
@@ -344,13 +375,13 @@ mov ebp,[edx + 0 + 4]
 xchg ebp,[edx + 8 + 4]
 mov [edx + 0 + 4],ebp
 mov al,1
-.L22:
+.sorted:
 add edx,8
 dec ecx
-jnz .L20        ; DEC/JNZ faster then LOOP
+jnz .sortingCycle                  ; DEC/JNZ faster then LOOP
 test eax,eax
-jnz .L23 
-.L21:
+jnz .sortingRestart 
+.sortingStop:
 ;---------- Get minimum and maximum after median ordering ---------------------;
 ; minimum time - maximum bandwidth
 fld qword [ebx]                    ; ST0 = first element, minimum CPI
@@ -370,12 +401,12 @@ fstp [DRAW_THREAD_PARMS.statMbpsMin]
 lea ecx,[esi - 1]
 shr ecx,1                     ; This branch for median ODD-sized array
 fld qword [ebx + ecx*8]       ; Get median
-jnc .L30                      ; Go if median for ODD size
+jnc .oddMedianCpi             ; Go if median for ODD size
 fadd qword [ebx + ecx*8 + 8]
 fld1
 fadd st0,st0
 fdivp st1,st0
-.L30:
+.oddMedianCpi:
 fst [DRAW_THREAD_PARMS.statCpiMedian]
 call HelperCPItoNSPI
 fstp [DRAW_THREAD_PARMS.statNspiMedian]
@@ -387,7 +418,7 @@ pushf
 call HelperCPItoNSPI
 call HelperNSPItoMBPS
 popf
-jnc .L31                       ; Go if median for ODD size
+jnc .oddMedianMbps             ; Go if median for ODD size
 fld qword [ebx + ecx*8 + 8]
 call HelperCPItoNSPI
 call HelperNSPItoMBPS
@@ -395,23 +426,23 @@ faddp st1,st0
 fld1
 fadd st0,st0
 fdivp st1,st0
-.L31:
+.oddMedianMbps:
 fstp [DRAW_THREAD_PARMS.statMbpsMedian]
 pop ebp edi ebx
 ;---------- Start calculations for drawings Y = f( CPI ) ----------------------;
 ; ST0 = current value, loaded before re-ordering
 call HelperCPItoNSPI
 cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .L50
+jae .skipMbpsConversion
 call HelperNSPItoMBPS
-.L50:
+.skipMbpsConversion:
 fmul [DRAW_PARMS.yMultiplier]  ; ST0 = Pixel offset from BaseY=0, negative offset
 push eax
 fistp dword [esp]
 pop eax
 ;---------- Setup coordinates for GUI -----------------------------------------;
 ; note at this point can set EAX=0 for draw horizontal line DEBUG.
-add eax,SUBWINY-GRIDBLANKY - 1
+add eax,SUBWINY - GRIDBLANKY - 1
 lea edx,[ebx + 1]
 lea ecx,[eax + 1]
 ;--- Work with Y-coordinate, adjust Y-coordinates for make solid line by Y ----;
@@ -445,19 +476,19 @@ pop esi
 push ebp edi
 mov ebp,[MEM_IPB.updatedApprox]
 test ebp,ebp
-jz .NoApproxMode
+jz .noApproxMode
 mov edi,00001111b
 cmp ebp,APPROX_X16
-je .CheckApproxMode
+je .checkApproxMode
 mov edi,00011111b
-.CheckApproxMode:
+.checkApproxMode:
 test esi,edi
-jnz .NoApproxMode
+jnz .noApproxMode
 dec ebx
 dec eax
 add edx,2  
 add ecx,2
-.NoApproxMode:
+.noApproxMode:
 pop edi ebp
 ;---------- Build RECT structure with rectangle points coordinates ------------;
 push edi
@@ -476,12 +507,12 @@ add edi,8      ; EDI = Pointer to measurement results array
 inc esi        ; ESI = Divisor for averaging
 inc ebx        ; EBX = X-coordinate offset by visualization position
 dec ebp        ; EBP = Number of pixels per timer tick
-jnz .DrawLine  ; This cycle for EBP points draw per one timer tick
-.EndLine:
-jmp .RedrawTexts
+jnz .drawLine  ; This cycle for EBP points draw per one timer tick
+.endLine:
+jmp .redrawTexts
 ;--- This branch for first paint ----------------------------------------------;
 ; draw statical elements, not changed when draw
-.FirstPaint:
+.firstPaint:
 mov [GUI_PARMS.childWinRunning],2
 mov [DRAW_PARMS.timerCount],0
 ;---------- Draw --------------------------------------------------------------;
@@ -508,7 +539,7 @@ call [FillRect]
 ;---------- Coordinate X-grid, vertical lines ---------------------------------;
 mov esi,GRIDBLANKX          ; ESI = Base point, X
 mov edi,GRIDX               ; EDI = Number of lines
-.XVgrid:
+.xVgrid:
 lea eax,[esi + 1]           ; Line width = 1 pixel
 mov [ebx + RECT.left],esi
 mov [ebx + RECT.top],0
@@ -520,11 +551,11 @@ push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
 call [FillRect]             ; Fill rectangle function
 add esi,GRIDSTEPX           ; Add X grid step
 dec edi                     ; Cycle for X-grid vertical lines
-jnz .XVgrid
+jnz .xVgrid
 ;---------- Coordinate Y-grid, horizontal lines -------------------------------;
 mov esi,SUBWINY-GRIDBLANKY  ; ESI = Base point, Y
 mov edi,GRIDY               ; EDI = Number of lines
-.YHgrid:
+.yHgrid:
 lea eax,[esi - 1]
 mov [ebx + RECT.left],GRIDBLANKX
 mov [ebx + RECT.top],eax
@@ -536,7 +567,7 @@ push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
 call [FillRect]             ; Fill rectangle function
 sub esi,GRIDSTEPY           ; Subtract Y grid step
 dec edi                     ; Cycle for Y-grid vertical lines
-jnz .YHgrid
+jnz .yHgrid
 ;---------- Initializing for grid texts write ---------------------------------;
 ; Initializing values for X-grid vertical lines and
 ; Y-grid horizontal lines texts
@@ -546,7 +577,7 @@ mov edi,SUBWINY-20      ; EDI = Base point Y, 20 pixels up
 xor ebp,ebp             ; EBP = Units value, X starts from 0
 ;---------- This cycle both for X and Y grids texts ---------------------------; 
 ; X/Y logic dynamically selected 
-.BothGrids:
+.bothGrids:
 ;---------- Build ASCII string ------------------------------------------------;
 push ebx edi
 lea edi,[TEMP_BUFFER]
@@ -562,14 +593,14 @@ pop edi ebx
 ;---------- Calculate correction value for Y axis grid values print -----------;
 mov edx,9
 sub edx,ecx         ; R10 = chars positions count
-jbe .RejectAddend   ; Go skip if correction not required 
+jbe .rejectAddend   ; Go skip if correction not required 
 imul edx,edx,7
 ;---------- Reject corrections if horizontal axis or overflow -----------------;
 cmp bh,1            ; BH=1 means Y-mode , BH=2 means X-mode
-je .DoneAddend      ; Go with EDX = correction if branch for vertical axis text 
-.RejectAddend:
+je .doneAddend      ; Go with EDX = correction if branch for vertical axis text 
+.rejectAddend:
 xor edx,edx
-.DoneAddend:
+.doneAddend:
 ;---------- Set region for text string write ----------------------------------;
 lea eax,[edi + 18]    ; EAX = Y coordinate down/right corner  
 push eax              ; Parm#5 = Y coordinate down/right corner
@@ -580,7 +611,7 @@ lea eax,[esi + edx]
 push eax              ; Parm#2 = X coordinate up/left corner
 push GRAPH_RECT       ; Parm#1 = Pointer to RECT structure to store parameters
 call [SetRect]        ; Set region rectangle function 
-; Draw text
+;---------- Draw text ---------------------------------------------------------;
 push DT_LEFT          ; Parm#5 = Method of formatting/alignment of text string
 push GRAPH_RECT       ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
 push -1               ; Parm#3 = String length, -1 means NULL-terminated string
@@ -590,25 +621,25 @@ call [DrawText]        ; Draw text function
 ;---------- Cycle for lines of selected grid ----------------------------------;
 lea ecx,[DRAW_PARMS]
 cmp bh,1                          ; BH=1 means Y-mode , BH=2 means X-mode
-je .YGrid
+je .yGrid
 ;---------- X-mode entry point ------------------------------------------------;
 add ebp,[ecx + DRPM.valueGridX]   ; Addend per X grid
 add esi,GRIDSTEPX
-jmp .CycleGrids
+jmp .cycleGrids
 ;---------- Y-mode entry point ------------------------------------------------;
-.YGrid:
+.yGrid:
 add ebp,[ecx + DRPM.valueGridY]   ; Addend per Y grid
 sub edi,GRIDSTEPY
-.CycleGrids:
+.cycleGrids:
 dec bl
-jnz .BothGrids
+jnz .bothGrids
 ;---------- Cycle for horizontal and vertical grids ---------------------------;
 mov bl,GRIDY - 1                              ; BL = Number of lines, Y
 mov esi,GRIDBLANKX - 68                       ; ESI = X coordinate
 mov edi,SUBWINY-GRIDBLANKY - GRIDSTEPY - 15   ; EDI = Y coordinate
 mov ebp,[ecx + DRPM.valueGridY]  ; EBP = Units value, Y starts with offset
 dec bh             ; BH = Counter, Pass#1 = XGrid (BH=2), Pass#2 = YGrid (BH=1)
-jnz .BothGrids
+jnz .bothGrids
 push COLOR_TEXT_UNITS     ; Parm#2 = Text front color value = 00bbggrrh
 push [GC_PARMS.handleMemDC]        ; Parm#1 = Handle to a Device Context
 call [SetTextColor]
@@ -700,7 +731,7 @@ push COLOR_TEXT_DUMP         ; Parm#2 = Text front color value = 00bbggrrh
 push [GC_PARMS.handleMemDC]  ; Parm#1 = Handle to a Device Context
 call [SetTextColor]
 xor eax,eax
-.AsmDump:
+.asmDump:
 ;---------- Write string for one hex byte -------------------------------------;
 push eax
 push eax
@@ -735,7 +766,7 @@ call HelperTextConstDraw
 pop esi eax
 inc eax
 dec ebp
-jnz .AsmDump 
+jnz .asmDump 
 .skipAsmDump:
 ;---------- TSC clock frequency -----------------------------------------------;
 lea edi,[DRAW_TSC_VALUE]
@@ -760,7 +791,7 @@ mov eax,6+18                ; EAX = Y coordinate down/right corner
 lea esi,[DRAW_TSC]          ; ESI = Pointer to text string
 call HelperTextConstDraw
 ;---------- This text strings must be updated at each visualization tick ------;
-.RedrawTexts:
+.redrawTexts:
 ;--- Initializing parameters for benchmark statistics, bandwidth and timings --;
 mov ebp,0300h
 ;---------- Print timings statistics, CPI minimum, maximum, average, median ---;
@@ -785,7 +816,7 @@ mov edx,SUBWINX - 250 + 64*2
 mov ebx,SUBWINX - 150 + 64*2 
 call HelperWriteStatisticsYconst
 ;---------- End of prepare, visual prepared objects ---------------------------;
-.DrawVisual:
+.drawVisual:
 xor eax,eax          ; EAX = 0 for compact push 0
 push SRCCOPY         ; Parm#9 = Raster operation code
 push eax             ; Parm#8 = Y source
@@ -798,7 +829,7 @@ push SHIFTX          ; Parm#2 = X destination
 push [GC_PARMS.handleDC]      ; Parm#1 = Handle of destination Device Context
 call [BitBlt]                       
 ;---------- Delete paint context ----------------------------------------------;
-.EndPaint:
+.endPaint:
 push PAINT_STRUCT       ; Parm#2 = Pointer to PAINTSTRUCT structure
 push dword [esp + 4]    ; Parm#1 = Parent window handle
 call [EndPaint]         ; This WinAPI returns BOOL status, but ignored
@@ -904,15 +935,15 @@ mov ebx,ebp          ; BH, BL = template
 mov eax,esi          ; EDX:EAX = value, double
 mov edx,edi
 test eax,eax
-jnz .L1
+jnz .valueGood
 test edx,edx
-jz .L0
-.L1:
+jz .valueSkip
+.valueGood:
 push edi
 lea edi,[TEMP_BUFFER]
 call DoublePrint
 pop edi
-.L0:
+.valueSkip:
 pop edx ecx ebx eax
 ;---------- Draw text string --------------------------------------------------;
 push esi

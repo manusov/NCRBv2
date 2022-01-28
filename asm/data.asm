@@ -1,7 +1,7 @@
 ;=========================================================================================================;
 ;                                                                                                         ;
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
-; (C)2021 Ilya Manusov.                                                                                   ;
+; (C)2022 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
 ; Previous version v1.xx.xx                                                                               ; 
 ; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
@@ -15,7 +15,7 @@
 ; See also other components:                                                                              ;
 ; NCRB32.ASM, NCRB64.ASM, KMD32.ASM, KMD64.ASM.                                                           ;
 ;                                                                                                         ;
-; Translation by Flat Assembler version 1.73.27 ( Jan 27, 2021 ).                                         ;
+; Translation by Flat Assembler version 1.73.29 ( Dec 18, 2021 ).                                         ;
 ; http://flatassembler.net/                                                                               ;
 ;                                                                                                         ;
 ; Edit by FASM Editor 2.0.                                                                                ; 
@@ -28,6 +28,9 @@
 ; User mode debug by FDBG ( 64-bit, actual for module NCRB64.EXE )                                        ;
 ; https://board.flatassembler.net/topic.php?t=9689&postdays=0&postorder=asc&start=180                     ;
 ; ( Search for archive fdbg0025.zip )                                                                     ;
+;                                                                                                         ;
+; User mode debug by x64dbg ( 32 and 64-bit, actual for modules NCRB32.EXE, NCRB64.EXE )                  ;
+; https://x64dbg.com/                                                                                     ;
 ;                                                                                                         ;
 ; Intel Software Development Emulator ( SDE ) used for debug                                              ;
 ; https://software.intel.com/content/www/us/en/develop/articles/intel-software-development-emulator.html  ;
@@ -47,7 +50,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.0.18.0'
+RESOURCE_VERSION      EQU  '2.1.0.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -76,6 +79,7 @@ IDD_TOPOLOGY           , LANG_ENGLISH + SUBLANG_DEFAULT, tabTopology      , \
 IDD_TOPOLOGY_EX        , LANG_ENGLISH + SUBLANG_DEFAULT, tabTopologyEx    , \
 IDD_NUMA               , LANG_ENGLISH + SUBLANG_DEFAULT, tabNuma          , \
 IDD_PGROUPS            , LANG_ENGLISH + SUBLANG_DEFAULT, tabPgroups       , \
+IDD_SMBIOS             , LANG_ENGLISH + SUBLANG_DEFAULT, tabSmbios        , \
 IDD_ACPI               , LANG_ENGLISH + SUBLANG_DEFAULT, tabAcpi          , \
 IDD_AFF_CPUID          , LANG_ENGLISH + SUBLANG_DEFAULT, tabAffCpuid      , \
 IDD_CHILD_MEMORY_RUN   , LANG_ENGLISH + SUBLANG_DEFAULT, childMemoryRun   , \
@@ -324,7 +328,15 @@ dialogitem  'EDIT'        , '', IDE_P_GROUPS_TEXT   ,   3,  30, 400, 198, WS_VIS
 dialogitem  'BUTTON'      , '', IDB_P_GROUPS_REPORT , 323, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT + WS_DISABLED
 dialogitem  'BUTTON'      , '', IDB_P_GROUPS_CANCEL , 362, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog                                   
-;---------- Tab 9 = ACPI tables list ------------------------------------------; 
+;---------- Tab 9 = SMBIOS structures list ------------------------------------;
+dialog      tabSmbios     , '',                         2,  30, 403, 253, WS_CHILD + WS_VISIBLE, 0, 0, 'Verdana', 10
+dialogitem  'STATIC'      , '', IDC_SMBIOS          ,   2,   3, 380,  10, WS_VISIBLE
+dialogitem  'EDIT'        , '', IDE_SMBIOS_UP       ,   3,  17, 400,  10, WS_VISIBLE + WS_BORDER + ES_READONLY
+dialogitem  'EDIT'        , '', IDE_SMBIOS_TEXT     ,   3,  30, 400, 198, WS_VISIBLE + WS_BORDER + ES_MULTILINE + ES_AUTOHSCROLL + ES_AUTOVSCROLL + ES_READONLY + WS_VSCROLL
+dialogitem  'BUTTON'      , '', IDB_SMBIOS_REPORT   , 323, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT + WS_DISABLED
+dialogitem  'BUTTON'      , '', IDB_SMBIOS_CANCEL   , 362, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
+enddialog                                   
+;---------- Tab 10 = ACPI tables list -----------------------------------------; 
 dialog      tabAcpi       , '',                         2,  30, 403, 253, WS_CHILD + WS_VISIBLE, 0, 0, 'Verdana', 10
 dialogitem  'STATIC'      , '', IDC_ACPI            ,   2,   3, 380,  10, WS_VISIBLE
 dialogitem  'EDIT'        , '', IDE_ACPI_UP_1       ,   3,  17, 400,  10, WS_VISIBLE + WS_BORDER + ES_READONLY
@@ -334,7 +346,7 @@ dialogitem  'EDIT'        , '', IDE_ACPI_TEXT_2     ,   3, 139, 400,  89, WS_VIS
 dialogitem  'BUTTON'      , '', IDB_ACPI_REPORT     , 323, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT + WS_DISABLED
 dialogitem  'BUTTON'      , '', IDB_ACPI_CANCEL     , 362, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog                                   
-;---------- Tab 10 = affinized CPUID dump, per each logical CPU ---------------; 
+;---------- Tab 11 = affinized CPUID dump, per each logical CPU ---------------; 
 dialog      tabAffCpuid   , '',                         2,  30, 403, 253, WS_CHILD + WS_VISIBLE, 0, 0, 'Verdana', 10
 dialogitem  'STATIC'      , '', IDC_AFF_CPUID       ,   2,   3, 380,  10, WS_VISIBLE
 dialogitem  'EDIT'        , '', IDE_A_CPUID_UP      ,   3,  17, 400,  10, WS_VISIBLE + WS_BORDER + ES_READONLY
@@ -487,18 +499,19 @@ menuitem '&About...'    , IDM_ABOUT, MFR_END
 ; Note. Strings represented as raw resources ( not as string resources ) for
 ; compact encoding: 1 byte per char.  
 resource raws, \
-IDS_STRINGS_POOL    , LANG_ENGLISH + SUBLANG_DEFAULT , stringsPool       , \
-IDS_BINDERS_POOL    , LANG_ENGLISH + SUBLANG_DEFAULT , bindersPool       , \ 
-IDS_CPU_COMMON_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , cpuCommonFeatures , \ 
-IDS_CPU_AVX512_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , cpuAvx512Features , \
-IDS_OS_CONTEXT_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , osContextFeatures , \
-IDS_INTEL_CACHE     , LANG_ENGLISH + SUBLANG_DEFAULT , intelCache        , \
-IDS_ACPI_DATA_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , acpiData          , \
-IDS_IMPORT_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , importList        , \ 
-IDS_FONTS_POOL      , LANG_ENGLISH + SUBLANG_DEFAULT , fontList          , \
-IDS_BRUSHES_POOL    , LANG_ENGLISH + SUBLANG_DEFAULT , brushesList       , \ 
-IDS_BITMAP_INFO     , LANG_ENGLISH + SUBLANG_DEFAULT , bitmapInfo        , \
-IDS_REPORT_INFO     , LANG_ENGLISH + SUBLANG_DEFAULT , reportInfo 
+IDS_STRINGS_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , stringsPool       , \
+IDS_BINDERS_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , bindersPool       , \ 
+IDS_CPU_COMMON_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , cpuCommonFeatures , \ 
+IDS_CPU_AVX512_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , cpuAvx512Features , \
+IDS_OS_CONTEXT_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , osContextFeatures , \
+IDS_INTEL_CACHE      , LANG_ENGLISH + SUBLANG_DEFAULT , intelCache        , \
+IDS_SMBIOS_DATA_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , smbiosData        , \ 
+IDS_ACPI_DATA_POOL   , LANG_ENGLISH + SUBLANG_DEFAULT , acpiData          , \
+IDS_IMPORT_POOL      , LANG_ENGLISH + SUBLANG_DEFAULT , importList        , \ 
+IDS_FONTS_POOL       , LANG_ENGLISH + SUBLANG_DEFAULT , fontList          , \
+IDS_BRUSHES_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , brushesList       , \ 
+IDS_BITMAP_INFO      , LANG_ENGLISH + SUBLANG_DEFAULT , bitmapInfo        , \
+IDS_REPORT_INFO      , LANG_ENGLISH + SUBLANG_DEFAULT , reportInfo 
 ;---------- Raw resource for strings pool -------------------------------------;
 resdata stringsPool
 ;---------- Brief names for application sheets --------------------------------; 
@@ -510,6 +523,7 @@ DB  'topology'          , 0
 DB  'extended topology' , 0
 DB  'numa domains'      , 0
 DB  'processor groups'  , 0
+DB  'smbios'            , 0
 DB  'acpi'              , 0
 DB  'affinized cpuid'   , 0
 ;---------- Full names for application sheets --------------------------------;
@@ -521,6 +535,7 @@ DB  'Platform topology by WinAPI GetLogicalProcessorInformation().'             
 DB  'Platform topology by WinAPI GetLogicalProcessorInformationEx().'                          , 0
 DB  'NUMA domains list by WinAPI GetNumaHighestNodeNumber() and other.'                        , 0
 DB  'Processor groups list by WinAPI GetActiveProcessorGroupCount() and other.'                , 0
+DB  'SMBIOS structures list by WinAPI EnumSystemFirmwareTables() and other.'                   , 0
 DB  'ACPI tables list by WinAPI EnumSystemFirmwareTables() and other.'                         , 0
 DB  'CPUID per each thread affinized by WinAPI SetThreadAffinityMask().'                       , 0
 ;---------- Title names for child windows -------------------------------------;
@@ -762,6 +777,7 @@ DB  ' Topology unit  | Logical CPU affinity | Comments'                   , 0
 DB  ' Cache          | Size                 | Count'                      , 0
 DB  ' NUMA domain  | Affinity (hex)           | Available memory at node' , 0
 DB  ' Group  | Processors count'                                          , 0
+DB  ' Offset(h) | Type | Length | Details'                                , 0 
 DB  ' Sign | OEM ID | OEM Table ID | Creator ID | OEM Rev   | Creator Rev | Rev' , 0
 DB  ' Summary'                                                            , 0
 DB  ' Thread   | Function   | EAX      | EBX      | ECX      | EDX'       , 0
@@ -811,6 +827,13 @@ DB  'x '           , 0
 DB  'Processor group' , 0
 DB  'efficiency='     , 0
 DB  'smt='            , 0
+;---------- Strings for SMBIOS information text -------------------------------;
+DB  'UNKNOWN structure type'  , 0
+DB  'Version '                , 0
+DB  ', method='               , 0
+DB  ', DMIrev='               , 0
+DB  ', Length='               , 0
+DB  ' bytes'                  , 0
 ;---------- Strings for ACPI information text ---------------------------------;
 DB  'UNKNOWN table signature' , 0
 ;---------- Strings for child screen = Memory and cache performance report ----;
@@ -1299,6 +1322,15 @@ SET_STRING  STR_GROUPS           , IDE_P_GROUPS_UP
 SET_PTR     BINDLIST.viewGroup   , IDE_P_GROUPS_TEXT 
 SET_STRING  STR_REPORT           , IDB_P_GROUPS_REPORT
 SET_STRING  STR_EXIT             , IDB_P_GROUPS_CANCEL
+BIND_STOP
+;---------- GUI binder script for SMBIOS information screen -------------------;
+SET_STRING  STR_FULL_SMBIOS      , IDC_SMBIOS
+SET_FONT    ID_FONT_2            , IDE_SMBIOS_UP 
+SET_FONT    ID_FONT_2            , IDE_SMBIOS_TEXT
+SET_STRING  STR_SMBIOS           , IDE_SMBIOS_UP
+SET_PTR     BINDLIST.viewSmbios  , IDE_SMBIOS_TEXT 
+SET_STRING  STR_REPORT           , IDB_SMBIOS_REPORT
+SET_STRING  STR_EXIT             , IDB_SMBIOS_CANCEL
 BIND_STOP
 ;---------- GUI binder script for ACPI information screen ---------------------;
 SET_STRING  STR_FULL_ACPI        , IDC_ACPI
@@ -2006,10 +2038,60 @@ L3U 0EBh, 18432  ; { 0xEB, "code and data L3 cache, 18432-kb, 24 ways, 64 byte l
 L3U 0ECh, 24576  ; { 0xEC, "code and data L3 cache, 24576-kb, 24 ways, 64 byte lines" } ,  
 END_CACHE        ; List terminator
 endres
+;---------- SMBIOS structures data base ---------------------------------------;
+resdata smbiosData
+DB  'BIOS Information'                          , 0
+DB  'System Info'                               , 0
+DB  'Baseboard'                                 , 0
+DB  'Chassis'                                   , 0
+DB  'Processor'                                 , 0
+DB  'Memory Controller'                         , 0
+DB  'Memory Module'                             , 0
+DB  'Cache Information'                         , 0
+DB  'Port Connector'                            , 0
+DB  'System Slots'                              , 0
+DB  'On Board Devices'                          , 0
+DB  'OEM Strings'                               , 0
+DB  'System Configuration Options'              , 0
+DB  'BIOS Language'                             , 0
+DB  'Group Associations'                        , 0
+DB  'System Event Log'                          , 0
+DB  'Physical Memory Array'                     , 0
+DB  'Memory Device'                             , 0
+DB  '32-Bit Memory Error'                       , 0
+DB  'Memory Array Mapped Address'               , 0
+DB  'Memory Device Mapped Address'              , 0
+DB  'Built-in Pointing Device'                  , 0
+DB  'Portable Battery'                          , 0
+DB  'System Reset'                              , 0
+DB  'Hardware Security'                         , 0
+DB  'System Power Controls'                     , 0
+DB  'Voltage Probe'                             , 0
+DB  'Cooling Device'                            , 0
+DB  'Temperature Probe'                         , 0
+DB  'Electrical Current Probe'                  , 0
+DB  'Out-of-Band Remote Access'                 , 0
+DB  'Boot Integrity Services (BIS) Entry Point' , 0
+DB  'System Boot Information'                   , 0
+DB  '64-Bit Memory Error'                       , 0
+DB  'Management Device'                         , 0
+DB  'Management Device Component'               , 0
+DB  'Management Device Threshold Data'          , 0
+DB  'Memory Channel'                            , 0
+DB  'IPMI Device Information'                   , 0
+DB  'System Power Supply'                       , 0
+DB  'Additional Information'                    , 0
+DB  'Onboard Devices Extended'                  , 0
+DB  'Management Controller Host Interface'      , 0
+DB  'TPM Device'                                , 0
+DB  'Processor Additional Information'          , 0
+DB  0
+endres
 ;---------- ACPI tables data base ---------------------------------------------; 
 resdata acpiData
 DB  'AEST' , 'Arm Error Source'                                 , 0
 DB  'APIC' , 'Multiple APIC Description'                        , 0
+DB  'ASF!' , 'Alert Standard Format'                            , 0
 DB  'BDAT' , 'BIOS Data ACPI'                                   , 0
 DB  'BERT' , 'Boot Error Record'                                , 0
 DB  'BGRT' , 'Boot Graphics Resource'                           , 0
@@ -2162,6 +2244,7 @@ DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY
 DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY_SUMMARY
 DW  STR_FULL_NUMA        , STR_NUMA
 DW  STR_FULL_P_GROUPS    , STR_GROUPS
+DW  STR_FULL_SMBIOS      , STR_SMBIOS
 DW  STR_FULL_ACPI        , STR_ACPI_LIST
 DW  STR_FULL_ACPI        , STR_ACPI_SUMMARY
 DW  STR_FULL_AFF_CPUID   , STR_AFF_CPUID
@@ -2176,8 +2259,9 @@ IDI_TOPOLOGY    , LANG_NEUTRAL , iTopology   , \
 IDI_TOPOLOGY_EX , LANG_NEUTRAL , iTopologyEx , \
 IDI_NUMA        , LANG_NEUTRAL , iNuma       , \
 IDI_P_GROUPS    , LANG_NEUTRAL , iPgroups    , \
+IDI_SMBIOS      , LANG_NEUTRAL , iSmbios     , \
 IDI_ACPI        , LANG_NEUTRAL , iAcpi       , \
-IDI_AFF_CPUID   , LANG_NEUTRAL , iAffCpuid   ; , \
+IDI_AFF_CPUID   , LANG_NEUTRAL , iAffCpuid
 ;---------- Directory of group icon resources ---------------------------------;
 resource gicons, \
 IDG_SYSINFO     , LANG_NEUTRAL , gSysinfo    , \
@@ -2188,8 +2272,9 @@ IDG_TOPOLOGY    , LANG_NEUTRAL , gTopology   , \
 IDG_TOPOLOGY_EX , LANG_NEUTRAL , gTopologyEx , \
 IDG_NUMA        , LANG_NEUTRAL , gNuma       , \
 IDG_P_GROUPS    , LANG_NEUTRAL , gPgroups    , \
+IDG_SMBIOS      , LANG_NEUTRAL , gSmbios     , \
 IDG_ACPI        , LANG_NEUTRAL , gAcpi       , \
-IDG_AFF_CPUID   , LANG_NEUTRAL , gAffCpuid   ; , \
+IDG_AFF_CPUID   , LANG_NEUTRAL , gAffCpuid
 ;---------- Icon resources ----------------------------------------------------;
 icon iSysinfo    , gSysinfo    , 'images\sysinfo.ico'
 icon iMemory     , gMemory     , 'images\memory.ico'
@@ -2199,6 +2284,7 @@ icon iTopology   , gTopology   , 'images\topology.ico'
 icon iTopologyEx , gTopologyEx , 'images\topologyex.ico'
 icon iNuma       , gNuma       , 'images\numa.ico'
 icon iPgroups    , gPgroups    , 'images\pgroups.ico'
+icon iSmbios     , gSmbios     , 'images\smbios.ico'
 icon iAcpi       , gAcpi       , 'images\acpi.ico'
 icon iAffCpuid   , gAffCpuid   , 'images\affcpuid.ico'
 ;---------- Version resources -------------------------------------------------;
@@ -2209,4 +2295,3 @@ versioninfo  version_info, \
 'FileVersion'     , RESOURCE_VERSION     ,\
 'CompanyName'     , RESOURCE_COMPANY     ,\
 'LegalCopyright'  , RESOURCE_COPYRIGHT
-

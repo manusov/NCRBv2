@@ -201,8 +201,11 @@ stc
 ret
 
 ;---------- Align memory pointer, required for WinAPI calls -------------------;
+;                                                                              ;
 ; INPUT:   RBP = Pointer                                                       ;
+;                                                                              ;
 ; OUTPUT:  RBP = Aligned pointer, updated if required                          ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAlignment:
 test bpl,00001111b
@@ -213,9 +216,12 @@ add rbp,010h
 ret
 
 ;--- Write relation name string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          AX  = String ID at application strings pool                         ;
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperRelationName:
 lea rdi,[rdx + 01]
@@ -226,9 +232,12 @@ pop rsi rcx
 ret
 
 ;--- Write affinity mask string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          RSI = Pointer to parsed topology entry: affinity mask               ;
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinity:
 lea rdi,[rdx + 18]   ; RDI = Destination text pointer
@@ -295,12 +304,15 @@ ret
 
 ;--- Write number value string for text generation by topology parsing --------;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          RSI = Pointer to parsed topology entry                              ;
 ;          AL          = Parameter offset in the topology entry structure      ; 
 ;          AH          = Text string position offset at destination            ;   
 ;          EAX.[31-16] = Parameter name String ID at application strings pool  ;  
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperParameter8:         ; Entry point for addressed 8-bit parameter
 shld ebx,eax,16
@@ -333,12 +345,15 @@ jmp ParameterEntry
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   RSI = Pointer to topology information buffer                        ;
 ;          RDI = Destination text buffer                                       ;
 ;          ECX = Entries count at topology information buffer                  ;  
 ;          AL  = Cache level                                                   ;  
 ;          AH  = Cache type                                                    ;    
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCacheSummary:
 push rcx rsi rax

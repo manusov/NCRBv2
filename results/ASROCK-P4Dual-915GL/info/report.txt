@@ -1,0 +1,226 @@
+NUMA CPU&RAM Benchmarks
+v2.01.00 for Windows ia32
+(C) 2022 Ilya Manusov
+
+
+ System information by WinAPI.
+-------------------------------------------------------------------------------
+ Parameter                     | Value                      | Hex
+-------------------------------------------------------------------------------
+ Memory load                     19 %                         00000013          
+ Total physical memory           2039.3 MB                    000000007F74E000  
+ Available physical memory       1637.9 MB                    00000000665F5000  
+ Total page file                 4078.6 MB                    00000000FEE9C000  
+ Available page file             3658.6 MB                    00000000E4AA4000  
+ Total virtual user space        2047.8 MB                    000000007FFE0000  
+ Available virtual user space    2008.1 MB                    000000007D823000  
+ Extended virtual                -                            0000000000000000  
+
+ Application minimum address     64 KB                        00010000          
+ Application maximum address     2147418111 Bytes             7FFEFFFF          
+ Active processor mask           -                            00000001          
+ Processor type                  586                          0000024A          
+ Allocation granularity          64 KB                        00010000          
+ Processor level                 15                           000F              
+ Processor revision              771                          0303              
+
+ Processors at current group     1                            00000001          
+ Processors total                1                            00000001          
+ Processor groups                1                            00000001          
+ NUMA domains                    1                            00000001          
+ Normal page size                4 KB                         00001000          
+ Minimum large page size         4 MB ( DISABLED )            0000000000400000
+
+
+ Native OS information for ia32 application under x64 OS.
+-------------------------------------------------------------------------------
+ Parameter                     | Value                      | Hex
+-------------------------------------------------------------------------------
+ Application minimum address     64 KB                        00010000          
+ Application maximum address     2147418111 Bytes             7FFEFFFF          
+ Active processor mask           -                            00000001          
+ Processor type                  586                          0000024A          
+ Allocation granularity          64 KB                        00010000          
+ Processor level                 15                           000F              
+ Processor revision              771                          0303
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformation().
+-------------------------------------------------------------------------------
+ Topology unit  | Logical CPU affinity | Comments
+-------------------------------------------------------------------------------
+ CPU package      0                                                             
+ CPU core         0                      ht=0                                   
+ L1 Data          0                      ways=8   line=64      size=16384       
+ L2 Unified       0                      ways=8   line=128     size=1048576     
+ NUMA node        0                      node=0                                 
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformation().
+-------------------------------------------------------------------------------
+ Cache          | Size                 | Count
+-------------------------------------------------------------------------------
+ L1 Data          16 KB                  x 1                                    
+ L2 Unified       1 MB                   x 1                                    
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformationEx().
+-------------------------------------------------------------------------------
+ Topology unit  | Logical CPU affinity | Comments
+-------------------------------------------------------------------------------
+ CPU core         0000.0                 smt=0    efficiency=0                  
+ L1 Data          0000.0                 ways=8   line=64      size=16384       
+ L2 Unified       0000.0                 ways=8   line=128     size=1048576     
+ CPU package      0000.0                 smt=0    efficiency=0                  
+ NUMA node        0000.0                 node=0                                 
+ Processor group  0000                                                          
+
+
+
+ Platform topology by WinAPI GetLogicalProcessorInformationEx().
+-------------------------------------------------------------------------------
+ Cache          | Size                 | Count
+-------------------------------------------------------------------------------
+ L1 Data          16 KB                  x 1                                    
+ L2 Unified       1 MB                   x 1                                    
+
+
+
+ NUMA domains list by WinAPI GetNumaHighestNodeNumber() and other.
+-------------------------------------------------------------------------------
+ NUMA domain  | Affinity (hex)           | Available memory at node
+-------------------------------------------------------------------------------
+ 0              0000.0                     1637.9 MB
+
+
+ Processor groups list by WinAPI GetActiveProcessorGroupCount() and other.
+-------------------------------------------------------------------------------
+ Group  | Processors count
+-------------------------------------------------------------------------------
+ 0        1
+
+
+ SMBIOS structures list by WinAPI EnumSystemFirmwareTables() and other.
+-------------------------------------------------------------------------------
+ Offset(h) | Type | Length | Details
+-------------------------------------------------------------------------------
+ 00000000     -      8       Version 2.3, method=0, DMIrev=35, Length=470 bytes 
+
+ 00000008     0      24      BIOS Information                                   
+                             American Megatrends Inc.                           
+                             P1.20                                              
+                             03/11/2005                                         
+
+                             00 18 00 00 01 02 00 F0 03 07 80 98 8B 7F 01 00    
+                             00 00 37 01 08 0C FF FF 41 6D 65 72 69 63 61 6E    
+                             20 4D 65 67 61 74 72 65 6E 64 73 20 49 6E 63 2E    
+                             00 50 31 2E 32 30 00 30 33 2F 31 31 2F 32 30 30    
+                             35 00 00                                           
+
+ 0000004B     1      27      System Info                                        
+                                                                                
+                             P4Dual-915GL                                       
+                             1.00                                               
+                             00000000                                           
+                             00000000                                           
+                                                                                
+
+                             01 1B 01 00 01 02 03 04 00 02 00 03 00 04 00 05    
+                             00 06 00 07 00 08 00 09 06 05 06 20 20 20 20 20    
+                             20 20 20 00 50 34 44 75 61 6C 2D 39 31 35 47 4C    
+                             00 31 2E 30 30 00 30 30 30 30 30 30 30 30 00 30    
+                             30 30 30 30 30 30 30 00 20 20 20 20 20 20 20 20    
+                             00 00                                              
+
+ 0000009D     2      15      Baseboard                                          
+                                                                                
+                             P4Dual-915GL                                       
+                             1.00                                               
+                             00000000                                           
+                             00000000                                           
+                                                                                
+
+                             02 0F 02 00 01 02 03 04 05 09 06 03 00 0A 00 20    
+                             20 20 20 20 20 20 20 00 50 34 44 75 61 6C 2D 39    
+                             31 35 47 4C 00 31 2E 30 30 00 30 30 30 30 30 30    
+                             30 30 00 30 30 30 30 30 30 30 30 00 20 20 20 20    
+                             20 20 20 20 00 00                                  
+
+ 000000E3     4      35      Processor                                          
+                             CPU Socket                                         
+                             Intel                                              
+                             Intel(R) Pentium(R) 4 CPU 2.40GHz                   
+                             To Be Filled By O.E.M.                             
+                             To Be Filled By O.E.M.                             
+                             To Be Filled By O.E.M.                             
+
+                             04 23 03 00 01 03 B5 02 33 0F 00 00 FF FB EB BF    
+                             03 06 85 00 5A 09 5A 09 41 01 04 00 05 00 FF FF    
+                             04 05 06 43 50 55 20 53 6F 63 6B 65 74 00 49 6E    
+                             74 65 6C 20 20 20 20 20 20 20 20 20 20 20 20 00    
+                             49 6E 74 65 6C 28 52 29 20 50 65 6E 74 69 75 6D    
+                             28 52 29 20 34 20 43 50 55 20 32 2E 34 30 47 48    
+                             7A 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20    
+                             20 20 20 20 00 54 6F 20 42 65 20 46 69 6C 6C 65    
+                             64 20 42 79 20 4F 2E 45 2E 4D 2E 00 54 6F 20 42    
+                             65 20 46 69 6C 6C 65 64 20 42 79 20 4F 2E 45 2E    
+                             4D 2E 00 54 6F 20 42 65 20 46 69 6C 6C 65 64 20    
+                             42 79 20 4F 2E 45 2E 4D 2E 00 00                   
+
+ 0000019E     7      19      Cache Information                                  
+                             L1-Cache                                           
+
+                             07 13 04 00 01 80 02 10 00 10 00 10 00 10 00 00    
+                             05 04 07 4C 31 2D 43 61 63 68 65 00 00             
+
+ 000001BB     7      19      Cache Information                                  
+                             L2-Cache                                           
+
+                             07 13 05 00 01 81 02 00 04 00 04 10 00 10 00 00    
+                             05 05 07 4C 32 2D 43 61 63 68 65 00 00             
+
+
+
+ ACPI tables list by WinAPI EnumSystemFirmwareTables() and other.
+-------------------------------------------------------------------------------
+ Sign | OEM ID | OEM Table ID | Creator ID | OEM Rev   | Creator Rev | Rev
+-------------------------------------------------------------------------------
+ APIC   A M I    OEMAPIC        MSFT         03000511h   00000097h     1        
+ FACP   A M I    OEMFACP        MSFT         03000511h   00000097h     2        
+ MCFG   A M I    OEMMCFG        MSFT         03000511h   00000097h     1        
+ OEMB   A M I    AMI_OEM        MSFT         03000511h   00000097h     1
+
+
+ ACPI tables list by WinAPI EnumSystemFirmwareTables() and other.
+-------------------------------------------------------------------------------
+ Summary
+-------------------------------------------------------------------------------
+ APIC, Multiple APIC Description                                                
+ FACP, Fixed ACPI Description                                                   
+ MCFG, Memory Mapped Configuration                                              
+ OEMB, OEM Specific Information
+
+
+ CPUID per each thread affinized by WinAPI SetThreadAffinityMask().
+-------------------------------------------------------------------------------
+ Thread   | Function   | EAX      | EBX      | ECX      | EDX
+-------------------------------------------------------------------------------
+  0         00000000     00000005   756E6547   6C65746E   49656E69              
+            00000001     00000F33   00010800   0000041D   BFEBFBFF              
+            00000002     605B5101   00000000   00000000   007C7040              
+            00000003     00000000   00000000   00000000   00000000              
+            00000004     00000121   01C0003F   0000001F   00000000              
+            00000004     00000143   01C0103F   000003FF   00000000              
+            00000005     00000040   00000040   00000000   00000000              
+            80000000     80000008   00000000   00000000   00000000              
+            80000001     00000000   00000000   00000000   00000000              
+            80000002     20202020   20202020   20202020   6E492020              
+            80000003     286C6574   50202952   69746E65   52286D75              
+            80000004     20342029   20555043   30342E32   007A4847              
+            80000005     00000000   00000000   00000000   00000000              
+            80000006     00000000   00000000   04008040   00000000              
+            80000007     00000000   00000000   00000000   00000000              
+            80000008     00002028   00000000   00000000   00000000              
+

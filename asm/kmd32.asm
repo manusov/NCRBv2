@@ -15,7 +15,7 @@
 ; See also other components:                                                                              ;
 ; NCRB32.ASM, NCRB64.ASM, DATA.ASM, KMD64.ASM.                                                            ;
 ;                                                                                                         ;
-; Translation by Flat Assembler version 1.73.27 ( Jan 27, 2021 ).                                         ;
+; Translation by Flat Assembler version 1.73.29 ( Dec 18, 2021 ).                                         ;
 ; http://flatassembler.net/                                                                               ;
 ;                                                                                                         ;
 ; Edit by FASM Editor 2.0.                                                                                ; 
@@ -28,6 +28,9 @@
 ; User mode debug by FDBG ( 64-bit, actual for module NCRB64.EXE )                                        ;
 ; https://board.flatassembler.net/topic.php?t=9689&postdays=0&postorder=asc&start=180                     ;
 ; ( Search for archive fdbg0025.zip )                                                                     ;
+;                                                                                                         ;
+; User mode debug by x64dbg ( 32 and 64-bit, actual for modules NCRB32.EXE, NCRB64.EXE )                  ;
+; https://x64dbg.com/                                                                                     ;
 ;                                                                                                         ;
 ; Intel Software Development Emulator ( SDE ) used for debug ( but not for kernel mode code )             ;
 ; https://software.intel.com/content/www/us/en/develop/articles/intel-software-development-emulator.html  ;

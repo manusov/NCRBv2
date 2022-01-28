@@ -79,6 +79,7 @@ call InfoExtendedTopology   ; Get platform extended topology by WinAPI
 jc .error
 call InfoNumaDomains        ; Get NUMA nodes list
 call InfoProcessorGroups    ; Get processor groups list
+call InfoSmbios             ; Get SMBIOS structures list
 call InfoAcpi               ; Get ACPI tables list
 call InfoAffinizedCpuid     ; Get affinized CPUID dump
 ;---------- Build texts by system information ---------------------------------;
@@ -89,6 +90,7 @@ jc .error
 call TextExtendedTopology
 call TextNumaDomains
 call TextProcessorGroups
+call TextSmbios
 call TextAcpi
 call TextAffinizedCpuid
 ;---------- Data fields for system information screen ( screen 0 ) ------------;
@@ -588,7 +590,7 @@ mov word [edi + BINDLIST.setMemPref],000000010b   ; Prefetch modes
 mov word [edi + BINDLIST.setMemMeas],11010101b    ; Measure precision modes
 mov word [edi + BINDLIST.setMemPix],00010111b     ; Pixels approximation modes
 ;---------- Text blocks for viewers -------------------------------------------;
-; This 11 pointers MUST BE SEQUENTAL, because accessed in the cycle:
+; This 12 pointers MUST BE SEQUENTAL, because accessed in the cycle:
 ; 1.  Operating system information
 ; 2.  Native operating system information
 ; 3.  Topology information by operating system, text block 1, list
@@ -597,9 +599,10 @@ mov word [edi + BINDLIST.setMemPix],00010111b     ; Pixels approximation modes
 ; 6.  Extended topology information by OS, text block 2, summary
 ; 7.  NUMA domains list by OS
 ; 8.  Processor groups list by OS
-; 9.  ACPI tables, text block 1 = tables list
-; 10. ACPI tables, text block 2 = tables detection by data base
-; 11. Affinized CPUID dump
+; 9.  SMBIOS structures
+; 10. ACPI tables, text block 1 = tables list
+; 11. ACPI tables, text block 2 = tables detection by data base
+; 12. Affinized CPUID dump
 mov ecx,TEXT_SCREEN_COUNT
 lea esi,[DYNA_PTR.textOs.objectStart]
 add edi,BINDLIST.viewOs

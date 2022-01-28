@@ -40,7 +40,6 @@
 ;------------------------------------------------------------------------------;
 
 ; TODO. ERROR REPORTING.
-; TODO. LABELS AND COMMENTS STYLE.
 ; TODO. CPU UTILIZATION AFTER DRAW DONE.
 ; TODO. Actualize next comments.
 ; TODO. Data labels convention: dataLabel or DataLabel ? See also vectorBrief.
@@ -169,7 +168,7 @@ mov [rdi + MEMIPB.updatedThreads],eax  ; Setup number of threads
 ; plus, see above dependences on HT for threads count
 mov eax,[rsi + MEMUPB.optionHT]
 mov [rdi + MEMIPB.updatedHT],eax       ; Copy Hyper-Threading option (UPB to IPB)
-; Setup Processor Group mode --------------------------------------------------; 
+;---------- Setup Processor Group mode ----------------------------------------; 
 ; plus, see above dependences on PG for threads count
 mov eax,[rsi + MEMUPB.optionPG]
 mov [rdi + MEMIPB.updatedPG],eax       ; Copy Processor Groups option 
@@ -188,19 +187,19 @@ lea rcx,[BENCHMARKS_REPEATS]  ; select measurements constants
 ; see also gui\drawsessionstart.inc, gui\drawsessionthread.inc
 ; for adaptive modes support
 cmp al,MEASURE_BRIEF
-je .L10                      ; Go with constants for fast (non precision) mode 
+je .repeatsSelected          ; Go with constants for fast (non precision) mode 
 cmp al,MEASURE_B_ADAPTIVE
-je .L10                      ; Go with constants for fast (non precision) mode
+je .repeatsSelected          ; Go with constants for fast (non precision) mode
 add rcx,REPEAT_SERIES_BYTES  ; use constants for slow (precision) mode
-.L10:
+.repeatsSelected:
 mov eax,[rdi + MEMIPB.updatedTarget]
 mov eax,[rcx + rax * REPEAT_ENTRY_BYTES]  ; note after this, bits RAX.63-32 = 0
 cmp [rdi + MEMIPB.updatedAsm],LATENCY_MODE
-jb .L13
+jb .modeSelected
 xor edx,edx
 mov ecx,LATENCY_DIVISOR  ; Important DIVISOR CONSTANT for latency mode
-div ecx        ; If Latency mode, make measurement repeats / LATENCY_DIVISOR,
-.L13:          ; note after this, bits RAX.63-32 = 0
+div ecx         ; If Latency mode, make measurement repeats / LATENCY_DIVISOR,
+.modeSelected:  ; note after this, bits RAX.63-32 = 0
 mov [rdi + MEMIPB.measureRepeats],rax  ; Setup number of measurement repeats
 ; Note this measurement repeats value can be updated in the adaptive modes,
 ; for drawings, at subroutine gui\drawsessionstart.inc,
@@ -277,18 +276,18 @@ and rax,rcx           ; AND-masking with this mask
 ;---------- Check drawings mode -----------------------------------------------;
 ; big block required for service all sizes when draw Performance = F(Size)
 cmp [rsi + MEMUPB.runContext],0
-je .L14   ; Go skip multiplication if simple measurement mode
+je .skipForSimple      ; Go skip multiplication if simple measurement mode
 ;---------- This required for memory reservation per drawings session ---------;
 bsr rcx,rax
 mov edx,1
 shl rdx,cl
 cmp rax,rdx
-jbe .L15
-lea rax,[rdx * 2]  ; Make integer power of 2
-.L15:
+jbe .skipAlignedExpand
+lea rax,[rdx * 2]      ; Make integer power of 2
+.skipAlignedExpand:
 ;---------- X*5 for memory reservation per X axis values ----------------------;
-imul rax,rax,5   ; Xmax = Xtarget * 5
-.L14:
+imul rax,rax,5         ; Xmax = Xtarget * 5
+.skipForSimple:
 ;---------- Store memory size per one thread and total ------------------------;
 mov [rdi + MEMIPB.memoryPerThread],rax   ; Setup memory size per one thread
 mov ecx,[rdi + MEMIPB.updatedThreads]
@@ -325,46 +324,46 @@ mov [rdi + MEMIPB.domainsCount],eax
 ;---------- Reduce domains count for NUMA single domain scenario --------------;
 lea rcx,[NUMA_LIST]
 cmp [rdi + MEMIPB.updatedNUMA],NUMA_CURRENT_ONLY
-jne .L30                         ; Go if not a single NUMA domain mode
+jne .skipSingleDomain            ; Go if not a single NUMA domain mode
 mov [rdi + MEMIPB.domainsCount],1
 cmp [rdi + MEMIPB.updatedThreads],1
-jbe .L30                         ; Go if not a multi-thread mode
+jbe .skipSingleDomain            ; Go if not a multi-thread mode
 ;---------- This code executed only for NUMA Option = single domain -----------; 
 xor eax,eax                 ; Pre-blank logical CPU count = 0
 mov rdx,qword [rcx + NUMACTRL.nodeAffinity]  ; Node 0 affinity mask
-.L34:
+.onesCount:
 shr rdx,1
-jnc .L35
+jnc .zeroBit
 inc eax                     ; This counts "1" bits at node 0 affinity mask 
-.L35:
+.zeroBit:
 test rdx,rdx
-jnz .L34                    ; Cycle exit when all "1" shifted
+jnz .onesCount              ; Cycle exit when all "1" shifted
 cmp [rsi + MEMUPB.optionHT],HT_NOT_USED
-jne .L36                    ; Skip "Threads count / 2" if no HT rejection case
+jne .skipHtRejection        ; Skip "Threads count / 2" if no HT rejection case
 cmp eax,1
-je .L36                     ; Skip "Threads count / 2" if Threads count = 1
+je .skipHtRejection         ; Skip "Threads count / 2" if Threads count = 1
 shr eax,1                   ; Threads count / 2  if required HT rejection
-.L36:
+.skipHtRejection:
 mov [rdi + MEMIPB.updatedThreads],eax  ; Update number of threads = f ( NUMA mode )
 ;--- End of conditionally executed code only for NUMA Option = single domain --;
 ;--- Swap affinity masks for NUMA Non Optimal scenario, force remote access ---;
 ; TODO. Note possible bug if assymetric domains ( processors per domain ).
-.L30:
+.skipSingleDomain:
 cmp [rdi + MEMIPB.updatedNUMA],NUMA_NON_OPTIMAL
-jne .L31         ; Go if NUMA mode not a "force non-optimal"
+jne .skipSwap     ; Go if NUMA mode not a "force non-optimal"
 lea rdx,[rcx + NUMACTRL.nodeAffinity]
 mov r8,rdx
 mov ecx,[rdi + MEMIPB.domainsCount]
-jrcxz .L31       ; skip swap if domains count = 0
-dec ecx          ; domains count - 1
-jrcxz .L31       ; skip swap if domains count = 1
-mov rax,[rdx]    ; read mask from first NUMA domain entry
-.L32:
+jrcxz .skipSwap   ; skip swap if domains count = 0
+dec ecx           ; domains count - 1
+jrcxz .skipSwap   ; skip swap if domains count = 1
+mov rax,[rdx]     ; read mask from first NUMA domain entry
+.swapCycle:
 add rdx,NUMACTRL_SIZE
-xchg rax,[rdx]  ; rotate masks at domains entries, example 1-2-3-4 to 4-1-2-3
-loop .L32       ; cycle for swapped domains
-mov [r8],rax    ; write mask to last NUMA domain entry 
-.L31:
+xchg rax,[rdx]   ; rotate masks at domains entries, example 1-2-3-4 to 4-1-2-3
+loop .swapCycle  ; cycle for swapped domains
+mov [r8],rax     ; write mask to last NUMA domain entry 
+.skipSwap:
 ;---------- Both NUMA-aware / unaware memory allocation -----------------------; 
 ; inside subroutine MemAllocationNuma, 
 ; this si SECOND step with memory allocation,
@@ -373,10 +372,10 @@ mov rax,[rdi + MEMIPB.memoryTotal]
 mov r8d,[rdi + MEMIPB.domainsCount]  ; R8 = Number of nodes
 ;--- Skip division buffer size by nodes count if threads count = 1 ------------; 
 cmp [rdi + MEMIPB.updatedThreads],1
-je .L33          ; Skip if threads = 1 and all memory allocated at node 0
+je .skipForSingle  ; Skip if threads = 1 and all memory allocated at node 0
 xor edx,edx
-div r8           ; Divide  allocated memory / node count  for multi-thread 
-.L33:
+div r8             ; Divide  allocated memory / node count  for multi-thread 
+.skipForSingle:
 lea rcx,[NUMA_LIST]               ; RCX = Base address of NUMA nodes list
 mov rdx,rax                       ; RDX = Memory allocation size per one node
 mov r9d,[rdi + MEMIPB.updatedLP]  ; R9D = Large Pages option

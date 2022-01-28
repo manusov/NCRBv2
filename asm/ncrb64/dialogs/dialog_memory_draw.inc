@@ -45,7 +45,13 @@ pop rbp
 mov rsp,rbp
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 ret
-;--- WM_INITDIALOG handler: create child window: memory performance draw ------; 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                           WM_INITDIALOG handler:                             ;
+;                 create child window: memory performance draw.                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wminitdialog:
 mov ax,BINDER_BUILD_MEMORY_DRAW
 call Binder 
@@ -130,7 +136,13 @@ mov edx,THREAD_TIME_LIMIT               ; RDX = Parm#2 = Time limit
 call [WaitForSingleObject]
 mov [GUI_PARMS.childWinRunning],1
 jmp .processed
-;---------- WM_CLOSE handler: close window, include for "Cancel" button  ------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                            WM_CLOSE handler:                                 ; 
+;                  close window, include for "Cancel" button.                  ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 ;---------- Stop measurement thread -------------------------------------------;
 mov [DRAW_THREAD_PARMS.measureBreak],1
@@ -173,7 +185,13 @@ mov edx,1                              ; RDX = Parm#2 = Result for return
 mov rcx,rbx                            ; RCX = Parm#1 = Window handle
 call [EndDialog]
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                           WM_COMMAND handler:                                ;
+;                        interpreting user input.                              ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 cmp r8,IDB_MD_CANCEL    ; Detect click "Exit" button in the draw child window
 je .wmclose
@@ -217,14 +235,14 @@ mov [DRAW_PARMS.timerCount],0
 lea rdi,[DRAW_THREAD_PARMS]
 finit
 cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .L40
+jae .nanoseconds
 fld [rdi + DTHP.statMbpsMax]
 push 90 10
-jmp .L41
-.L40:
+jmp .scalingDone
+.nanoseconds:
 fld [rdi + DTHP.statNspiMax]
 push 9 2
-.L41:
+.scalingDone:
 fidiv dword [rsp + 8]
 fimul dword [rsp]
 fistp dword [rsp + 8]
@@ -249,28 +267,41 @@ mov edx,THREAD_TIME_LIMIT               ; RDX = Parm#2 = Time limit
 call [WaitForSingleObject]
 mov [GUI_PARMS.childWinRunning],1
 jmp .processed
-;---------- WM_TIMER handler ( timer event: timer tick callback ) -------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                             WM_TIMER handler:                                ;
+;                 timer event handler for timer tick callback,                 ;
+;           set revisualization request by screen data invalidation.           ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmtimer:
 lea rcx,[GUI_PARMS.childWinRunning]
 lea rdx,[DRAW_PARMS.timerCount]     ; For two variables: COUNT, PREVIOUS Y
 xor eax,eax                         ; This clear entire RAX
 ;---------- Check session running ---------------------------------------------;
 cmp [rcx],al           ; 0=Stop, 1=First, 2=Progress
-je .SkipTimer          ; Skip if halted
+je .skipTimer          ; Skip if halted
 inc dword [rdx]        ; Counter +1
 ;---------- Check session abort -----------------------------------------------;
 cmp [DRAW_THREAD_PARMS.measureBreak],0
-je .YetNotHalt 
+je .yetNotHalt 
 mov [rcx],al           ; Running=0 means HALTED
 ;---------- Set revisualization request ---------------------------------------;
-.YetNotHalt:
+.yetNotHalt:
 mov rcx,rbx            ; Parm#1 = RCX = Window handle 
 xor edx,edx            ; Parm#2 = RDX = Pointer to invalidated region, 0=All window
 xor r8d,r8d            ; Parm#3 = R8  = Background erase flag, 0=Background unchanged
 call [InvalidateRect]  ; This cause callback WM_PAINT operation
-.SkipTimer:
+.skipTimer:
 jmp .processed
-;---------- WM_PAINT handler --------------------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                             WM_PAINT handler:                                ;
+;  draw text strings, coordinate axises, charts performance = f( block size ). ;                                  
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmpaint:
 ;---------- Make paint context ------------------------------------------------;
 mov rcx,rbx                ; Parm#1 = RCX = Parent window handle
@@ -284,9 +315,9 @@ xor ebp,ebp                ; RBP = 0, used for compact encoding
 lea rcx,[GUI_PARMS.childWinRunning]
 mov al,[rcx]
 cmp al,0                   ; 0 = Halted
-je .EndPaint
+je .endPaint
 cmp al,1                   ; 1 = First drawings (grid)
-je .FirstPaint             ; Go if this is first pass, draw axes
+je .firstPaint             ; Go if this is first pass, draw axes
 ;---------- Continue draw y=f(x), not a first pass, setup drawings ------------;
 lea rcx,[DRAW_THREAD_PARMS]
 lea r14,[rcx + DTHP.measureArray]
@@ -298,10 +329,10 @@ shl rax,3       ; 2^3 = 8 bytes per entry (QWORD)
 add r14,rax
 mov [rcx + DTHP.visualCounter],ebp
 sub ebp,r12d
-jbe .EndLine
+jbe .endLine
 add r12,GRIDBLANKX + 1 
 ;---------- This cycle for EBP points draw per one timer tick -----------------;
-.DrawLine: 
+.drawLine: 
 ;---------- Calculate EAX = F( measurement result ) ---------------------------;
 ; Remember about can use integer compare for floation point operands,
 ; because shifted order. Instead FCOM / FSTSW AX / SAHF.
@@ -331,30 +362,30 @@ fst [r11 + DTHP.statMbpsSum]      ; store average MBPS, averaging separately
 fidiv dword [rsp]                 ; this access to R13 in the stack
 fstp [r11 + DTHP.statMbpsAverage]
 pop r13
-;--- Median ordering, also used for min/max, ordering by "bubble" method ------;
-; Note floating point values can be ordered by integer compare,
+;--- Median sorting, also used for min/max, sorting by "bubble" method --------;
+; Note floating point values can be sorted by integer compare,
 ; because shifted exponent used at FP format
-.L23:
-lea rcx,[r13-1]
+.sortingRestart:
+lea rcx,[r13 - 1]
 lea rdx,[r11 + DTHP.measureArray]
 mov r9,rdx                            ; R9  = Pointer to array first element
 lea r10,[rdx + rcx*8]                 ; R10 = Pointer to array last element
-jrcxz .L21
+jrcxz .sortingStop
 xor eax,eax
-.L20:
+.sortingCycle:
 mov r8,[rdx + 0]
 cmp r8,[rdx + 8]
-jbe .L22
+jbe .sorted
 xchg r8,[rdx + 8]
 mov [rdx + 0],r8
 mov al,1
-.L22:
+.sorted:
 add rdx,8
 dec ecx
-jnz .L20        ; DEC/JNZ faster then LOOP
+jnz .sortingCycle                 ; DEC/JNZ faster then LOOP
 test eax,eax
-jnz .L23 
-.L21:
+jnz .sortingRestart 
+.sortingStop:
 ;---------- Get minimum and maximum after median ordering ---------------------;
 ; Minimum time - maximum bandwidth
 fld qword [r9]                    ; ST0 = first element, minimum CPI
@@ -371,15 +402,15 @@ fst [r11 + DTHP.statNspiMax]
 call HelperNSPItoMBPS
 fstp [r11 + DTHP.statMbpsMin]
 ;--- Get median CPI, nsPI after median ordering, note FPU already initialized -; 
-lea rcx,[r13-1]
+lea rcx,[r13 - 1]
 shr ecx,1                      ; This branch for median ODD-sized array
 fld qword [r9 + rcx*8]         ; Get median
-jnc .L30                       ; Go if median for ODD size
+jnc .oddMedianCpi              ; Go if median for ODD size
 fadd qword [r9 + rcx*8 + 8]
 fld1
 fadd st0,st0
 fdivp st1,st0
-.L30:
+.oddMedianCpi:
 fst [r11 + DTHP.statCpiMedian]
 call HelperCPItoNSPI
 fstp [r11 + DTHP.statNspiMedian]
@@ -391,7 +422,7 @@ pushf
 call HelperCPItoNSPI
 call HelperNSPItoMBPS
 popf
-jnc .L31                       ; Go if median for ODD size
+jnc .oddMedianMbps             ; Go if median for ODD size
 fld qword [r9 + rcx*8 + 8]
 call HelperCPItoNSPI
 call HelperNSPItoMBPS
@@ -399,22 +430,22 @@ faddp st1,st0
 fld1
 fadd st0,st0
 fdivp st1,st0
-.L31:
+.oddMedianMbps:
 fstp [r11 + DTHP.statMbpsMedian]
 ;---------- Start calculations for drawings Y = f( CPI ) ----------------------;
 ; ST0 = current value, loaded before re-ordering
 call HelperCPItoNSPI
 cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .L50
+jae .skipMbpsConversion
 call HelperNSPItoMBPS
-.L50:
+.skipMbpsConversion:
 fmul [DRAW_PARMS.yMultiplier]  ; ST0 = Pixel offset from BaseY=0, negative offset
 push rax
 fistp dword [rsp]
 pop rax
 ;---------- Setup coordinates for GUI -----------------------------------------;
 ; note at this point can set EAX=0 for draw horizontal line DEBUG.
-add eax,SUBWINY-GRIDBLANKY - 1
+add eax,SUBWINY - GRIDBLANKY - 1
 lea rdx,[r12+1]
 lea ecx,[eax+1]
 ;--- Work with Y-coordinate, adjust Y-coordinates for make solid line by Y ----;
@@ -446,19 +477,19 @@ inc ecx           ; Make down extra-pixel for vertical line
 push r12
 mov r8d,[MEM_IPB.updatedApprox]
 test r8d,r8d
-jz .NoApproxMode
+jz .noApproxMode
 mov r9d,00001111b
 cmp r8d,APPROX_X16
-je .CheckApproxMode
+je .checkApproxMode
 mov r9d,00011111b
-.CheckApproxMode:
+.checkApproxMode:
 test r13d,r9d
-jnz .NoApproxMode
+jnz .noApproxMode
 dec r12d
 dec eax
 add edx,2  
 add ecx,2
-.NoApproxMode:
+.noApproxMode:
 mov [rdi+RECT.left],r12d
 mov [rdi+RECT.top],eax
 mov [rdi+RECT.right],edx
@@ -474,12 +505,12 @@ add r14,8      ; R14 = Pointer to measurement results array
 inc r13d       ; R13D = Divisor for averaging
 inc r12d       ; R12D = X-coordinate offset by visualization position
 dec ebp        ; EBP = Number of pixels per timer tick
-jnz .DrawLine  ; This cycle for EBP points draw per one timer tick
-.EndLine:
-jmp .RedrawTexts
+jnz .drawLine  ; This cycle for EBP points draw per one timer tick
+.endLine:
+jmp .redrawTexts
 ;---------- This branch for first paint ---------------------------------------;  
 ; Draw statical elements, not changed when draw
-.FirstPaint:
+.firstPaint:
 mov byte [rcx],2               ; [rcx] = [Win1_Running]
 mov [DRAW_PARMS.timerCount],ebp
 ;---------- Draw --------------------------------------------------------------;
@@ -505,7 +536,7 @@ call [FillRect]
 mov r12d,GRIDBLANKX          ; R12D = Base point, X
 mov r13d,SUBWINY-GRIDBLANKY  ; R13D = Base point, Y
 mov r14d,GRIDX               ; R14D = Number of lines
-.XVgrid:
+.xVgrid:
 lea rax,[r12 + 1]            ; Line width = 1 pixel
 mov [rdi+RECT.left],r12d
 mov [rdi+RECT.top],ebp
@@ -517,11 +548,11 @@ mov r8,[GC_PARMS.handlesBrushes + 00]  ; Parm#3 = R8 = Handle to a color brush
 call [FillRect]              ; Fill rectangle function
 add r12d,GRIDSTEPX           ; Add X grid step
 dec r14d                     ; Cycle for X-grid vertical lines
-jnz .XVgrid
+jnz .xVgrid
 ;---------- Coordinate Y-grid, horizontal lines -------------------------------;
 mov r12d,SUBWINY-GRIDBLANKY  ; R12D = Base point, Y
 mov r13d,GRIDY               ; R13D = Number of lines
-.YHgrid:
+.yHgrid:
 lea rax,[r12 - 1]
 mov [rdi + RECT.left],GRIDBLANKX
 mov [rdi + RECT.top],eax
@@ -533,7 +564,7 @@ mov r8,[GC_PARMS.handlesBrushes + 00]  ; Parm#3 = R8 = Handle to a color brush
 call [FillRect]               ; Fill rectangle function
 sub r12d,GRIDSTEPY            ; Subtract Y grid step
 dec r13d                      ; Cycle for Y-grid vertical lines
-jnz .YHgrid
+jnz .yHgrid
 ;---------- Initializing for grid texts write ---------------------------------;
 ; Initializing values for X-grid vertical lines and
 ; Y-grid horizontal lines texts
@@ -544,7 +575,7 @@ mov r12d,GRIDBLANKX     ; R12D = Base point, X
 mov r13d,SUBWINY-20     ; R13D = Base point Y, 20 pixels up
 xor ebp,ebp             ; EBP = Units value, X starts from 0
 ;--- This cycle both for X and Y grids texts, X/Y logic dynamically selected --; 
-.BothGrids:
+.bothGrids:
 ;---------- Build ASCII string ------------------------------------------------;
 push rdi
 lea rdi,[TEMP_BUFFER]   ; RDI = Pointer for print decimal string as ASCII
@@ -560,14 +591,14 @@ pop rdi
 ;---------- Calculate correction value for Y axis grid values print -----------;
 mov r10d,9
 sub r10,rcx         ; R10 = chars positions count
-jbe .RejectAddend   ; Go skip if correction not required 
+jbe .rejectAddend   ; Go skip if correction not required 
 imul r10,r10,7
 ;---------- Reject corrections if horizontal axis or overflow -----------------;
 cmp bh,1            ; BH=1 means Y-mode , BH=2 means X-mode
-je .DoneAddend      ; Go with R10 = correction if branch for vertical axis text 
-.RejectAddend:
+je .doneAddend      ; Go with R10 = correction if branch for vertical axis text 
+.rejectAddend:
 xor r10,r10
-.DoneAddend:
+.doneAddend:
 ;---------- Set region for text string write ----------------------------------;
 ; Here don't align stack because PUSH RBX
 mov rcx,rdi               ; Parm#1 = RCX = Pointer to RECT structure to store parameters
@@ -579,38 +610,38 @@ push rax                  ; Parm#5 = Y coordinate down/right corner
 sub rsp,32                ; Create parameters shadow
 call [SetRect]            ; Set region rectangle function 
 add rsp,32+8              ; Remove parameters shadow and one parameter
-lea rdx,[TEMP_BUFFER]
 ;---------- Draw text ---------------------------------------------------------;
 ; Here don't align stack because PUSH RBX , Parm#2 = RDX = Pointer to text string
-mov rcx,rsi                  ; Parm#1 = RCX = Handle to a Device Context, Parm#2 = RDX set by previous step
-mov r8,-1                    ; Parm#3 = R8 = String length, -1 means NULL-terminated string
-mov r9,rdi                   ; Parm#4 = R9 = Pointer to RECT structure, initialized by [SetRect] function
-push DT_LEFT                 ; Parm#5 = Method of formatting/alignment of text string
-sub rsp,32                   ; Create parameters shadow
-call [DrawText]              ; Draw text function 
-add rsp,32+8                 ; Remove parameters shadow and 1 parameter
+lea rdx,[TEMP_BUFFER]
+mov rcx,rsi               ; Parm#1 = RCX = Handle to a Device Context, Parm#2 = RDX set by previous step
+mov r8,-1                 ; Parm#3 = R8 = String length, -1 means NULL-terminated string
+mov r9,rdi                ; Parm#4 = R9 = Pointer to RECT structure, initialized by [SetRect] function
+push DT_LEFT              ; Parm#5 = Method of formatting/alignment of text string
+sub rsp,32                ; Create parameters shadow
+call [DrawText]           ; Draw text function 
+add rsp,32+8              ; Remove parameters shadow and 1 parameter
 ;---------- Cycle for lines of selected grid ----------------------------------;
 lea rcx,[DRAW_PARMS]
-cmp bh,1                     ; BH=1 means Y-mode , BH=2 means X-mode
-je .YGrid
+cmp bh,1                  ; BH=1 means Y-mode , BH=2 means X-mode
+je .yGrid
 ;---------- X-mode entry point ------------------------------------------------;
 add ebp,[rcx + DRPM.valueGridX]   ; Addend per X grid
 add r12d,GRIDSTEPX
-jmp .CycleGrids
+jmp .cycleGrids
 ;---------- Y-mode entry point ------------------------------------------------;
-.YGrid:
+.yGrid:
 add ebp,[rcx + DRPM.valueGridY]   ; Addend per Y grid
 sub r13d,GRIDSTEPY
-.CycleGrids:
+.cycleGrids:
 dec r14d
-jnz .BothGrids
+jnz .bothGrids
 ;---------- Cycle for horizontal and vertical grids ---------------------------;
 mov r14d,GRIDY - 1                             ; R14D = Number of lines, Y
 mov r12d,GRIDBLANKX - 68                       ; R12D = X coordinate
 mov r13d,SUBWINY-GRIDBLANKY - GRIDSTEPY - 15   ; R13D = Y coordinate
 mov ebp,[rcx + DRPM.valueGridY]  ; EBP = Units value, Y starts with offset
 dec bh             ; BH = Counter, Pass#1 = XGrid (BH=2), Pass#2 = YGrid (BH=1)
-jnz .BothGrids
+jnz .bothGrids
 ;---------- Restore RBX = Handle ----------------------------------------------; 
 ; This also important for stack alignment: 5 parms. functions inside fragment
 pop rbx
@@ -705,7 +736,7 @@ mov r13d,128
 mov rcx,rsi                  ; Parm#1 = RCX = Handle to a Device Context
 mov edx,COLOR_TEXT_DUMP      ; Parm#2 = RDX = Text front color value = 00bbggrrh
 call [SetTextColor]
-.AsmDump:
+.asmDump:
 lea r12,[TEMP_BUFFER]
 push rdi
 mov rdi,r12
@@ -734,7 +765,7 @@ add eax,r10d                 ; Add offset to Y-end
 call HelperTextConstDraw
 inc r15
 dec r13d
-jnz .AsmDump 
+jnz .asmDump 
 .skipAsmDump:
 ;---------- TSC clock frequency -----------------------------------------------;
 push rbx rdi
@@ -759,7 +790,7 @@ mov eax,6+18                 ; RAX = Transit for Parm#5 = Y coordinate down/righ
 lea r12,[DRAW_TSC]           ; R12 = Pointer to text string
 call HelperTextConstDraw
 ;---------- This text strings must be updated at each visualization tick ------;
-.RedrawTexts:
+.redrawTexts:
 ;--- Initializing parameters for benchmark statistics, bandwidth and timings --;
 mov r13d,0300h
 ;---------- Print timings statistics, CPI minimum, maximum, average, median ---;
@@ -784,7 +815,7 @@ mov edx,SUBWINX - 250 + 64*2
 mov r9d,SUBWINX - 150 + 64*2 
 call HelperWriteStatisticsYconst
 ;---------- End of prepare, visual prepared objects ---------------------------;
-.DrawVisual:
+.drawVisual:
 mov rcx,[GC_PARMS.handleDC] ; Parm#1 = RCX = Handle of destination Device Context
 mov edx,SHIFTX          ; Parm#2 = RDX = X destination
 mov r8d,SHIFTY          ; Parm#3 = R8  = Y destination
@@ -800,7 +831,7 @@ sub rsp,32              ; Create parameters shadow
 call [BitBlt]                       
 add rsp,32+40+8         ; Remove parameters shadow, 5 parameters, 1 qword for align
 ;---------- Delete paint context ----------------------------------------------;
-.EndPaint:
+.endPaint:
 mov rcx,rbx             ; Parm#1 = RCX = Parent window handle
 lea rdx,[PAINT_STRUCT]  ; Parm#2 = RDX = Pointer to PAINTSTRUCT structure
 call [EndPaint]         ; This WinAPI returns BOOL status, but ignored

@@ -248,11 +248,14 @@ mov [DYNA_PTR.textOs.objectStop],ebp
 ret
 
 ;--- Pre-blank string with CR, LF, write parameter name, set text pointers ----;
+;                                                                              ;
 ; INPUT:   EBP = Pointer to destination buffer                                 ;
 ;          AX  = Index for parameter name for write to string                  ; 
+;                                                                              ;
 ; OUTPUT:  EDI = Pointer to parameter value position in the string             ;
-;          ECX  = Pointer to parameter hex value position in the string        ;
+;          ECX = Pointer to parameter hex value position in the string         ;
 ;          EBP = Updated pointer to destination buffer                         ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoString:
 push esi
@@ -277,11 +280,14 @@ ret
 ;           This variant for units fixed = megabytes                           ;
 ;           This variant for memory status structure.                          ;
 ;           This variant for 64-bit value.                                     ;
+;                                                                              ;
 ; INPUT:   EDI = Pointer to destination buffer, value position                 ;
 ;          ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the MEMORYSTATUSEX structure                        ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoSize:
 mov bl,2
@@ -310,14 +316,18 @@ pop edi
 jmp HexPrint64
 
 ;---------- Write memory block size to pre-blanked string, include hex --------;
+;                                                                              ;
 ;           This variant for units auto selected                               ;
 ;           This variant for system information structure.                     ;
 ;           This variant for 64-bit value.                                     ;
+;                                                                              ;
 ; INPUT:   EDI = Pointer to destination buffer, value position                 ;
 ;          ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the MEMORYSTATUSEX structure                        ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoSizeAuto:
 mov bl,0FFh
@@ -326,10 +336,13 @@ jmp SizeHelperEntry
 ;---------- Write memory block size to pre-blanked, hex only ------------------;
 ;           This variant for memory status structure.                          ;
 ;           This variant for 64-bit value.                                     ;
+;                                                                              ;
 ; INPUT:   ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the MEMORYSTATUSEX structure                        ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoHex:
 mov bl,0
@@ -339,11 +352,14 @@ jmp SizeHelperEntry
 ;           This variant for units fixed = megabytes.                          ;
 ;           This variant for system information structure.                     ;
 ;           This variant for 32-bit value.                                     ;
+;                                                                              ;
 ; INPUT:   EDI = Pointer to destination buffer, value position                 ;
 ;          ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the SYSTEM_INFO structure                           ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoSizeAuto32:
 mov bl,0FFh
@@ -363,11 +379,14 @@ pop eax edi
 jmp HexPrint32
 
 ;---------- Write 32-bit number to pre-blanked string, decimal and hex --------;
+;                                                                              ;
 ; INPUT:   EDI = Pointer to destination buffer, decimal value position         ;
 ;          ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the SYSTEM_INFO structure                           ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoNumber32:
 movzx eax,al
@@ -389,11 +408,14 @@ mov edi,ecx
 jmp HexPrint32
 
 ;---------- Write 16-bit number to pre-blanked string, decimal and hex --------;
+;                                                                              ;
 ; INPUT:   EDI = Pointer to destination buffer, decimal value position         ;
 ;          ECX = Pointer to destination buffer, hex value position             ; 
 ;          AL  = Offset in the SYSTEM_INFO structure                           ; 
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperOsInfoNumber16:
 movzx eax,al
@@ -412,10 +434,13 @@ pop eax edi
 jmp HexPrint16
 
 ;---------- Write system information strings ----------------------------------;
+;                                                                              ;
 ; INPUT:   EBP = Pointer to destination buffer                                 ;
-;          BH = information type: 0 = OS info , 1 = native OS info             ;
+;          BH  = Information type: 0 = OS info , 1 = native OS info            ;
+;                                                                              ;
 ; OUTPUT:  EBP = Updated pointer to destination buffer                         ;
 ;          EDI = Last used and updated destination pointer                     ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperSystemInfo:
 mov ax,STR_OS_MIN_ADDRESS                        ; Application minimum address

@@ -29,6 +29,25 @@ virtual at r8
 tp                   TOKEN_PRIVILEGES 
 end virtual
 
+;---------- Firmware definitions for SMBIOS support ---------------------------;
+
+SMBIOS_TYPE_0       = 0
+SMBIOS_UNKNOWN_TYPE = 45
+
+struct DATA_HEADER
+method       db 0
+versionMajor db 0
+versionMinor db 0
+revisionDmi  db 0
+dataLength   dd 0
+ends
+
+struct OBJECT_HEADER
+type   db 0
+length db 0
+handle dw 0
+ends
+
 ;---------- Subroutines -------------------------------------------------------;
 
 include 'load_inf.inc'
@@ -44,5 +63,6 @@ include 'info_topology.inc'
 include 'info_extended_topology.inc'
 include 'info_numa_domains.inc'
 include 'info_processor_groups.inc'
+include 'info_smbios.inc'
 include 'info_acpi.inc'
 include 'info_affinized_cpuid.inc'

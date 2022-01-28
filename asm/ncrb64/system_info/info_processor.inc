@@ -109,6 +109,7 @@ ret
 ;          Destination memory at [input RDI] =                                 ;
 ;           bytes [00-11] = CPU vendor string                                  ;
 ;           byte  [12-12] = 00h, string terminator                             ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCheckCpuid:
 ;---------- Check for ID bit writeable for "1" --------------------------------;
@@ -159,6 +160,7 @@ ret
 ;          String formatted by subroutine, left spaces deleted.                ;
 ;          If feature not supported, string contain "None",                    ;
 ;          but errors not reported, NCRB can work without this feature         ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperGetCpuName:
 cld                          ; Clear direction, because STOSB/STOSD used
@@ -238,6 +240,7 @@ ret
 ;          RDI = Input RDI + 8 , buffer size fixed = 8 bytes                   ;
 ;          Destination memory at [input RDI] = Results                         ;
 ;           Qword [00-07] = TSC frequency, Hz = delta TSC per 1 second         ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperMeasureTsc:
 cld                        ; Clear direction, because STOSQ used
@@ -388,6 +391,7 @@ jmp .build
 ; OUTPUT:  EBX = Updated 32-bit bitmap, caller can twice execute build cycle   ;
 ;                for low and high 32-bit dwords of 64-bit bitmap,              ;
 ;                note about 64-bit code portability to 32-bit code.            ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperEntryCpuid:
 push rsi rdi rbp rbx
@@ -463,6 +467,7 @@ ret
 ; OUTPUT:  EBX = Updated 32-bit bitmap, caller can twice execute build cycle   ;
 ;                for low and high 32-bit dwords of 64-bit bitmap,              ;
 ;                note about 64-bit code portability to 32-bit code.            ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperEntryXcr0:
 push rbp rbx

@@ -220,11 +220,14 @@ mov [DYNA_PTR.textTopologyEx2.objectStop],ebp
 ret
 
 ;---------- Get topological information ---------------------------------------;
+;                                                                              ;
 ; INPUT:   EBX = WinAPI function address                                       ;
 ;          EBP = Pointer to buffer for topology information                    ;
 ;          EDI = Buffer used size accumulator                                  ;
 ;          AL  = Relation type by WinAPI encoding                              ;
+;                                                                              ;
 ; OUTPUT:  EDI = Updated buffer size accumulator                               ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;             
 HelperTopologyEx:
 push ebx esi eax 0
@@ -263,10 +266,13 @@ stc
 jmp .exit
 
 ;--- Write affinity mask string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   EDX = Destination base address                                      ;
 ;          ESI = Pointer to parsed topology entry: affinity mask               ;
 ;          AL  = Field offset in the parsed structure                          ; 
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinityGroup:    ; TODO. Optimize by EntryAffinity
 push esi ebp
@@ -338,10 +344,13 @@ pop edx ecx ebp esi
 ret
 
 ;--- Write proc. group string for text generation by topology parsing ---------;
+;                                                                              ;
 ; INPUT:   EDX = Destination base address                                      ;
 ;          ESI = Pointer to parsed topology entry: affinity mask               ;
 ;          AL  = Field offset in the parsed structure                          ; 
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinityMask:
 push esi
@@ -355,12 +364,15 @@ ret
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   ESI = Pointer to topology information buffer                        ;
 ;          EDI = Destination text buffer                                       ;
 ;          ECX = Topology information buffer address limit                     ;  
 ;          AL  = Cache level                                                   ;  
 ;          AH  = Cache type                                                    ;    
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCacheSummaryEx:
 push ecx esi 0 0 ebp

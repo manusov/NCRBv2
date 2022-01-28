@@ -40,6 +40,7 @@ ret
 .error:
 stc             ; CF = 1 means error
 jmp .exit
+
 ;--- Same operation for thread routine, ---------------------------------------;
 ;    this required for latency measurement mode,                               ;
 ;    when change fill pattern to walk pattern                                  ;
@@ -57,6 +58,7 @@ mov [ebx + THCTRL.entryPoint],eax   ; EAX = pointer to pattern routine
 add ebx,THCTRL_SIZE                 ; EBX = threads entries pointer
 loop .update                        ; ECX = threads entries counter
 ret
+
 ;--- Same operation for adaptive mode repeats count, ----------------------;
 ;    this required for adaptive repeats mode,                              ;
 ;    when change Repeats count = F ( Block size )                          ;

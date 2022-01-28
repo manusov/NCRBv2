@@ -380,13 +380,16 @@ mov [DYNA_PTR.textAcpi2.objectStop],rbp
 ret
 
 ;---------- Copy text string with chars checks --------------------------------;
+;                                                                              ;
 ; INPUT:   RBX = Source base                                                   ;
 ;          RBP = Destination base                                              ;
 ;          AL  = Offset for source string                                      ;
 ;          AH  = Offset for destination string                                 ;
 ;          EAX.[31-16] = String size                                           ;    
+;                                                                              ;
 ; OUTPUT:  RDI = Last used updated pointer                                     ;
 ;          String at [RBP + AH] size EAX.[31-16] updated                       ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCopyString:
 movzx ecx,al
@@ -414,12 +417,15 @@ loop .copy
 ret
 
 ;---------- Write decimal number text string, 8 bit value ---------------------;
+;                                                                              ;
 ; INPUT:   RBX = Source base                                                   ;
 ;          RBP = Destination base                                              ;
 ;          AL  = Offset for source data contain 8-bit value                    ;
 ;          AH  = Offset for destination string                                 ;
+;                                                                              ;
 ; OUTPUT:  RDI = Last used updated pointer                                     ;
 ;          String at [RBP + AH] updated                                        ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperDecimalString:
 push rbx
@@ -433,12 +439,15 @@ pop rbx
 ret
 
 ;---------- Write hex number text string, 32 bit value ------------------------;
+;                                                                              ;
 ; INPUT:   RBX = Source base                                                   ;
 ;          RBP = Destination base                                              ;
 ;          AL  = Offset for source data contain 8-bit value                    ;
 ;          AH  = Offset for destination string                                 ;
+;                                                                              ;
 ; OUTPUT:  RDI = Last used updated pointer                                     ;
 ;          String at [RBP + AH] updated                                        ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperHexString:
 call HelperHexStringNh

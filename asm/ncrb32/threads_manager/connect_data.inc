@@ -11,8 +11,8 @@ DEFAULT_DRAM_BLOCK      =  32 * 1024 * 1024
 DEFAULT_CACHE_BLOCK     =  32 * 1024
 ; Constants for custom block size restrictions
 CUSTOM_BLOCK_MIN        =  16 * 1024
-CUSTOM_BLOCK_MAX        =  256 * 1024 * 1024   ;  old = 64 * 1024 * 1024 
-CUSTOM_BLOCK_ALIGN      =  512                 ;  old = 16 * 1024
+CUSTOM_BLOCK_MAX        =  256 * 1024 * 1024 
+CUSTOM_BLOCK_ALIGN      =  512
 ;---------- Memory timings constants ------------------------------------------;
 ; 10000 milliseconds = 10 seconds, events wait time for
 ; communication with child thread
@@ -20,15 +20,15 @@ THREAD_TIME_LIMIT       =  10000
 ; Benchmarks repeat parameters, precision=f(repeats), for Cache&RAM mode
 ; Calibrate iterations for objects, normal mode
 ; this constants must be multiple of LATENCY DIVISOR (50)
-L1_REPEATS_FAST         =  2000000  ;  old = 100000
+L1_REPEATS_FAST         =  2000000
 L2_REPEATS_FAST         =  50000
 L3_REPEATS_FAST         =  1000
 L4_REPEATS_FAST         =  200
 DRAM_REPEATS_FAST       =  100
-CUSTOM_REPEATS_FAST     =  100      ;  old = 100000
+CUSTOM_REPEATS_FAST     =  100
 ; Calibrate iterations for objects, slow mode
 ; this constants must be multiple of LATENCY DIVISOR (50)
-L1_REPEATS_SLOW         =  2500000  ;  old = 2000000
+L1_REPEATS_SLOW         =  2500000
 L2_REPEATS_SLOW         =  500000
 L3_REPEATS_SLOW         =  10000
 L4_REPEATS_SLOW         =  2000

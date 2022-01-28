@@ -28,8 +28,14 @@ je .wmclose
 .skip:
 xor eax,eax
 jmp .finish
-;--- WM_INITDIALOG handler: create child window: vector perf. brief report ----;
-.wminitdialog:                   ; Build main window
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                WM_INITDIALOG handler: create child window:                   ; 
+;                    vector performance brief report.                          ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.wminitdialog:
 mov ax,BINDER_BUILD_VECTOR_BRIEF
 call Binder
 push [edi + APPDATA.createdIcons + VBRF_ICON_NUMBER * 4]
@@ -44,12 +50,22 @@ push esi
 push PARM_HWNDDLG
 call [SetWindowText]
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------; 
-; Detect click "OK" button at vector brief window
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                 WM_COMMAND handler: interpreting user input.                 ; 
+;               Detect click "OK" button at vector brief window.               ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:
 cmp PARM_WPARAM,IDB_VB_OK
 jne .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 push 1                           ; Parm#2 = Result for return
 push ebx                         ; Parm#1 = Window handle

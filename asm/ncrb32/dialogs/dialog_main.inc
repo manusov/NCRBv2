@@ -31,14 +31,19 @@ je .tabproc
 .skip:
 xor eax,eax
 jmp .finish
-;---------- WM_INITDIALOG handler: create main window -------------------------;
-.wminitdialog:                   ; Build main window 
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                WM_INITDIALOG handler: create main window.                    ; 
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.wminitdialog: 
 mov eax,PARM_HWNDDLG
 mov [edi + APPDATA.hMain],eax
-push IDC_TAB                         ; Parm#2 = Item identifier
-push PARM_HWNDDLG                    ; Parm#1 = Handle to dialog box
-call [GetDlgItem]                    ; Get handle
-mov [edi + APPDATA.hTab],eax         ; Store sheets container handle
+push IDC_TAB                     ; Parm#2 = Item identifier
+push PARM_HWNDDLG                ; Parm#1 = Handle to dialog box
+call [GetDlgItem]                ; Get handle
+mov [edi + APPDATA.hTab],eax     ; Store sheets container handle
 ;---------- Initializing sheet structure --------------------------------------;
 xor eax,eax
 mov [ebx + TC_ITEM.mask],TCIF_TEXT + TCIF_IMAGE
@@ -164,7 +169,13 @@ push PROGRAM_NAME                 ; Parm#2 = Pointer to text string
 push PARM_HWNDDLG                 ; Parm#1 = Window handle
 call [SetWindowText]              ; Set main window text title
 jmp .processed
-;---------- WM_COMMAND handler: interpreting user input -----------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                 WM_COMMAND handler: interpreting user input,                 ; 
+;              include user input: cancel button or close window.              ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmcommand:                       ; User input: cancel button or close window
 ;---------- Detect click "About" item in the main menu ------------------------;
 mov eax,PARM_WPARAM
@@ -188,8 +199,14 @@ jmp .processed
 cmp ax,IDM_EXIT
 je .wmclose
 jmp .processed
-;---------- WM_NOTIFY handler: events from child GUI objects ------------------;
-.tabproc:                         ; Change sheet selection
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;             WM_NOTIFY handler: events from child GUI objects.                ;  
+;                         Change sheet selection.                              ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+.tabproc:
 cmp PARM_WPARAM,IDC_TAB
 jne .skip
 mov eax,PARM_LPARAM
@@ -209,7 +226,12 @@ push SW_SHOWDEFAULT
 push dword [esi + eax*4]
 call [ShowWindow]                    ; Show current selected sheet
 jmp .processed
-;---------- WM_CLOSE handler: close window ------------------------------------;
+
+;------------------------------------------------------------------------------;
+;                                                                              ;
+;                     WM_CLOSE handler: close window.                          ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
 .wmclose:
 push 1                            ; Parm#2 = Result for return
 push PARM_HWNDDLG                 ; Parm#1 = Window handle

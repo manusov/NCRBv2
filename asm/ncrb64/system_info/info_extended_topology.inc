@@ -222,12 +222,15 @@ mov [DYNA_PTR.textTopologyEx2.objectStop],rbp
 ret
 
 ;---------- Get topological information ---------------------------------------;
+;                                                                              ;
 ; INPUT:   RBX = WinAPI function address                                       ;
 ;          RBP = Pointer to buffer for topology information                    ;
 ;          R14 = Buffer used size accumulator                                  ;
 ;          R13 = Pointer to temporary DWORD variable, located at stack frame   ;
 ;          AL  = Relation type by WinAPI encoding                              ;
+;                                                                              ;
 ; OUTPUT:  R14 = Updated buffer size accumulator                               ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;             
 HelperTopologyEx:
 push rsi rdi
@@ -266,10 +269,13 @@ stc
 jmp .exit
 
 ;--- Write affinity mask string for text generation by topology parsing -------;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          RSI = Pointer to parsed topology entry: affinity mask               ;
 ;          AL  = Field offset in the parsed structure                          ; 
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinityGroup:
 push rsi
@@ -287,10 +293,13 @@ pop rsi
 ret
 
 ;--- Write proc. group string for text generation by topology parsing ---------;
+;                                                                              ;
 ; INPUT:   RDX = Destination base address                                      ;
 ;          RSI = Pointer to parsed topology entry: affinity mask               ;
 ;          AL  = Field offset in the parsed structure                          ; 
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperAffinityMask:
 push rsi
@@ -304,12 +313,15 @@ ret
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
 ; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
+;                                                                              ;
 ; INPUT:   RSI = Pointer to topology information buffer                        ;
 ;          RDI = Destination text buffer                                       ;
 ;          RCX = Topology information buffer address limit                     ;  
 ;          AL  = Cache level                                                   ;  
 ;          AH  = Cache type                                                    ;    
+;                                                                              ;
 ; OUTPUT:  None                                                                ;
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCacheSummaryEx:
 push rcx rsi rax

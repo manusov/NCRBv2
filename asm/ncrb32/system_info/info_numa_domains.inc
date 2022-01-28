@@ -144,9 +144,12 @@ mov [DYNA_PTR.textNuma.objectStop],ebp
 ret
 
 ;--- Pre-blank string with CR, LF, write parameter name, set text pointers ----;
+;                                                                              ;
 ; INPUT:   EBP = Pointer to destination buffer                                 ;
 ;          EAX = Number write to string                                        ; 
+;                                                                              ;
 ; OUTPUT:  EBP = Updated pointer to destination buffer                         ;   
+;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperNumberString:
 push ecx eax
