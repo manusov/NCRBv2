@@ -1,3 +1,26 @@
+27.03.2022. v2.01.01. Changes for x64 and ia32 versions.
+1) New design for "About" window with web links to GitHub and FASM.
+2) Added signatures for detection ACPI tables:
+   2.1) AGDI, 'Arm Generic Diagnostic Dump Interface'
+        https://www.spinics.net/lists/kernel/msg4274275.html
+   2.2) HMAT, 'Heterogeneous Memory Attributes'
+   2.3) PDTT, 'Platform Debug Trigger'
+   2.4) PPTT, 'Processor Properties Topology'
+   2.5) S3PT, 'S3 Performance'
+        https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html
+   2.6) TDEL, 'Trust Domain Event Log'
+        https://uefi.org/sites/default/files/resources/Virtual%20Firmware%20for%20Intel%20Trust%20Domain%20Extensions%20-%20UEFI_12.15.2020_0.pdf
+   2.7) VIOT, 'Virtual I/O Translation'
+         https://lore.kernel.org/linux-acpi/YFSIKeihQAc8KPmG@myrica/T/
+   2.8) WDDT, 'Watch Dog Description'
+        https://code.woboq.org/linux/linux/include/acpi/actbl3.h.html
+See also:
+https://www.acpica.org/
+https://github.com/acpica/acpica/
+https://github.com/acpica/acpica/blob/master/source/common/ahtable.c
+https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html
+
+
 28.01.2022. v2.01.00. Changes for x64 and ia32 versions.
 1) Added new sheet for view SMBIOS information.
 2) Added ACPI table signature to data base.

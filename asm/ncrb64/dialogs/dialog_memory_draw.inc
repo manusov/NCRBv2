@@ -70,7 +70,7 @@ mov rcx,rbx
 call [SetWindowText]
 mov [GUI_PARMS.silentMode],0       ; Pre-disable silent mode
 mov [DRAW_PARMS.drawPreviousY],0   ; Initializing drawing context
-;---------- Initialize graphics context ---------------------------------------æ
+;---------- Initialize graphics context ---------------------------------------;
 xor ecx,ecx                        ; Parm#1 = RCX = Handle to exist DC, 0=Application current screen
 call [CreateCompatibleDC]          ; Create compatible Device Context for buffered video output 
 mov [GC_PARMS.handleMemDC],rax     ; Store handle

@@ -47,14 +47,13 @@
 include 'win64a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
-RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition'
-RESOURCE_VERSION        EQU '2.1.0.0'
+RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
+RESOURCE_VERSION        EQU '2.1.1.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
-RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov'
-PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64'
-ABOUT_CAP_TEXT          EQU 'Program info'
-ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks'
-ABOUT_TEXT_2            EQU 'v2.01.00 for Windows x64'
+RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
+PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
+ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
+ABOUT_TEXT_2            EQU 'v2.01.01 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -151,10 +150,45 @@ xchg rcx,rax
 call [LockResource] 
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if pointer = NULL, means error
-stosq                              ; Store pointer to icon                 
+stosq                              ; Store pointer to icon resource                 
 inc ebx                            ; EBX = Next icon
 dec esi                            ; ESI = Cycle counter  
 jnz .loadIcons                     ; Cycle for initializing all icons 
+;---------- Load icon resource for "About" window -----------------------------;
+mov r8d,RT_GROUP_ICON
+mov edx,IDG_ABOUT_BOX
+mov rcx,[r15 + APPDATA.hResources]
+call [FindResource]
+test rax,rax                       ; RAX = HRSRC, handle of resource block
+jz .iconsPoolFailed                ; Go if handle = NULL, means error
+xchg rdx,rax
+mov rcx,[r15 + APPDATA.hResources]
+call [LoadResource] 
+test rax,rax                       ; RAX = HRSRC, handle of resource block
+jz .iconsPoolFailed                ; Go if handle = NULL, means error
+xchg rcx,rax
+call [LockResource] 
+test rax,rax                            ; RAX = HRSRC, handle of resource block
+jz .iconsPoolFailed                     ; Go if pointer = NULL, means error
+mov [r15 + APPDATA.aboutLockedIcon],rax ; Store pointer to icon resource                 
+;---------- Create icon from loaded resource for "About" window ---------------;
+; This step executed during initialization for integrity check and prevent
+; load-unload with potential memory leak.
+; Note constant 10A8h is icon length value from icon file.
+push 0                            ; This PUSH 0 for stack alignment
+push LR_DEFAULTCOLOR              ; Parm#7 = Flags
+push ICONDY                       ; Parm#6 = cyDesired
+push ICONDX                       ; Parm#5 = cxDesired
+mov r9d,30000h                    ; R9  = Parm#4 = Version of icon format
+mov r8d,TRUE                      ; R8  = Parm#3 = Icon/Cursor, TRUE means Icon
+mov edx,10A8h                     ; RDX = Parm#2 = dwResSize, bytes (from file) 
+xchg rcx,rax                      ; RCX = Parm#1 = Pointer to resource bits 
+sub rsp,32
+call [CreateIconFromResourceEx]   ; Create icon, return handle
+add rsp,32 + 32
+test rax,rax                              ; RAX = HICON, handle of icon
+jz .iconsPoolFailed                       ; Go if pointer = NULL, means error
+mov [r15 + APPDATA.aboutCreatedIcon],rax  ; Store pointer to icon
 ;---------- Get handle and address pointer to raw pools at resources DLL ------;
 ; Strings located at raw resources part, for compact encoding 1 byte per char,
 ; note standard string resource use 2 byte per char (UNICODE). 
@@ -1345,7 +1379,6 @@ NAME_ADVAPI32  DB  'ADVAPI32.DLL' , 0 , 0  ; Two zeroes means end of list
 NAME_DATA      DB  'DATA.DLL'     , 0
 ;---------- Text strings about application ------------------------------------;
 PROGRAM_NAME   DB  PROGRAM_NAME_TEXT   , 0
-ABOUT_CAP      DB  ABOUT_CAP_TEXT      , 0
 ABOUT_NAME     DB  ABOUT_TEXT_1        , 0Dh,0Ah
                DB  ABOUT_TEXT_2        , 0Dh,0Ah
                DB  ABOUT_TEXT_3        , 0Dh,0Ah, 0
@@ -1617,6 +1650,7 @@ VECBR_OPB VECBROPB  ?
 ;---------- Key data for GUI application with resources -----------------------;  
 struct APPDATA
 hResources                 dq ?     ; Resource DLL handle
+hInstance                  dq ?     ; This EXE file handle
 lockedStrings              dq ?     ; Pointer to strings pool
 lockedBinders              dq ?     ; Pointer to binders pool
 lockedDataCpuCommon        dq ?     ; Data for build common CPU feature bitmap
@@ -1641,7 +1675,8 @@ tabCtrlItem                TC_ITEM ?              ; Tab item data structure
 lockedIcons                dq ICON_COUNT dup ?    ; Pointers to icons resources
 createdIcons               dq ICON_COUNT dup ?    ; Pointers to icons 
 hTabDlg                    dq ITEM_COUNT dup ?    ; Sheets handles
-hInstance                  dq ?                   ; This EXE file handle
+aboutLockedIcon            dq ?     ; Pointer to "About" icon resource
+aboutCreatedIcon           dq ?     ; Pointer to "About" icon
 ends
 APP_DATA APPDATA ?
 ;---------- Operating system constants and structures definition --------------;
@@ -1967,6 +2002,31 @@ REPORT_TEXT_COUNT = 12
 ERROR_FILE_EXISTS = 050h
 align 8
 OPEN_FILE_NAME OPENFILENAME ?
+;---------- Support "About" window with picture, mouse cursor, web link -------;
+struct CLICKSTRING
+stringId    dd ?
+fullSize    dd ?
+clickStart  dd ?
+clickSize   dd ?
+xmin        dd ?
+xmax        dd ?
+ymin        dd ?
+ymax        dd ?
+ends
+struct ABOUTBOX
+hCursor      dq ?
+hFont        dq ?
+hFontBack    dq ?
+ps           PAINTSTRUCT ?
+rect         RECT        ?
+backRect     RECT        ?
+sz           SIZE        ?
+tm           TEXTMETRIC  ?
+clickStr1    CLICKSTRING ?
+clickStr2    CLICKSTRING ?
+ends
+align 8
+ABOUT_BOX ABOUTBOX ?
 
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
@@ -1979,13 +2039,15 @@ library kernel32 , 'kernel32.dll' , \
         user32   , 'user32.dll'   , \
         comctl32 , 'comctl32.dll' , \
         comdlg32 , 'comdlg32.dll' , \
-        gdi32    , 'gdi32.dll' 
+        gdi32    , 'gdi32.dll'    , \
+        shell32  , 'shell32.dll' 
 include 'api\kernel32.inc'
 include 'api\advapi32.inc'
 include 'api\user32.inc'
 include 'api\comctl32.inc'
 include 'api\comdlg32.inc'
 include 'api\gdi32.inc'
+include 'api\shell32.inc'
 
 ;------------------------------------------------------------------------------;
 ;                                                                              ;

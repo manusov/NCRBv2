@@ -182,11 +182,12 @@ mov eax,PARM_WPARAM
 cmp ax,IDM_ABOUT
 jne .noabout
 ;---------- "About" message box and wait user input ---------------------------;
-push MB_ICONINFORMATION   ; Parm#4 = Message box icon type = Info
-push ABOUT_CAP            ; Parm#3 = Pointer to caption
-push ABOUT_NAME           ; Parm#2 = Pointer to "About" string
-push PARM_HWNDDLG         ; Parm#1 = Parent window handle
-call [MessageBoxA]
+push 0                           ; Parm#5 = dwInitParam, not used
+push DialogProcChildAbout        ; Parm#4 = Pointer to dialog procedure
+push PARM_HWNDDLG                ; Parm#3 = Parent window handle
+push IDD_CHILD_ABOUT             ; Parm#2 = Dialog window resource ID
+push [edi + APPDATA.hResources]  ; Parm#1 = Resource module handle
+call [DialogBoxParam]
 jmp .processed
 ;---------- Detect click "Save report" item in the main menu ------------------;
 .noabout:

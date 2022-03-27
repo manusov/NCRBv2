@@ -17,6 +17,7 @@ include 'dialog_main_tabs.inc'
 include 'dialog_memory_run.inc'
 include 'dialog_memory_draw.inc'
 include 'dialog_vector_brief.inc'
+include 'dialog_about.inc'
 ;---------- Benchmarks scenario routines --------------------------------------;
 include 'scenario_memory_run.inc'
 include 'scenario_memory_draw.inc'

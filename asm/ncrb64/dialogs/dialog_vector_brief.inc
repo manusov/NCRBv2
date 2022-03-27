@@ -1,14 +1,14 @@
 ;---------- Callback dialogue procedures for operations child windows ---------;
-;           Handler for "Run" button, vector brief mode at "Math" screen       ; 
+;           Handler for "Run" button, vector brief mode at "Math" screen       ;
 ;                                                                              ;
-; INPUT:   RCX = Parm#1 = HWND = Dialog box handle                             ; 
-;          RDX = Parm#2 = UINT = Message                                       ; 
+; INPUT:   RCX = Parm#1 = HWND = Dialog box handle                             ;
+;          RDX = Parm#2 = UINT = Message                                       ;
 ;          R8  = Parm#3 = WPARAM, message-specific                             ;
 ;          R9  = Parm#4 = LPARAM, message-specific                             ;
 ;                                                                              ;
 ; OUTPUT:  RAX = status, TRUE = message recognized and processed               ;
 ;                        FALSE = not recognized, must be processed by OS,      ;
-;                        see MSDN for status exceptions and details            ;  
+;                        see MSDN for status exceptions and details            ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 DialogProcChildVectorBrief:

@@ -199,11 +199,15 @@ mov eax,LOW_WPARAM
 cmp ax,IDM_ABOUT
 jne .noabout
 ;---------- "About" message box and wait user input ---------------------------;
-mov r9d,MB_ICONINFORMATION   ; R9  = Parm#4 = Message box icon type = Info
-lea r8,[ABOUT_CAP]           ; R8  = Parm#3 = Pointer to caption
-lea rdx,[ABOUT_NAME]         ; RDX = Parm#2 = Pointer to "About" string
-mov rcx,PARM_HWNDDLG         ; RCX = Parm#1 = Parent window handle
-call [MessageBoxA]
+xor eax,eax                 ; RAX=0 for compact push 0, first push = alignment
+push rax rax                       ; Parm#5 = dwInitParam, not used 
+lea r9,[DialogProcChildAbout]      ; R9  = Parm#4 = Pointer to dialog procedure
+mov r8,PARM_HWNDDLG                ; R8  = Parm#3 = Parent window handle 
+mov edx,IDD_CHILD_ABOUT            ; RDX = Parm#2 = Dialog window resource ID 
+mov rcx,[r15 + APPDATA.hResources] ; RCX = Parm#1 = Resource module handle   
+sub rsp,32
+call [DialogBoxParam]
+add rsp,32 + 16
 jmp .processed
 ;---------- Detect click "Save report" item in the main menu ------------------; 
 .noabout:

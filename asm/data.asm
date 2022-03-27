@@ -50,7 +50,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.1.0.0'
+RESOURCE_VERSION      EQU  '2.1.1.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -84,7 +84,8 @@ IDD_ACPI               , LANG_ENGLISH + SUBLANG_DEFAULT, tabAcpi          , \
 IDD_AFF_CPUID          , LANG_ENGLISH + SUBLANG_DEFAULT, tabAffCpuid      , \
 IDD_CHILD_MEMORY_RUN   , LANG_ENGLISH + SUBLANG_DEFAULT, childMemoryRun   , \
 IDD_CHILD_MEMORY_DRAW  , LANG_ENGLISH + SUBLANG_DEFAULT, childMemoryDraw  , \
-IDD_CHILD_VECTOR_BRIEF , LANG_ENGLISH + SUBLANG_DEFAULT, childVectorBrief 
+IDD_CHILD_VECTOR_BRIEF , LANG_ENGLISH + SUBLANG_DEFAULT, childVectorBrief , \
+IDD_CHILD_ABOUT        , LANG_ENGLISH + SUBLANG_DEFAULT, childAbout 
 ;---------- Application main window as tabbed sheet ---------------------------;
 dialog      mainDialog,        '',                      0,   0, 410, 282, DS_CENTER + WS_CAPTION + WS_SYSMENU, 0, IDR_MENU, 'Verdana', 10
 dialogitem  'SysTabControl32', '', IDC_TAB          ,   1,   1, 408,  29, WS_VISIBLE + TCS_MULTILINE
@@ -483,6 +484,10 @@ dialogitem  'STATIC'      , '', IDC_VB_FCOS_V       , 243, 234, 150,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_VB_FSINCOS_V    , 243, 243, 150,  10, WS_VISIBLE 
 dialogitem  'BUTTON'      , '', IDB_VB_OK           , 360, 250,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog
+;---------- Child window = "About" box ----------------------------------------;
+dialog      childAbout    , '',                       100, 100, 120, 101, WS_CAPTION + WS_SYSMENU + WS_VISIBLE, 0, 0, 'Verdana', 10
+dialogitem  'BUTTON'      , '', IDB_ABOUT_OK        ,  47,  83,  32,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
+enddialog 
 ;---------- Application main menu and service items ---------------------------; 
 resource menus, IDR_MENU, LANG_ENGLISH + SUBLANG_DEFAULT, mainMenu
 menu mainMenu
@@ -960,6 +965,13 @@ DB  'VSQRTPD ymm'    , 0
 DB  'VSQRTPD zmm'    , 0
 DB  'FCOS'           , 0             
 DB  'FSINCOS'        , 0             
+;---------- Strings for child screen = "About" window -------------------------;
+DB  'Program info'                                , 0
+DB  'More at GitHub.'                             , 0 
+DB  'Developed with Flat Assembler.'              , 0
+DB  'https://github.com/manusov?tab=repositories' , 0
+DB  'https://flatassembler.net/'                  , 0
+DB  'Shell error.'                                , 0
 ;---------- Strings for fatal error messages, cannot run NCRB -----------------;
 ; This messages can be generated if resource DLL successfully loaded,
 ; see also message strings at executeble files NCRB32.ASM, NCRB64.ASM.
@@ -1541,6 +1553,9 @@ SET_INFO    BINDLIST.vbX87cos                     , IDC_VB_FCOS_V
 SET_INFO    BINDLIST.vbX87sincos                  , IDC_VB_FSINCOS_V 
 SET_STRING  STR_OK                                , IDB_VB_OK             
 BIND_STOP
+;---------- GUI binder script for child screen = "About" window ---------------;
+SET_STRING  STR_OK                                , IDB_ABOUT_OK
+BIND_STOP
 ;---------- Continue, binders for GUI scripts ---------------------------------;
 ; This binders for set GUI objects (widgets) state by data from buffer
 ; (bindlist), separate from build objects, because required set by
@@ -2090,6 +2105,7 @@ endres
 ;---------- ACPI tables data base ---------------------------------------------; 
 resdata acpiData
 DB  'AEST' , 'Arm Error Source'                                 , 0
+DB  'AGDI' , 'Arm Generic Diagnostic Dump Interface'            , 0
 DB  'APIC' , 'Multiple APIC Description'                        , 0
 DB  'ASF!' , 'Alert Standard Format'                            , 0
 DB  'BDAT' , 'BIOS Data ACPI'                                   , 0
@@ -2115,9 +2131,10 @@ DB  'FACP' , 'Fixed ACPI Description'                           , 0
 DB  'FACS' , 'Firmware ACPI Control Structure'                  , 0
 DB  'FIDT' , 'Firmware Identification'                          , 0
 DB  'FPDT' , 'Firmware Performance Data'                        , 0
-DB  'GSCI' , 'GMCH SCI Information'                             , 0 
+DB  'GSCI' , 'GMCH SCI Information'                             , 0
 DB  'GTDT' , 'Generic Timer Description'                        , 0
 DB  'HEST' , 'Hardware Error Source'                            , 0
+DB  'HMAT' , 'Heterogeneous Memory Attributes'                  , 0
 DB  'HPET' , 'High Precision Event Timer'                       , 0
 DB  'IBFT' , 'iSCSI Boot Firmware'                              , 0
 DB  'IORT' , 'I/O Remapping'                                    , 0
@@ -2135,16 +2152,19 @@ DB  'OEMx' , 'OEM Specific Information'                         , 0
 DB  'OEMB' , 'OEM Specific Information'                         , 0
 DB  'PHAT' , 'Platform Health Assessment'                       , 0
 DB  'PCCT' , 'Platform Communications Channel'                  , 0
+DB  'PDTT' , 'Platform Debug Trigger'                           , 0
 DB  'PMTT' , 'Platform Memory Topology'                         , 0
+DB  'PPTT' , 'Processor Properties Topology'                    , 0
 DB  'PSDT' , 'Persistent System Description'                    , 0
-DB  'PRMT' , 'Platform Runtime Mechanism Table'                 , 0
-DB  'PTDT' , 'Platform Telemetry Data Table'                    , 0
+DB  'PRMT' , 'Platform Runtime Mechanism'                       , 0
+DB  'PTDT' , 'Platform Telemetry Data'                          , 0
 DB  'RASF' , 'ACPI RAS Feature'                                 , 0
-DB  'RGRT' , 'Regulatory Graphics Resource Table'               , 0
+DB  'RGRT' , 'Regulatory Graphics Resource'                     , 0
 DB  'RSDT' , 'Root System Description'                          , 0
+DB  'S3PT' , 'S3 Performance'                                   , 0
 DB  'SBST' , 'Smart Battery Specification'                      , 0
 DB  'SDEI' , 'Software Delegated Exceptions Interface'          , 0
-DB  'SDEV' , 'Secure Devices Table'                             , 0
+DB  'SDEV' , 'Secure Devices'                                   , 0
 DB  'SLIC' , 'Microsoft Software Licensing'                     , 0
 DB  'SLIT' , 'System Locality Distance Information'             , 0
 DB  'SRAT' , 'Static/System Resource Affinity'                  , 0
@@ -2154,11 +2174,14 @@ DB  'SPMI' , 'Server Platform Management Interface'             , 0
 DB  'STAO' , '_STA Override'                                    , 0
 DB  'SVKL' , 'Storage Volume Key Data'                          , 0
 DB  'TCPA' , 'Trusted Computing Platform Alliance Capabilities' , 0
+DB  'TDEL' , 'Trust Domain Event Log'                           , 0
 DB  'TPM2' , 'Trusted Platform Module 2'                        , 0
 DB  'UEFI' , 'Unified Extensible Firmware Interface'            , 0
+DB  'VIOT' , 'Virtual I/O Translation'                          , 0
 DB  'WAET' , 'Windows ACPI Emulated Devices'                    , 0
-DB  'WDAT' , 'Watch Dog Action Table'                           , 0
-DB  'WDRT' , 'Watch Dog Resource Table'                         , 0
+DB  'WDAT' , 'Watch Dog Action'                                 , 0
+DB  'WDDT' , 'Watch Dog Description'                            , 0
+DB  'WDRT' , 'Watch Dog Resource'                               , 0
 DB  'WPBT' , 'Windows Platform Binary'                          , 0
 DB  'WSMT' , 'Windows Security Mitigations'                     , 0
 DB  'XENV' , 'Xen Project'                                      , 0
@@ -2261,7 +2284,8 @@ IDI_NUMA        , LANG_NEUTRAL , iNuma       , \
 IDI_P_GROUPS    , LANG_NEUTRAL , iPgroups    , \
 IDI_SMBIOS      , LANG_NEUTRAL , iSmbios     , \
 IDI_ACPI        , LANG_NEUTRAL , iAcpi       , \
-IDI_AFF_CPUID   , LANG_NEUTRAL , iAffCpuid
+IDI_AFF_CPUID   , LANG_NEUTRAL , iAffCpuid   , \
+IDI_ABOUT_BOX   , LANG_NEUTRAL , iAboutBox
 ;---------- Directory of group icon resources ---------------------------------;
 resource gicons, \
 IDG_SYSINFO     , LANG_NEUTRAL , gSysinfo    , \
@@ -2274,7 +2298,8 @@ IDG_NUMA        , LANG_NEUTRAL , gNuma       , \
 IDG_P_GROUPS    , LANG_NEUTRAL , gPgroups    , \
 IDG_SMBIOS      , LANG_NEUTRAL , gSmbios     , \
 IDG_ACPI        , LANG_NEUTRAL , gAcpi       , \
-IDG_AFF_CPUID   , LANG_NEUTRAL , gAffCpuid
+IDG_AFF_CPUID   , LANG_NEUTRAL , gAffCpuid   , \
+IDG_ABOUT_BOX   , LANG_NEUTRAL , gAboutBox
 ;---------- Icon resources ----------------------------------------------------;
 icon iSysinfo    , gSysinfo    , 'images\sysinfo.ico'
 icon iMemory     , gMemory     , 'images\memory.ico'
@@ -2287,6 +2312,7 @@ icon iPgroups    , gPgroups    , 'images\pgroups.ico'
 icon iSmbios     , gSmbios     , 'images\smbios.ico'
 icon iAcpi       , gAcpi       , 'images\acpi.ico'
 icon iAffCpuid   , gAffCpuid   , 'images\affcpuid.ico'
+icon iAboutBox   , gAboutBox   , 'images\books.ico'
 ;---------- Version resources -------------------------------------------------;
 resource     version, 1, LANG_NEUTRAL, version_info
 versioninfo  version_info, \ 
