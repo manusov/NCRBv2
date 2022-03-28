@@ -373,7 +373,7 @@ call [SelectObject]
 push esi                   ; Parm#2 = Pointer to PAINT structure
 push ebx                   ; Parm#1 = Window handle
 call [EndPaint]
-jmp .statusZero
+jmp .statusOne  ; .statusZero , experimentally changed because background redraw when other window overlap this
 
 ;---------- Helper for detect mouse cursor position at clickable text ---------;
 ;                                                                              ;

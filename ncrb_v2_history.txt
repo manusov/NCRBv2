@@ -1,3 +1,7 @@
+28.03.2022. v2.01.02. Changes for x64 and ia32 versions.
+Changed "About" window procedure (Status after WM_PAINT message handling).
+
+
 27.03.2022. v2.01.01. Changes for x64 and ia32 versions.
 1) New design for "About" window with web links to GitHub and FASM.
 2) Added signatures for detection ACPI tables:

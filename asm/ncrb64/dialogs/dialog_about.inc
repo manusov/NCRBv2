@@ -369,7 +369,7 @@ call [SelectObject]
 mov rdx,rsi                   ; Parm#2 = RDX = Pointer to PAINT structure
 mov rcx,rbx                   ; Parm#1 = RCX = Window handle
 call [EndPaint]
-jmp .statusZero
+jmp .statusOne  ; .statusZero , experimentally changed because background redraw when other window overlap this 
 
 ;---------- Helper for detect mouse cursor position at clickable text ---------;
 ;                                                                              ;
