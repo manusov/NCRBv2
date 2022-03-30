@@ -44,7 +44,7 @@ jmp .status
 mov eax,1
 .status:
 pop ebp edi esi ebx
-ret
+ret 16
 
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
@@ -227,7 +227,7 @@ mov ecx,3
 cld
 rep movsd
 lodsd
-sub eax,YBOTTOM
+sub eax,ABOUT_YBOTTOM
 stosd
 pop edi esi
 ;---------- Set window transparency for text write ----------------------------;
@@ -239,11 +239,13 @@ push COLOR_WINDOW + 1             ; Parm#3 = Color (or HBRUSH)
 push edi                          ; Parm#2 = Pointer to RECT structure
 push ebp                          ; Parm#1 = hDC
 call [FillRect] 
-push [APP_DATA.aboutCreatedIcon]  ; Parm#4 = Handle icon
-push ICONY                        ; Parm#3 = Base Y coordinate
-push ICONX                        ; Parm#2 = Base X coordinate 
+;---------- Draw central picture ----------------------------------------------;
+push [APP_DATA.createdBigIcons]   ; Parm#4 = Handle icon
+push ABOUT_ICONY                  ; Parm#3 = Base Y coordinate
+push ABOUT_ICONX                  ; Parm#2 = Base X coordinate 
 push ebp                          ; Parm#1 = hDC, handle display context
 call [DrawIcon]
+;---------- Support text output -----------------------------------------------;
 xor eax,eax
 mov ecx,[ABOUT_BOX.hFont]
 jecxz @f
@@ -259,7 +261,7 @@ call [GetTextMetrics]
 push ebx esi
 cld
 lea esi,[ABOUT_NAME]
-mov ebx,YBASE1
+mov ebx,ABOUT_YBASE1
 .next1:
 mov ecx,esi
 @@:
@@ -274,7 +276,7 @@ jne @b
 lea edx,[esi - 1]
 sub edx,ecx
 mov [edi + RECT.top],ebx
-add ebx,YADD1
+add ebx,ABOUT_YADD1
 mov [edi + RECT.bottom],ebx
 call HelperCenterText
 dec esi
@@ -301,7 +303,7 @@ mov [ebx + CLICKSTRING.stringId + sizeof.CLICKSTRING],STR_AB_FASM
 mov [ebx + CLICKSTRING.fullSize + sizeof.CLICKSTRING],ABOUT_FULL_SIZE_2
 mov [ebx + CLICKSTRING.clickStart + sizeof.CLICKSTRING],ABOUT_CLICK_START_2
 mov [ebx + CLICKSTRING.clickSize + sizeof.CLICKSTRING],ABOUT_CLICK_SIZE_2
-mov dword [esp + 04],YBASE2
+mov dword [esp + 04],ABOUT_YBASE2
 .clickableStrings:
 push esi
 mov esi,[APP_DATA.lockedStrings]
@@ -324,7 +326,7 @@ mov [esp + 12],edx
 mov [edi + RECT.left],edx
 mov eax,[esp + 04]
 mov [edi + RECT.top],eax
-add eax,YADD2
+add eax,ABOUT_YADD2
 mov [edi + RECT.bottom],eax
 mov edx,[ebx + CLICKSTRING.clickStart]
 mov ecx,[esp + 08]
@@ -358,8 +360,8 @@ add ecx,[ebx + CLICKSTRING.clickSize]
 add ecx,[esp + 08]
 call HelperLeftText
 add ebx,sizeof.CLICKSTRING
-add dword [esp + 04],YADD2
-cmp dword [esp + 04],YBASE2 + YADD2 
+add dword [esp + 04],ABOUT_YADD2
+cmp dword [esp + 04],ABOUT_YBASE2 + ABOUT_YADD2 
 jbe .clickableStrings 
 pop ebx
 add esp,16                 ; Remove 4 dwords from stack frame

@@ -8,7 +8,7 @@
 ;                                                                              ;
 ; OUTPUT:  RAX = status, TRUE = message recognized and processed               ;
 ;                        FALSE = not recognized, must be processed by OS,      ;
-;                        see MSDN for status exceptions and details            ;  
+;                        see MSDN for status exceptions and details.           ;  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 DialogProcChildMemoryDraw:
@@ -208,8 +208,13 @@ jmp .resizeEntry
 mov r8d,TIMER_TICK_SHOW     ; Timer period (ms), screen refresh high frequency
 xor edi,edi                 ; Silent Mode = 0
 ;---------- Entry point for silent mode branch --------------------------------;
-.resizeEntry:     ; R8  = Parm#3 = Timer ticks period, ms
-mov rcx,rbx       ; RCX = Parm#1 = Parent window handle
+.resizeEntry:
+push r8
+mov al,WAIT_MODE_MEMORY
+call OpenPleaseWait                 ; Open "Please wait" window
+pop r8
+;---------- Set timer for draw periodical visualization -----------------------;
+mov rcx,rbx       ; RCX = Parm#1 = Parent window handle, R8  = Parm#3 = Timer ticks period, ms
 xor edx,edx       ; RDX = Parm#2 = Event ID
 xor r9d,r9d       ; R9  = Parm#4 = Notify function pointer, not used here
 call [SetTimer]
@@ -266,6 +271,7 @@ mov rcx,[DRAW_THREAD_PARMS.eventStart]  ; RCX = Parm#1 = Handle for start event
 mov edx,THREAD_TIME_LIMIT               ; RDX = Parm#2 = Time limit
 call [WaitForSingleObject]
 mov [GUI_PARMS.childWinRunning],1
+call ClosePleaseWait                    ; Close "Please wait" window
 jmp .processed
 
 ;------------------------------------------------------------------------------;

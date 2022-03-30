@@ -8,7 +8,7 @@
 ;                                                                              ;
 ; OUTPUT:  RAX = status, TRUE = message recognized and processed               ;
 ;                        FALSE = not recognized, must be processed by OS,      ;
-;                        see MSDN for status exceptions and details            ;
+;                        see MSDN for status exceptions and details.           ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 DialogProcChildVectorBrief:

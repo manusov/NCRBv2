@@ -8,7 +8,7 @@
 ;                                                                              ;
 ; OUTPUT:  EAX = status, TRUE = message recognized and processed               ;
 ;                        FALSE = not recognized, must be processed by OS,      ;
-;                        see MSDN for status exceptions and details            ;  
+;                        see MSDN for status exceptions and details.           ;  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 DialogProcChildMemoryDraw:
@@ -197,7 +197,12 @@ mov cl,0                  ; Silent Mode = 0
 ;---------- Entry point for silent mode branch --------------------------------;
 .resizeEntry:
 push ecx
+push eax
+mov al,WAIT_MODE_MEMORY
+call OpenPleaseWait                 ; Open "Please wait" window
+pop eax
 ;---------- Start parameters frame here ---------------------------------------;
+;---------- Set timer for draw periodical visualization -----------------------;
 push 0                    ; Parm#4 = Notify function pointer, not used here
 push eax                  ; Parm#3 = Timer ticks period, ms
 push 0                    ; Parm#2 = Event ID
@@ -257,6 +262,7 @@ push THREAD_TIME_LIMIT               ; Parm#2 = Time limit
 push [DRAW_THREAD_PARMS.eventStart]  ; Parm#1 = Handle for start event
 call [WaitForSingleObject]
 mov [GUI_PARMS.childWinRunning],1
+call ClosePleaseWait                    ; Close "Please wait" window
 jmp .processed
 
 ;------------------------------------------------------------------------------;

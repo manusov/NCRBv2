@@ -50,7 +50,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.1.2.0'
+RESOURCE_VERSION      EQU  '2.1.3.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -85,7 +85,8 @@ IDD_AFF_CPUID          , LANG_ENGLISH + SUBLANG_DEFAULT, tabAffCpuid      , \
 IDD_CHILD_MEMORY_RUN   , LANG_ENGLISH + SUBLANG_DEFAULT, childMemoryRun   , \
 IDD_CHILD_MEMORY_DRAW  , LANG_ENGLISH + SUBLANG_DEFAULT, childMemoryDraw  , \
 IDD_CHILD_VECTOR_BRIEF , LANG_ENGLISH + SUBLANG_DEFAULT, childVectorBrief , \
-IDD_CHILD_ABOUT        , LANG_ENGLISH + SUBLANG_DEFAULT, childAbout 
+IDD_CHILD_ABOUT        , LANG_ENGLISH + SUBLANG_DEFAULT, childAbout       , \
+IDD_CHILD_WAIT         , LANG_ENGLISH + SUBLANG_DEFAULT, childWait
 ;---------- Application main window as tabbed sheet ---------------------------;
 dialog      mainDialog,        '',                      0,   0, 410, 282, DS_CENTER + WS_CAPTION + WS_SYSMENU, 0, IDR_MENU, 'Verdana', 10
 dialogitem  'SysTabControl32', '', IDC_TAB          ,   1,   1, 408,  29, WS_VISIBLE + TCS_MULTILINE
@@ -488,6 +489,9 @@ enddialog
 dialog      childAbout    , '',                       100, 100, 120, 101, WS_CAPTION + WS_SYSMENU + WS_VISIBLE, 0, 0, 'Verdana', 10
 dialogitem  'BUTTON'      , '', IDB_ABOUT_OK        ,  47,  83,  32,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog 
+;---------- Child window = "Please wait" box ----------------------------------;
+dialog      childWait     , '',                       160,  60,  86,  65, WS_CAPTION + WS_VISIBLE, 0, 0, 'Verdana', 10
+enddialog
 ;---------- Application main menu and service items ---------------------------; 
 resource menus, IDR_MENU, LANG_ENGLISH + SUBLANG_DEFAULT, mainMenu
 menu mainMenu
@@ -972,6 +976,11 @@ DB  'Developed with Flat Assembler.'              , 0
 DB  'https://github.com/manusov?tab=repositories' , 0
 DB  'https://flatassembler.net/'                  , 0
 DB  'Shell error.'                                , 0
+;---------- Strings for child screen = "Please wait" window -------------------;
+DB  'CPU benchmark'     , 0   ; This 2 ID must be sequental, selected by value
+DB  'Memory benchmark'  , 0
+DB  'Please wait...'    , 0
+DB  'Running'           , 0
 ;---------- Strings for fatal error messages, cannot run NCRB -----------------;
 ; This messages can be generated if resource DLL successfully loaded,
 ; see also message strings at executeble files NCRB32.ASM, NCRB64.ASM.
@@ -2285,7 +2294,8 @@ IDI_P_GROUPS    , LANG_NEUTRAL , iPgroups    , \
 IDI_SMBIOS      , LANG_NEUTRAL , iSmbios     , \
 IDI_ACPI        , LANG_NEUTRAL , iAcpi       , \
 IDI_AFF_CPUID   , LANG_NEUTRAL , iAffCpuid   , \
-IDI_ABOUT_BOX   , LANG_NEUTRAL , iAboutBox
+IDI_ABOUT_BOX   , LANG_NEUTRAL , iAboutBox   , \
+IDI_WAIT_BOX    , LANG_NEUTRAL , iWaitBox
 ;---------- Directory of group icon resources ---------------------------------;
 resource gicons, \
 IDG_SYSINFO     , LANG_NEUTRAL , gSysinfo    , \
@@ -2299,7 +2309,8 @@ IDG_P_GROUPS    , LANG_NEUTRAL , gPgroups    , \
 IDG_SMBIOS      , LANG_NEUTRAL , gSmbios     , \
 IDG_ACPI        , LANG_NEUTRAL , gAcpi       , \
 IDG_AFF_CPUID   , LANG_NEUTRAL , gAffCpuid   , \
-IDG_ABOUT_BOX   , LANG_NEUTRAL , gAboutBox
+IDG_ABOUT_BOX   , LANG_NEUTRAL , gAboutBox   , \
+IDG_WAIT_BOX    , LANG_NEUTRAL , gWaitBox
 ;---------- Icon resources ----------------------------------------------------;
 icon iSysinfo    , gSysinfo    , 'images\sysinfo.ico'
 icon iMemory     , gMemory     , 'images\memory.ico'
@@ -2313,6 +2324,7 @@ icon iSmbios     , gSmbios     , 'images\smbios.ico'
 icon iAcpi       , gAcpi       , 'images\acpi.ico'
 icon iAffCpuid   , gAffCpuid   , 'images\affcpuid.ico'
 icon iAboutBox   , gAboutBox   , 'images\books.ico'
+icon iWaitBox    , gWaitBox    , 'images\tools.ico'
 ;---------- Version resources -------------------------------------------------;
 resource     version, 1, LANG_NEUTRAL, version_info
 versioninfo  version_info, \ 

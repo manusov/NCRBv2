@@ -23,7 +23,8 @@ IDD_AFF_CPUID           = 111
 IDD_CHILD_MEMORY_RUN    = 120
 IDD_CHILD_MEMORY_DRAW   = 121
 IDD_CHILD_VECTOR_BRIEF  = 122
-IDD_CHILD_ABOUT         = 123 
+IDD_CHILD_ABOUT         = 123
+IDD_CHILD_WAIT          = 124
 ;---------- Identifiers for application main menu and menu items --------------; 
 IDR_MENU                = 130
 IDM_SAVE_REPORT         = 131 
@@ -60,6 +61,7 @@ IDI_SMBIOS              = 168
 IDI_ACPI                = 169
 IDI_AFF_CPUID           = 170    ; Last tab sheet icon
 IDI_ABOUT_BOX           = 171    ; Picture for "About" box icon
+IDI_WAIT_BOX            = 172    ; Picture for "Wait" box icon 
 ;---------- Identifiers for group icons ---------------------------------------;
 IDG_SYSINFO             = 180    ; First tab sheet group icon
 IDG_MEMORY              = 181
@@ -73,11 +75,13 @@ IDG_SMBIOS              = 188
 IDG_ACPI                = 189
 IDG_AFF_CPUID           = 190    ; Last tab sheet group icon
 IDG_ABOUT_BOX           = 191    ; Picture for "About" box group icon
+IDG_WAIT_BOX            = 192    ; Picture for "Wait" box group icon 
 ;---------- Initial values and counters for build GUI objects -----------------; 
 ICON_FIRST              = IDG_SYSINFO
 IDD_FIRST               = IDD_SYSINFO
 ITEM_COUNT              = 11
 ICON_COUNT              = ITEM_COUNT
+BIG_ICON_COUNT          = 2
 MEMORY_ICON_NUMBER      = 1
 VBRF_ICON_NUMBER        = 0
 ;---------- Identifier for tabbed sheet component -----------------------------;
@@ -914,10 +918,15 @@ ABOUT_FULL_SIZE_2      = 30  ; all string size, chars
 ABOUT_CLICK_START_2    = 15  ; start of 'Flat Assembler' sub-string, 0-based 
 ABOUT_CLICK_SIZE_2     = 14  ; size of 'Flat Assembler' sub-string
 ABOUT_CLICK_COLOR      = 00FF0000h  ; Color for clicked, 00bbggrrh 
+;---------- Strings for child screen = "Please wait" window -------------------;
+STR_PW_CPU_BENCH       = STR_AB_SHELL_ERROR + 1  ; This 2 ID must be sequental
+STR_PW_MEMORY_BENCH    = STR_PW_CPU_BENCH + 1
+STR_PW_PLEASE_WAIT     = STR_PW_CPU_BENCH + 2
+STR_PW_RUNNING         = STR_PW_CPU_BENCH + 3
 ;---------- Strings for fatal error messages, cannot run NCRB -----------------;
 ; This messages can be generated if resource DLL successfully loaded,
 ; see also message strings at executeble files NCRB32.ASM, NCRB64.ASM.
-STR_ERROR_CPUID        = STR_AB_SHELL_ERROR + 1 
+STR_ERROR_CPUID        = STR_PW_RUNNING + 1 
 STR_ERROR_CPUID_F1     = STR_ERROR_CPUID + 1    
 STR_ERROR_X87          = STR_ERROR_CPUID + 2
 STR_ERROR_TSC          = STR_ERROR_CPUID + 3
@@ -1333,12 +1342,20 @@ UNITS_COUNT           = 7
 DRAW_TSC_STRING_SIZE  = 32
 TSC_VALUE_OFFSET      = 19
 ;---------- GUI geometry definitions for "About" window -----------------------;
-YBASE1   =  45    ; Strings 1-3 vertical start position
-YBASE2   =  106   ; Strings 4-5 vertical start position
-YADD1    =  17    ; Strings 1-3 vertical step 
-YADD2    =  17    ; Strings 4-5 vertical step 
-YBOTTOM  =  45    ; Bottom field with "OK" button Y-size
-ICONX    =  104   ; Icon base X-coordinate, upper-left corner
-ICONY    =  5     ; Icon base Y-coordinate, upper-left corner
-ICONDX   =  32    ; Icon X-size
-ICONDY   =  32    ; Icon Y-size
+ABOUT_YBASE1     =  45    ; Strings 1-3 vertical start position
+ABOUT_YBASE2     =  106   ; Strings 4-5 vertical start position
+ABOUT_YADD1      =  17    ; Strings 1-3 vertical step 
+ABOUT_YADD2      =  17    ; Strings 4-5 vertical step 
+ABOUT_YBOTTOM    =  45    ; Bottom field with "OK" button Y-size
+ABOUT_ICONX      =  104   ; Icon base X-coordinate, upper-left corner
+ABOUT_ICONY      =  5     ; Icon base Y-coordinate, upper-left corner
+ABOUT_ICONDX     =  32    ; Icon X-size
+ABOUT_ICONDY     =  32    ; Icon Y-size
+;---------- GUI geometry and control definitions for "Wait" window ------------;
+WAIT_YBASE1      =  23    ; Benchmark name string vertical start position
+WAIT_YBASE2      =  85    ; "Please wait" string vertical start position
+WAIT_YADD        =  18    ; Strings vertical step, here for rectangle size
+WAIT_ICONX       =  69    ; Icon base X-coordinate, upper-left corner
+WAIT_ICONY       =  48    ; Icon base Y-coordinate, upper-left corner
+WAIT_MODE_CPU    =  0     ; "Please wait" for CPU benchmark
+WAIT_MODE_MEMORY =  1     ; "Please wait" for Memory benchmark

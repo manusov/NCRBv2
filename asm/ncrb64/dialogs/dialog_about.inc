@@ -221,39 +221,41 @@ mov ecx,3
 cld
 rep movsd
 lodsd
-sub eax,YBOTTOM
+sub eax,ABOUT_YBOTTOM
 stosd
 pop rdi rsi
 ;---------- Set window transparency for text write ----------------------------;
-mov edx,TRANSPARENT                 ; Parm#2 = RDX = Mode
-mov rcx,r13                         ; Parm#1 = RCX = hDC  
+mov edx,TRANSPARENT                ; Parm#2 = RDX = Mode
+mov rcx,r13                        ; Parm#1 = RCX = hDC  
 call [SetBkMode]
 ;---------- Fill window by background color -----------------------------------; 
-mov r8d,COLOR_WINDOW + 1            ; Parm#3 = R8  = Color (or HBRUSH)
-mov rdx,rdi                         ; Parm#2 = RDX = Pointer to RECT structure
-mov rcx,r13                         ; Parm#1 = RCX = hDC  
+mov r8d,COLOR_WINDOW + 1           ; Parm#3 = R8  = Color (or HBRUSH)
+mov rdx,rdi                        ; Parm#2 = RDX = Pointer to RECT structure
+mov rcx,r13                        ; Parm#1 = RCX = hDC  
 call [FillRect] 
-mov r9,[APP_DATA.aboutCreatedIcon]  ; Parm#4 = R9  = Handle icon
-mov r8d,ICONY                       ; Parm#3 = R8  = Base Y coordinate
-mov edx,ICONX                       ; Parm#2 = RDX = Base X coordinate
-mov rcx,r13                         ; Parm#1 = RCX = hDC, handle display context
+;---------- Draw central picture ----------------------------------------------;
+mov r9,[APP_DATA.createdBigIcons]  ; Parm#4 = R9  = Handle icon
+mov r8d,ABOUT_ICONY                ; Parm#3 = R8  = Base Y coordinate
+mov edx,ABOUT_ICONX                ; Parm#2 = RDX = Base X coordinate
+mov rcx,r13                        ; Parm#1 = RCX = hDC, handle display context
 call [DrawIcon]
+;---------- Support text output -----------------------------------------------;
 xor eax,eax
-mov rdx,[r15 + ABOUTBOX.hFont]      ; Parm#2 = RDX = HGDIOBJ, object handle
+mov rdx,[r15 + ABOUTBOX.hFont]     ; Parm#2 = RDX = HGDIOBJ, object handle
 test rdx,rdx
 jz @f
-mov rcx,r13                         ; Parm#1 = RCX = hDC, handle display context
+mov rcx,r13                        ; Parm#1 = RCX = hDC, handle display context
 call [SelectObject]
 @@:
 mov [r15 + ABOUTBOX.hFontBack],rax
-lea rdx,[r15 + ABOUTBOX.tm]         ; Parm#2 = Pointer to TEXTMETRIC structure
-mov rcx,r13                         ; Parm#1 = RCX = hDC, handle display context
+lea rdx,[r15 + ABOUTBOX.tm]        ; Parm#2 = Pointer to TEXTMETRIC structure
+mov rcx,r13                        ; Parm#1 = RCX = hDC, handle display context
 call [GetTextMetrics]
 ;---------- Strings 1-3, without clickable elements ---------------------------;
 push rbx rsi
 cld
 lea rsi,[ABOUT_NAME]
-mov ebx,YBASE1
+mov ebx,ABOUT_YBASE1
 .next1:
 mov rdx,rsi
 @@:
@@ -268,7 +270,7 @@ jne @b
 lea r8,[rsi - 1]
 sub r8,rdx
 mov [rdi + RECT.top],ebx
-add ebx,YADD1
+add ebx,ABOUT_YADD1
 mov [rdi + RECT.bottom],ebx
 call HelperCenterText
 dec rsi
@@ -296,7 +298,7 @@ mov [r14 + CLICKSTRING.stringId + sizeof.CLICKSTRING],STR_AB_FASM
 mov [r14 + CLICKSTRING.fullSize + sizeof.CLICKSTRING],ABOUT_FULL_SIZE_2
 mov [r14 + CLICKSTRING.clickStart + sizeof.CLICKSTRING],ABOUT_CLICK_START_2
 mov [r14 + CLICKSTRING.clickSize + sizeof.CLICKSTRING],ABOUT_CLICK_SIZE_2
-mov ebp,YBASE2
+mov ebp,ABOUT_YBASE2
 .clickableStrings:
 push rsi
 mov rsi,[APP_DATA.lockedStrings]
@@ -319,7 +321,7 @@ mov r12d,edx
 mov [rdi + RECT.left],edx
 mov eax,ebp
 mov [rdi + RECT.top],eax
-add eax,YADD2
+add eax,ABOUT_YADD2
 mov [rdi + RECT.bottom],eax
 mov r8d,[r14 + CLICKSTRING.clickStart]
 mov rdx,rbx
@@ -354,8 +356,8 @@ add edx,[r14 + CLICKSTRING.clickSize]
 add rdx,rbx
 call HelperLeftText
 add r14,sizeof.CLICKSTRING
-add ebp,YADD2
-cmp ebp,YBASE2 + YADD2 
+add ebp,ABOUT_YADD2
+cmp ebp,ABOUT_YBASE2 + ABOUT_YADD2 
 jbe .clickableStrings 
 add rsp,32
 pop rbp rbx

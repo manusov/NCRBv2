@@ -48,12 +48,12 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.1.2.0'
+RESOURCE_VERSION        EQU '2.1.3.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.01.02 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.01.03 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -153,9 +153,14 @@ stosd                              ; Store pointer to icon resource
 inc ebp                            ; EBP = Next icon
 dec esi                            ; ESI = Cycle counter  
 jnz .loadIcons                     ; Cycle for initializing all icons 
-;---------- Load icon resource for "About" window -----------------------------;
+;---------- Load icon resource for "About" and "Wait" windows -----------------;
+; Note "Big Icons" name because 32x32 pixels.
+lea edi,[ebx + APPDATA.lockedBigIcons]
+mov esi,BIG_ICON_COUNT
+mov ebp,IDG_ABOUT_BOX
+.loadBigIcons:                     ; Cycle for icons resources and images
 push RT_GROUP_ICON                 ; Parm#3 = Resource type
-push IDG_ABOUT_BOX                 ; Parm#2 = Resource name, used numeric ID
+push ebp                           ; Parm#2 = Resource name, used numeric ID
 push [ebx + APPDATA.hResources]    ; Parm#1 = Module handle, this load from DLL
 call [FindResource]                ; Find resource, get handle of block
 test eax,eax                       ; EAX = HRSRC, handle of resource block
@@ -169,14 +174,14 @@ push eax                           ; Parm#1 = Resource handle
 call [LockResource]                ; Lock resource, get address pointer
 test eax,eax                       ; EAX = LPVOID, pointer to resource
 jz .iconsPoolFailed                ; Go if pointer = NULL, means error
-mov [ebx + APPDATA.aboutLockedIcon],eax ; Store pointer to icon resource
-;---------- Create icon from loaded resource for "About" window ---------------;
+stosd                              ; Store pointer to icon resource
+;---------- Create icon from loaded resources for "About" and "Wait" windows --;
 ; This step executed during initialization for integrity check and prevent
 ; load-unload with potential memory leak.
 ; Note constant 10A8h is icon length value from icon file.
 push LR_DEFAULTCOLOR              ; Parm#7 = Flags
-push ICONDY                       ; Parm#6 = cyDesired
-push ICONDX                       ; Parm#5 = cxDesired
+push ABOUT_ICONDY                 ; Parm#6 = cyDesired
+push ABOUT_ICONDX                 ; Parm#5 = cxDesired
 push 30000h                       ; Parm#4 = Version of icon format
 push TRUE                         ; Parm#3 = Icon/Cursor, TRUE means Icon
 push 10A8h                        ; Parm#2 = dwResSize, bytes (from file) 
@@ -184,7 +189,10 @@ push eax                          ; Parm#1 = Pointer to resource bits
 call [CreateIconFromResourceEx]   ; Create icon, return handle
 test eax,eax                              ; EAX = HICON, handle of icon
 jz .iconsPoolFailed                       ; Go if pointer = NULL, means error
-mov [ebx + APPDATA.aboutCreatedIcon],eax  ; Store pointer to icon
+mov [edi + BIG_ICON_COUNT * 4 - 4],eax    ; Store pointer to icon
+inc ebp                                   ; icon id + 1
+dec esi                                   ; cycle counter - 1
+jnz .loadBigIcons 
 ;---------- Get handle and address pointer to raw pools at resources DLL ------;
 ; Strings located at raw resources part, for compact encoding 1 byte per char,
 ; note standard string resource use 2 byte per char (UNICODE). 
@@ -259,7 +267,7 @@ mov bp,DRAW_TABLE_COUNT
 mov dx,DRAW_TABLE_FIRST_TEXT
 @@:
 mov eax,edx
-mov esi,[APP_DATA.lockedStrings]
+mov esi,[ebx + APPDATA.lockedStrings]
 call IndexString
 xchg eax,esi
 stosd
@@ -272,7 +280,7 @@ mov bp,UNITS_COUNT
 mov dx,UNITS_FIRST_TEXT 
 @@:
 mov eax,edx
-mov esi,[APP_DATA.lockedStrings]
+mov esi,[ebx + APPDATA.lockedStrings]
 call IndexString
 xchg eax,esi
 stosd
@@ -1658,34 +1666,37 @@ align 8
 VECBR_OPB VECBROPB ?
 ;---------- Key data for GUI application with resources -----------------------;  
 struct APPDATA
-hResources                 dd ?     ; Resource DLL handle
-hInstance                  dd ?     ; This EXE file handle
-lockedStrings              dd ?     ; Pointer to strings pool
-lockedBinders              dd ?     ; Pointer to binders pool
-lockedDataCpuCommon        dd ?     ; Data for build common CPU feature bitmap
-lockedDataCpuAvx512        dd ?     ; Data for build AVX512 feature bitmap
-lockedDataOsContext        dd ?     ; Data for build OS context bitmap
-lockedDataIntelCache       dd ?     ; Data for Intel cache descriptors decode
-lockedDataSmbios           dd ?     ; Data base for SMBIOS structures detection
-lockedDataAcpi             dd ?     ; Data base for ACPI tables detection
-lockedImportList           dd ?     ; List for WinAPI dynamical import
-lockedFontList             dd ?     ; List of fonts names
-lockedBrushesList          dd ?     ; List of color brushes
-lockedBitmapInfo           dd ?     ; Bitmap info header for draw window
-lockedReportInfo           dd ?     ; Strings IDs for report table headers
-hFont1                     dd ?     ; Handles of created fonts
-hFont2                     dd ?
-hIcon                      dd ?     ; Application icon handle
-hMain                      dd ?     ; Main window handle
-hTab                       dd ?     ; Sheets container handle
-hImageList                 dd ?     ; Image list handle
-selectedTab                dd ?                   ; Current sheet number
-tabCtrlItem                TC_ITEM ?              ; Tab item data structure
-lockedIcons                dd ICON_COUNT dup ?    ; Pointers to icons resources
-createdIcons               dd ICON_COUNT dup ?    ; Pointers to icons
-hTabDlg                    dd ITEM_COUNT dup ?    ; Sheets handles
-aboutLockedIcon            dd ?     ; Pointer to "About" icon resource
-aboutCreatedIcon           dd ?     ; Pointer to "About" icon
+hResources              dd ?     ; Resource DLL handle
+hInstance               dd ?     ; This EXE file handle
+lockedStrings           dd ?     ; Pointer to strings pool
+lockedBinders           dd ?     ; Pointer to binders pool
+lockedDataCpuCommon     dd ?     ; Data for build common CPU feature bitmap
+lockedDataCpuAvx512     dd ?     ; Data for build AVX512 feature bitmap
+lockedDataOsContext     dd ?     ; Data for build OS context bitmap
+lockedDataIntelCache    dd ?     ; Data for Intel cache descriptors decode
+lockedDataSmbios        dd ?     ; Data base for SMBIOS structures detection
+lockedDataAcpi          dd ?     ; Data base for ACPI tables detection
+lockedImportList        dd ?     ; List for WinAPI dynamical import
+lockedFontList          dd ?     ; List of fonts names
+lockedBrushesList       dd ?     ; List of color brushes
+lockedBitmapInfo        dd ?     ; Bitmap info header for draw window
+lockedReportInfo        dd ?     ; Strings IDs for report table headers
+hFont1                  dd ?     ; Handles of created fonts
+hFont2                  dd ?
+hIcon                   dd ?     ; Application icon handle
+hMain                   dd ?     ; Main window handle
+;---------- Support application tabbed sheets ---------------------------------;
+hTab                    dd ?                     ; Sheets container handle
+hImageList              dd ?                     ; Image list handle
+selectedTab             dd ?                     ; Current sheet number
+tabCtrlItem             TC_ITEM ?                ; Tab item data structure
+lockedIcons             dd ICON_COUNT dup ?      ; Pointers to icons resources
+createdIcons            dd ICON_COUNT dup ?      ; Pointers to icons
+hTabDlg                 dd ITEM_COUNT dup ?      ; Sheets handles
+;---------- Support "About" and "Please wait" windows -------------------------;
+hPleaseWait             dd ?                     ; "Please wait" window handle
+lockedBigIcons          dd BIG_ICON_COUNT dup ?  ; Pointers to icon resources
+createdBigIcons         dd BIG_ICON_COUNT dup ?  ; Pointers to icons
 ends
 APP_DATA APPDATA ?
 ;---------- Operating system constants and structures definition --------------;
@@ -2037,6 +2048,17 @@ clickStr2    CLICKSTRING ?
 ends
 align 8
 ABOUT_BOX ABOUTBOX ?
+;---------- Support "Please wait" window with pictures ------------------------;
+struct WAITBOX
+hFont        dd ?
+hFontBack    dd ?
+ps           PAINTSTRUCT ?
+rect         RECT        ?
+backRect     RECT        ?
+mode         dd          ?
+ends
+align 8
+WAIT_BOX WAITBOX ?
 
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
