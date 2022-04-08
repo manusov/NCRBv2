@@ -1,0 +1,15 @@
+; NCRB (NUMA CPU and RAM benchmarks) configuration file.
+os         = on    ; Enable operating system detail info.
+nativeos   = on    ; Enable native operating system detail info, if run NCRB32 under Win64.
+tlbcpuid   = on    ; Enable CPU caches and TLB detail info.
+topology   = on    ; Enable platform topology detail info by WinAPI.
+topologyex = on    ; Enable platform topology detail info by WinAPI, extended function.
+numa       = on    ; Enable NUMA nodes list by WinAPI.
+groups     = on    ; Enable processor groups list by WinAPI.
+acpi       = on    ; Enable ACPI tables list by WinAPI.
+affcpuid   = on    ; Enable affinized CPUID dump.
+kernelmode = on    ; Enable kernel mode driver service control program support.
+loadkmd    = off   ; Enable pre-load kernel mode driver, or can load manually at KMD screen.
+
+
+
