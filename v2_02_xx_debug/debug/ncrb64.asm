@@ -48,12 +48,12 @@ include 'win64a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.2.1.0'
+RESOURCE_VERSION        EQU '2.2.2.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.02.01 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.02.02 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon

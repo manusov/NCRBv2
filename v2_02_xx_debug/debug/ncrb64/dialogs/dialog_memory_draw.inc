@@ -395,23 +395,31 @@ fstp [rsi + DTHP.statMbpsAverage]
 ffree st0
 fincstp
 ; Select Y-scale by statistics
+; Note FPU rounding mode temporary changed for this operation
 cmp [DRAW_PARMS.selectMode],0
 jne .nanoseconds 
-fld [rsi + DTHP.statMbpsMax]
-push 90 10
-jmp .scalingDone
+fld [rsi + DTHP.statMbpsMax]  ; Get maximum MBPS if Bandwidth mode
+jmp .unitsSelected
 .nanoseconds:
-fld [rsi + DTHP.statNspiMax]
-push 9 2
-.scalingDone:
-fidiv dword [rsp + 8]
-fimul dword [rsp]
-fistp dword [rsp + 8]
-pop rax rax
+fld [rsi + DTHP.statNspiMax]  ; Get maximum nsPI if Latency mode
+.unitsSelected:
+push 9               ; Divisor = coordinate grid count = 9
+fidiv dword [rsp]
+fstcw [rsp + 4]      ; Store FPU Control Word
+mov ax,[rsp + 4]
+and ax,0F3FFh        ; Mask RC (Rounding Control), bits [11,10]
+or ax,00800h         ; Set RC = 10b = Round Up
+mov [rsp + 6],ax
+fldcw [rsp + 6]      ; Load changed FPU Control Word
+fistp dword [rsp]    ; Store result (valueGridY) at Round Up mode
+fldcw [rsp + 4]      ; Restore original FPU Control Word
+pop rax              ; RAX = calculated valueGridY
+; Check for underflow (units per grid = 0) and correct to units per grid = 1 
 test eax,eax
 jnz @f
 inc eax
 @@:
+; Set selected Y-scale and calculate multiplier for pixel coordinates
 cmp [DRAW_PARMS.valueGridY],eax
 je @f
 mov [DRAW_PARMS.showStatic],1
