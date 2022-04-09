@@ -289,6 +289,8 @@ mov al,WAIT_MODE_MEMORY
 call OpenPleaseWait              ; Open "Please wait" window
 call DrawSessionStart            ; Target measured operation
 ;--- Conditionally wait measurements for all points if Silent mode ------------; 
+pushf
+jc .noSilent
 test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
 jz .noSilent                         ; Go skip if non silent mode
 .waitSilent:
@@ -298,6 +300,7 @@ cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
 jb .waitSilent
 .noSilent:
 call ClosePleaseWait             ; Close "Please wait" window
+popf
 jc .runtimeError                 ; Go error message box if status bad
 ;--- Create dialogue window with drawings Performance = F ( Block Size ) ------;
 push 0

@@ -412,6 +412,10 @@ test eax,eax
 jnz @f
 inc eax
 @@:
+cmp [DRAW_PARMS.valueGridY],eax
+je @f
+mov [DRAW_PARMS.showStatic],1
+@@:
 mov [DRAW_PARMS.valueGridY],eax
 push rax -GRIDSTEPY                                       ; + 2 qwords to stack
 fild dword [rsp]        ; ST0 = - grid step, pixels
