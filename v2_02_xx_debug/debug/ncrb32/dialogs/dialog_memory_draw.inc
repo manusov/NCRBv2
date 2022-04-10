@@ -15,7 +15,7 @@ DialogProcChildMemoryDraw:
 push ebp
 mov ebp,esp
 push ebx esi edi
-mov ebx,PARM_HWNDDLG             ; EBX = Window handle
+mov ebx,PARM_HWNDDLG           ; EBX = Window handle
 ;---------- Detect message type -----------------------------------------------;
 mov eax,PARM_MSG               ; Use EAX for compact CMP, TODO. Optimize width.
 cmp eax,WM_INITDIALOG
@@ -209,12 +209,37 @@ call DrawSessionStop
 ; Restart
 mov [DRAW_PARMS.showStatic],1
 call DrawSessionStart                ; note can corrupt pointers
+jc .runtimeError                     ; Go error message box if status bad
 ; Wait for measurement thread run, this event at thread entry point
 ; Note status after [WaitForSingleObject] ignored. TODO. Check it.
 push THREAD_TIME_LIMIT               ; Parm#2 = Time limit
 push [DRAW_THREAD_PARMS.eventStart]  ; Parm#1 = Handle for start event
 call [WaitForSingleObject]
+;--- Conditionally wait measurements for all points if Silent mode ------------; 
+test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
+jz .noSilent                         ; Go skip if non silent mode
+.waitSilent:
+push 100                             ; Units = milliseconds
+call [Sleep]
+cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
+jb .waitSilent
+.noSilent:
+call ClosePleaseWait             ; Close "Please wait" window
+jmp .processed
+;---------- Handler for runtime errors ----------------------------------------;
+.runtimeError:
+push eax
 call ClosePleaseWait                 ; Close "Please wait" window
+pop eax
+mov esi,[APP_DATA.lockedStrings]
+movzx eax,al
+add eax,STR_RUNTIME_ALLOC
+call IndexString       ; Return ESI = Selected string address 
+push MB_ICONERROR      ; Parm#4 = Attributes
+push PROGRAM_NAME      ; Parm#3 = Pointer to title (caption) string
+push esi               ; Parm#2 = Pointer to string: error name 
+push ebx               ; Parm#1 = Parent Window = NULL
+call [MessageBox]  
 jmp .processed
 
 ;------------------------------------------------------------------------------;

@@ -222,12 +222,39 @@ call DrawSessionStop
 ; Restart
 mov [DRAW_PARMS.showStatic],1
 call DrawSessionStart                   ; note can corrupt pointers
+jc .runtimeError                        ; Go error message box if status bad
 ; Wait for measurement thread run, this event at thread entry point
 ; Note status after [WaitForSingleObject] ignored. TODO. check it.
 mov rcx,[DRAW_THREAD_PARMS.eventStart]  ; RCX = Parm#1 = Handle for start event
 mov edx,THREAD_TIME_LIMIT               ; RDX = Parm#2 = Time limit
 call [WaitForSingleObject]
-call ClosePleaseWait                    ; Close "Please wait" window
+;--- Conditionally wait measurements for all points if Silent mode ------------; 
+test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
+jz .noSilent                         ; Go skip if non silent mode
+.waitSilent:
+mov ecx,100                          ; Units = milliseconds
+sub rsp,32
+call [Sleep]
+add rsp,32
+cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
+jb .waitSilent
+.noSilent:
+call ClosePleaseWait                ; Close "Please wait" window
+jmp .processed
+;---------- Handler for runtime errors ----------------------------------------;
+.runtimeError:
+push rax
+call ClosePleaseWait                ; Close "Please wait" window
+pop rax
+mov rsi,[APP_DATA.lockedStrings]
+movzx eax,al
+add eax,STR_RUNTIME_ALLOC
+call IndexString       ; Return ESI = Selected string address 
+mov r9d,MB_ICONERROR   ; R9  = Parm#4 = Attributes
+lea r8,[PROGRAM_NAME]  ; R8  = Parm#3 = Pointer to title (caption) string
+mov rdx,rsi            ; RDX = Parm#2 = Pointer to string: error name 
+mov rcx,rbx            ; RCX = Parm#1 = Parent Window - this window
+call [MessageBox]  
 jmp .processed
 
 ;------------------------------------------------------------------------------;

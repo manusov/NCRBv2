@@ -30,9 +30,11 @@ NCRB v2.02.xx items. All both for x64 and ia32 versions.
 15. +  Scale values for MBPS (bandwidth) and ns (latency): approximation bug with valueGridY.
 16. +  Pre-verify at Oracle VMBox virtual machines: WinXP 32/64 , Win7 32/64 , Win10 32/64.
 17. +  Pre-verify all buttons and options, plus save report function.
+18. +  Error code corruption: benchmark buffer allocation / timings measurement.
+19. +  Abort instead error message at ia32 version when SMT+HT+DRAM Read. Size > 4 GB check.
 
-Additional experiments.
-------------------------
+Additional experiments and bugs fix.
+-------------------------------------
 1.     Experiments with threads priority.
 2.     Experiments with visualization timer refresh rate.
 3.     Memory fence required for measurement and visualization threads shared variables.

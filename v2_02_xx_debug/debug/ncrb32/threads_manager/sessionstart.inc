@@ -301,6 +301,11 @@ mov [edi + MEMIPB.memoryPerThread],eax   ; Setup memory size per one thread
 mov ecx,[edi + MEMIPB.updatedThreads]
 mul ecx                                  ; multiply by number of threads
 mov [edi + MEMIPB.memoryTotal],eax       ; Setup memory size per all threads
+;---------- Check memory size overflow, specific for 32-bit application -------;
+test eax,eax
+js .allocError           ; Go error if low 32 bits above or equal 2 GB 
+test edx,edx             ; EDX = High 32 bits of product after MUL instruction
+jnz .allocError          ; Go error if high 32 bits non zero, means above 4 GB
 ;--- IPB initialization as  IPB = f ( UPB, SYSPARMS ) done at this point ------;
 ; next steps is resources allocation. 
 ;---------- Build NUMA nodes list ---------------------------------------------; 
@@ -312,6 +317,7 @@ mov edx,[edi + MEMIPB.updatedPG]    ; EDX = Processor Groups option
 mov eax,[edi + MEMIPB.updatedNUMA]  ; EAX = NUMA option
 call BuildNumaNodesList             ; CF returned, build list of NUMA nodes
 jnc .numaValid                      ; Go if no errors, means EAX = NUMA nodes count
+.allocError:
 mov al,MSG_RUNTIME_ALLOC            ; otherwise AL = error status
 jmp .exit                           ; Go for error handling
 .numaValid:
