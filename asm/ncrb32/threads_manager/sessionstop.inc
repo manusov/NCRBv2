@@ -28,15 +28,15 @@
 ; Remember about PUSH-POP in the callers.                                      ;
 ;------------------------------------------------------------------------------;
 SessionStop:
-lea edi,[MEM_IPB]      ; RDI = Pointer to IPB (benchmark scenario)
+mov edi,MEM_IPB        ; RDI = Pointer to IPB (benchmark scenario)
 ;---------- Threads stop, release handles for Threads and Events --------------;
-lea ecx,[THREAD_LIST]                  ; ECX = Pointer to threads list
+mov ecx,THREAD_LIST                    ; ECX = Pointer to threads list
 mov edx,[edi + MEMIPB.updatedThreads]  ; EDX = Threads count
 call ReleaseThreadsList
 mov al,MSG_RUNTIME_RELEASE             ; AL = error status, valid if CF=1 only
 jc .exit                               ; Go if error
 ;---------- NUMA-aware or unaware memory release ------------------------------;
-lea ebx,[NUMA_LIST]                    ; EBX = Pointer to NUMA nodes list
+mov ebx,NUMA_LIST                      ; EBX = Pointer to NUMA nodes list
 mov edx,[edi + MEMIPB.domainsCount]    ; EDX = NUMA domains count
 call MemReleaseNuma
 mov al,MSG_RUNTIME_RELEASE             ; AL = error status, valid if CF=1 only

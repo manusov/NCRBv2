@@ -177,7 +177,7 @@ cmp esi,ecx
 jb .scanRelationsEx
 ;---------- Support screen 0 threads, cores, sockets ( variables ) ------------;
 mov esi,[esp + 12]
-lea ebx,[SYS_PARMS.summaryTopology]
+mov ebx,SYS_PARMS.summaryTopology
 pop ecx
 jecxz @f
 mov [ebx + SUMMARYTOPOLOGY.threads],ecx

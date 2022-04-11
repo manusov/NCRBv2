@@ -11,7 +11,7 @@
 ;------------------------------------------------------------------------------;
 InfoProcessor:
 ;---------- Check CPUID instruction support, get 12-chars vendor string -------;
-lea edi,[CPU_DATA.vendorString]
+mov edi,CPU_DATA.vendorString
 call HelperCheckCpuid
 jc .errorCpuid        ; Go error if CPUID instruction not supported or locked
 cmp eax,1
@@ -74,7 +74,7 @@ stosd
 call HelperMeasureTsc
 jc .errorTscFreq      ; Go error if TSC frequency measurement failed
 ;---------- Cache detection by CPUID ------------------------------------------;
-lea edi,[CPU_CACHE_DATA]
+mov edi,CPU_CACHE_DATA
 call HelperCpuidCache
 clc
 ret

@@ -48,12 +48,12 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.1.3.0'
+RESOURCE_VERSION        EQU '2.2.4.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.01.03 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.02.04 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -102,7 +102,7 @@ test eax,eax
 jz .memoryAllocError                ; Go if memory allocation error
 mov [APP_MEMORY],eax         
 ;---------- Start GUI initialization ------------------------------------------;
-lea ebx,[APP_DATA]
+mov ebx,APP_DATA
 push APP_CTRL                       ; Parm#1 = Pointer to structure
 call [InitCommonControlsEx]         ; GUI initialization
 test eax,eax
@@ -198,7 +198,7 @@ jnz .loadBigIcons
 ; note standard string resource use 2 byte per char (UNICODE). 
 ; Binders located at raw resources part,
 ; note binders script used for interconnect GUI and System Information routines. 
-lea esi,[RAW_LIST]
+mov esi,RAW_LIST
 lea edi,[ebx + APPDATA.lockedStrings]
 .loadRaw:
 lodsw
@@ -262,7 +262,7 @@ jne @b
 jmp .createFonts
 .doneFonts:
 ;---------- Pre-load strings for fast build clks/mbps table texts -------------;
-lea edi,[CLKS_MBPS_TEXTS]
+mov edi,CLKS_MBPS_TEXTS
 mov bp,DRAW_TABLE_COUNT
 mov dx,DRAW_TABLE_FIRST_TEXT
 @@:
@@ -275,7 +275,7 @@ inc edx
 dec bp
 jnz @b
 ;--- Pre-load strings for fast build Bytes/KB/MB/GB/TB/MBPS/nanoseconds -------;
-lea edi,[UNITS_TEXTS]
+mov edi,UNITS_TEXTS
 mov bp,UNITS_COUNT
 mov dx,UNITS_FIRST_TEXT 
 @@:
@@ -288,7 +288,7 @@ inc edx
 dec bp
 jnz @b
 ;---------- Pre-load string for write TSC frequency at drawings window --------;
-lea edi,[DRAW_TSC]
+mov edi,DRAW_TSC
 mov ax,STR_MD_TSC_CLOCK_MHZ
 call PoolStringWrite
 ;---------- Load configuration file ncrb.inf ----------------------------------; 
@@ -303,13 +303,13 @@ jc .errorPlatform
 ; call UnloadKernelModeDriver
 ;---------- Check dynamical import results, show missing WinAPI warning -------;
 ; Application can start with this non-fatal warning.
-lea edi,[TEMP_BUFFER]
+mov edi,TEMP_BUFFER
 push esi edi
 mov edx,esi
 mov ax,STR_WARNING_API
 call PoolStringWrite 
 mov esi,[ebx + APPDATA.lockedImportList]
-lea edx,[DYNA_IMPORT]
+mov edx,DYNA_IMPORT
 xor ebp,ebp
 .checkImport:
 cmp byte [esi],0
@@ -374,7 +374,7 @@ xor ebp,ebp                     ; EBP = Exit Code, 0 means no errors
 mov esi,[APP_MEMORY]
 test esi,esi
 jz .exit
-lea ebx,[APP_DATA]
+mov ebx,APP_DATA
 ;---------- Delete created fonts ----------------------------------------------;
 push esi
 mov esi,[ebx + APPDATA.lockedFontList]
@@ -445,7 +445,7 @@ mov al,MSG_MEMORY_ALLOC_ERROR
 ; This procedure for application error, use message strings from exe file,
 ; can execute if resource DLL not loaded or load failes.
 .errorProgram:
-lea esi,[MSG_ERRORS]   ; ESI = Strings pool base, AL = String index 
+mov esi,MSG_ERRORS     ; ESI = Strings pool base, AL = String index 
 mov ah,0
 .errorEntry:
 call IndexString       ; Return ESI = Selected string address 
@@ -906,7 +906,7 @@ jnc .exit                                ; Go skip if no restriction checks
 .overflow:
 mov dword [BIND_LIST.getBlkCustom],eax
 mov ax,STR_CUSTOM_ERROR
-lea edi,[TEMP_BUFFER]  ; EDI = Pointer to buffer for build message
+mov edi,TEMP_BUFFER    ; EDI = Pointer to buffer for build message
 push edi               ; Pointer to message string, copy
 call PoolStringWrite
 mov ax,0A0Dh
@@ -986,7 +986,7 @@ mov edx,eax
 mov ecx,eax
 shr eax,6
 and eax,00001FFFh     ; EAX = first 13-bit parameter
-shr edx,6+13
+shr edx,6 + 13
 and edx,00001FFFh     ; EDX = second 13-bit parameter
 and ecx,00111111b
 push esi edi
@@ -1029,7 +1029,7 @@ BindSetBool:          ; EAX = Variable offset, EDX = Resource ID for GUI item
 mov ecx,eax
 shr eax,3
 and ecx,0111b
-lea esi,[BIND_LIST]
+mov esi,BIND_LIST
 movzx eax,byte [esi + eax]
 bt eax,ecx
 setc al
@@ -1050,7 +1050,7 @@ BindSetSwitch:     ; EAX = Variable offset:bit, EDX = Resource ID for GUI item
 mov ecx,eax
 shr eax,3
 and ecx,0111b
-lea esi,[BIND_LIST]
+mov esi,BIND_LIST
 movzx eax,byte [esi + eax]
 xor esi,esi
 bt eax,ecx
@@ -1087,8 +1087,8 @@ jmp BindSetNumberEntry
 BindSetHex64:
 mov cl,2
 BindSetNumberEntry:
-lea esi,[BIND_LIST]
-lea edi,[TEMP_BUFFER]
+mov esi,BIND_LIST
+mov edi,TEMP_BUFFER
 add esi,eax
 push ebx edx edi
 dec cl
@@ -1171,7 +1171,7 @@ clc
 ret
 ;---------- Script handler: bind font from registry to GUI object -------------;
 BindSetFont:          ; EAX = Font number, EDX = Resource ID for GUI item
-lea esi,[APP_DATA.hFont1]
+mov esi,APP_DATA.hFont1
 mov esi,[esi + eax * 4]
 push edx              ; Parm#2 = Resource ID for GUI item 
 push ebx              ; Parm#1 = Parent window handle  
@@ -1226,7 +1226,7 @@ jmp BindGetNumberEntry
 BindGetHex64:
 mov bp,2
 BindGetNumberEntry:
-lea esi,[TEMP_BUFFER]
+mov esi,TEMP_BUFFER
 lea edi,[BIND_LIST + eax]
 push edx               ; Parm#2 = Resource ID for GUI item 
 push ebx               ; Parm#1 = Parent window handle  
@@ -1301,7 +1301,7 @@ test bp,bp             ; Detect decimal or hexadecimal mode
 jz .errorMessage 
 mov ax,STR_PARSING_HEX
 .errorMessage:
-lea edi,[TEMP_BUFFER]  ; EDI = Pointer to buffer for build message
+mov edi,TEMP_BUFFER    ; EDI = Pointer to buffer for build message
 mov edx,edi            ; EDX = Pointer to message string, copy
 call PoolStringWrite
 mov ax,0A0Dh
@@ -1387,6 +1387,7 @@ RAW_LIST       DW  IDS_STRINGS_POOL
                DW  IDS_IMPORT_POOL
                DW  IDS_FONTS_POOL
                DW  IDS_BRUSHES_POOL
+               DW  IDS_PENS_POOL
                DW  IDS_BITMAP_INFO
                DW  IDS_REPORT_INFO
                DW  0
@@ -1679,6 +1680,7 @@ lockedDataAcpi          dd ?     ; Data base for ACPI tables detection
 lockedImportList        dd ?     ; List for WinAPI dynamical import
 lockedFontList          dd ?     ; List of fonts names
 lockedBrushesList       dd ?     ; List of color brushes
+lockedPensList          dd ?     ; List of color pens
 lockedBitmapInfo        dd ?     ; Bitmap info header for draw window
 lockedReportInfo        dd ?     ; Strings IDs for report table headers
 hFont1                  dd ?     ; Handles of created fonts
@@ -1877,7 +1879,6 @@ DEFAULT_Y_MBPS_PER_GRID = Y_RANGE_MAX_BANDWIDTH / Y_DIV  ; Default units per gri
 DEFAULT_Y_NS_PER_GRID = Y_RANGE_MAX_LATENCY / Y_DIV      ; Default units per grid Y , nanoseconds
 ; Benchmarks visualization timings parameters
 TIMER_TICK_SHOW    = 50     ; Milliseconds per tick, benchmarks progress timer
-TIMER_TICK_SILENT  = 60000  ; 1 revisual per 1 minute, for silent mode
 ;--- Parallel thread for measurements at draw window, state parameters --------;
 ; Number of pixels by X, used for drawings, means number of measurements per draw
 DRAW_POINTS_COUNT  =  640
@@ -1896,14 +1897,14 @@ valueGridX       dd  ?      ; Units per horizontal grid cell
 valueGridY       dd  ?      ; Units per vertical grid cell
 selectUnits      dd  ?      ; Units select: 0=Bytes, 1=Kilobytes, 2=Megabytes
 selectMode       dd  ?      ; Measurement mode: 0=Bandwidth, 1=Latency
-; Drawings X-counter and X-drawings support
-timerCount       dd  ?      ; Timer ticks count ; OLD = Pixels counter for X-progress when drawing
-drawPreviousY    dd  ?      ; Previous coordinate for vertical lines draw if required, when ABS(X(i)-X(i+1)) > 1
 ; Benchmark drawings scale parameters
 ; Better store value for multiply (not divide) at each iteration, for minimize CPU resources utilization
 ; A / B  replace to:  A * C , when C = 1/B. Store C.
 ; Also, vertical offset must be negative, upper means smaller offset, biggest MBPS/ns value
 yMultiplier      dq  ?      ; Y pixels scale factor, floating point, double
+; Flag for show static elements of drawings window at first pass,
+; static elements - not requires update by measurement results: axises, dump ...
+showStatic       dd  ?
 ends
 align 8
 DRAW_PARMS DRPM ?
@@ -1938,28 +1939,24 @@ statMbpsAverage  dq  ?
 statMbpsMedian   dq  ?
 statMbpsSum      dq  ?
 ; Array of measurements results, double precision floating point, 64-bit, [delta TSC]
-; under measurement ordered for median, remember it before get value for drawings
+; under measurement ordered for median, remember it before get value for drawings  
 measureArray     dq  DRAW_POINTS_COUNT dup (?)
+calculateArray   dq  DRAW_POINTS_COUNT dup (?)
+; Array of POINT structures for [PolyLine] WinAPI function
+polylineArray    dq  DRAW_POINTS_COUNT dup (?)
 ends
 align 8
 DRAW_THREAD_PARMS DTHP ?
-;---------- Variables for drawings GUI window management ----------------------;
-struct GUIPARMS
-childWinHandle   dd  ?    ; Handle for drawings window, used for revisual
-silentMode       db  ?    ; Silent mode flag, 1 = Slow screen refresh
-childWinRunning  db  ?
-ends
-align 8
-GUI_PARMS GUIPARMS ?
 ;---------- Variables for graphics controller context -------------------------; 
 ; Video output control
 struct GCPARMS
+handleDC         dd  ?          ; Handle Graphical Device Context
 handleMemDC      dd  ?          ; Handle for Device Context, video controller
 bitmapPointer    dd  ?          ; Bitmap pointer
 handleBitmap     dd  ?          ; Handle of bitmap for graphics draw
+handlePen        dd  ?          ; Handle for color pen 
 handlesBrushes   dd  4 dup (?)  ; Handle for color brushes
 handleFont       dd  ?          ; Handle for font in the drawings window
-handleDC         dd  ?          ; Handle Graphical Device Context
 ends
 align 8
 GC_PARMS GCPARMS ?

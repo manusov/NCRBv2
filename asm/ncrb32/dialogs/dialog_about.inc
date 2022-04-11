@@ -204,7 +204,7 @@ jmp .statusZero
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmpaint:
-lea esi,[ABOUT_BOX.ps]
+mov esi,ABOUT_BOX.ps
 push esi                   ; Parm#2 = Pointer to PAINT structure
 push ebx                   ; Parm#1 = Window handle
 call [BeginPaint]
@@ -217,11 +217,11 @@ push eax eax eax eax       ; Reserve 4 dwords at stack frame
 ; Note don't use RECT after BeginPaint,
 ; it can be partial area, required [GetClientRect].
 push esi
-lea esi,[ABOUT_BOX.backRect]
+mov esi,ABOUT_BOX.backRect
 push esi                       ; Parm#2 = Pointer to RECT structure 
 push ebx                       ; Parm#1 = Window handle 
 call [GetClientRect]
-lea edi,[ABOUT_BOX.rect]
+mov edi,ABOUT_BOX.rect
 push edi
 mov ecx,3
 cld
@@ -260,7 +260,7 @@ call [GetTextMetrics]
 ;---------- Strings 1-3, without clickable elements ---------------------------;
 push ebx esi
 cld
-lea esi,[ABOUT_NAME]
+mov esi,ABOUT_NAME
 mov ebx,ABOUT_YBASE1
 .next1:
 mov ecx,esi
@@ -294,7 +294,7 @@ jmp .next1
 pop esi ebx
 ;---------- Strings 4-5, with clickable elements ------------------------------;
 push ebx
-lea ebx,[ABOUT_BOX.clickStr1]
+mov ebx,ABOUT_BOX.clickStr1
 mov [ebx + CLICKSTRING.stringId],STR_AB_GITHUB
 mov [ebx + CLICKSTRING.fullSize],ABOUT_FULL_SIZE_1
 mov [ebx + CLICKSTRING.clickStart],ABOUT_CLICK_START_1
@@ -386,10 +386,10 @@ jmp .statusOne  ; .statusZero , experimentally changed because background redraw
 ;                                                                              ;
 ;------------------------------------------------------------------------------; 
 HelperCheckLine4:
-lea ecx,[ABOUT_BOX.clickStr1]  ; Pointer for clickable string 1
+mov ecx,ABOUT_BOX.clickStr1  ; Pointer for clickable string 1
 jmp helperCheckLine
 HelperCheckLine5:
-lea ecx,[ABOUT_BOX.clickStr2]  ; Pointer for clickable string 2
+mov ecx,ABOUT_BOX.clickStr2  ; Pointer for clickable string 2
 helperCheckLine:
 push eax
 mov edx,eax

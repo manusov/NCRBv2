@@ -40,8 +40,8 @@ call GuiToUserParms   ; Update UPB
 call SessionStart     ; Initializing, allocate events, threads, memory, IPB
 jc .exit              ; Go if error returned, AL = Error code
 ;---------- Initializing pointers ---------------------------------------------;
-lea ebp,[BIND_LIST]
-lea ebx,[MEM_IPB]
+mov ebp,BIND_LIST
+mov ebx,MEM_IPB
 ;---------- Down comments strings, assembler method ---------------------------;
 lea edi,[ebp + BINDLIST.mdAsm]
 mov eax,[ebx + MEMIPB.updatedAsm]
@@ -117,7 +117,7 @@ call PoolStringWrite
 mov al,0
 stosb
 ;--- Support option, actual for drawings only: adaptive measurement modes -----;
-lea esi,[ADAPTIVE_REPEATS]
+mov esi,ADAPTIVE_REPEATS
 mov eax,[ebx + MEMIPB.updatedMeasure]
 sub eax,MEASURE_B_ADAPTIVE
 jc .skipAdaptive
@@ -128,7 +128,7 @@ mov dword [ebx + MEMIPB.adaptiveSeconds + 0],ecx
 mov ecx,[esi + eax*8 + 4]
 mov dword [ebx + MEMIPB.adaptiveSeconds + 4],ecx
 ;---------- Select Bandwidth or Latency measurement mode ----------------------;
-lea esi,[THREAD_LIST]
+mov esi,THREAD_LIST
 mov ecx,esi
 cmp [ebx + MEMIPB.updatedAsm],LATENCY_MODE
 jae .latencyAdaptive
@@ -209,8 +209,7 @@ pop eax edx                         ; This for release stack only
 ; interpreted and supported at draw session thread 
 .skipAdaptive:
 ;---------- Load pointer to drawings parameters -------------------------------;
-mov [GUI_PARMS.childWinHandle],0
-lea edi,[DRAW_PARMS]
+mov edi,DRAW_PARMS
 ;---------- Calculate X grid step values --------------------------------------;
 ; Must be integer power of 2 for next step correct
 ; Note this operation increase memory size requirements, because increase EAX
@@ -269,7 +268,7 @@ fidiv dword [esp + 4]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )
 fstp [edi + DRPM.yMultiplier]
 pop eax eax
 ;--- Initializing handles and run thread with DrawSessionThread  subroutine ---; 
-lea esi,[DRAW_THREAD_PARMS]
+mov esi,DRAW_THREAD_PARMS
 mov edi,esi
 cld
 ;---------- Create event for thread start, store event handle -----------------;
@@ -350,7 +349,7 @@ pushad
 call SessionStop    ; De-initializing, release events, threads, memory
 jc .exit            ; Go if error returned, AL = Error code
 ;---------- Initializing pointer ----------------------------------------------;
-lea esi,[DRAW_THREAD_PARMS]
+mov esi,DRAW_THREAD_PARMS
 cld
 ;---------- Terminate threads -------------------------------------------------;
 ; Close handles, halt and remove thread with DrawSessionThread  subroutine
@@ -417,42 +416,30 @@ jmp .exit
 DrawSessionThread:
 ;---------- Entry point, must be compliant Microsoft ia32 calling convention --;
 pushad
-;--- Drawings window invalidation for silent mode: show at drawings start -----; 
-cmp [GUI_PARMS.silentMode],0
-je .skipSilent
-mov eax,[GUI_PARMS.childWinHandle]
-test eax,eax
-jz .skipSilent
-push 0                 ; Parm#3 = Background erase flag, 0=Background unchanged
-push 0                 ; Parm#2 = Pointer to invalidated region, 0=All window
-push eax               ; Parm#1 = Window handle
-call [InvalidateRect]  ; This cause callback WM_PAINT operation
-.skipSilent:
 ;---------- Signaling thread START --------------------------------------------;
 push [DRAW_THREAD_PARMS.eventStart]    ; Parm#1 = Handle for thread start event
 call [SetEvent]                        ; Call WinAPI function
 ;---------- Measurement initialization, pre-heat ------------------------------;
-lea esi,[MEM_IPB]                      ; ESI = Pointer to input parameters block
-lea ecx,[THREAD_LIST]                  ; ECX = Pointer to Threads List
+mov esi,MEM_IPB                        ; ESI = Pointer to input parameters block
+mov ecx,THREAD_LIST                    ; ECX = Pointer to Threads List
 mov edx,[esi + MEMIPB.updatedThreads]  ; EDX = Threads count
 call ThreadsReStart
 jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 ;---------- Measurement cycle -------------------------------------------------;
 .backgroundProcess:
 cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
-je .silentBranch
-ja .backgroundSkip     ; Can replace this to wait with minimum utilization ?
-lea esi,[MEM_IPB]      ; ESI = Pointer to Input Parameters Block (IPB)
-lea edi,[MEM_OPB]      ; EDI = Pointer to Output Parameters Block (OPB)
+jae .backgroundSkip    ; TODO. Can replace this to wait with minimum utilization ?
+mov esi,MEM_IPB        ; ESI = Pointer to Input Parameters Block (IPB)
+mov edi,MEM_OPB        ; EDI = Pointer to Output Parameters Block (OPB)
 ;---------- Update block size at threads control block ------------------------;
 mov edx,esi                             ; EDX = Pointer to IPB
 mov ecx,[esi + MEMIPB.updatedThreads]   ; ECX = Number of threads
 mov eax,[esi + MEMIPB.startBlockSize]   ; EAX = Block size per thread, bytes
-lea ebx,[THREAD_LIST]                   ; EBX = Pointer to threads list
+mov ebx,THREAD_LIST                     ; EBX = Pointer to threads list
 call ThreadsUpdateBlockSize
 cmp [esi + MEMIPB.updatedMeasure],MEASURE_B_ADAPTIVE
 jb .noAdaptive                          ; Go skip if adaptive mode not used
-lea ebx,[THREAD_LIST]                   ; EBX = Pointer to threads list 
+mov ebx,THREAD_LIST                     ; EBX = Pointer to threads list 
 mov edx,esi                             ; EDX = Pointer to IPB 
 mov ecx,[esi + MEMIPB.updatedThreads]   ; ECX = Number of threads 
 call ThreadsUpdateAdaptive
@@ -462,30 +449,30 @@ cmp [esi + MEMIPB.updatedAsm],LATENCY_MODE
 jae .latencyMode   ; Go if LATENCY mode, otherwise BANDWIDTH mode 
 .bandwidthMode:
 ;---------- Measurement pattern -----------------------------------------------;
-lea ecx,[THREAD_LIST]
+mov ecx,THREAD_LIST
 mov edx,[esi + MEMIPB.updatedThreads]
 call ThreadsReStart
 jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 jmp .doneBandwidthOrLatency
 .latencyMode:
 ;---------- Setup pattern for prepare walk list -------------------------------;
-lea ebx,[THREAD_LIST]                      ; EBX = Pointer to threads list
+mov ebx,THREAD_LIST                        ; EBX = Pointer to threads list
 mov ecx,[esi + MEMIPB.updatedThreads]      ; ECX = Number of threads
 mov eax,[esi + MEMIPB.patternRoutine]      ; EAX = Pointer to pattern routine
 call ThreadsUpdatePattern
 ;---------- Run service pattern, prepare walk list, delta TSC ignored here ----;
-lea ecx,[THREAD_LIST]                      ; ECX = Pointer to threads list
+mov ecx,THREAD_LIST                        ; ECX = Pointer to threads list
 mov edx,[esi + MEMIPB.updatedThreads]      ; EDX = Number of threads
 call ThreadsReStart
 jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 ;---------- Setup pattern for walk with list, prepared on previous step -------;
-lea ebx,[THREAD_LIST]
+mov ebx,THREAD_LIST
 mov ecx,[esi + MEMIPB.updatedThreads]
 mov eax,[esi + MEMIPB.walkRoutine]
 call ThreadsUpdatePattern
 ;---------- Run measurement pattern -------------------------------------------; 
 ; Walk by prepared walk list, get delta TSC in the RAX
-lea ecx,[THREAD_LIST]
+mov ecx,THREAD_LIST
 mov edx,[esi + MEMIPB.updatedThreads]
 call ThreadsReStart
 jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
@@ -546,17 +533,3 @@ call [SetEvent]                       ; Call WinAPI function
 popad
 xor eax,eax                           ; EAX = 0, return code = 0
 ret 4
-;--- Drawings window invalidation for silent mode: show at drawings end -------; 
-.silentBranch:
-mov al,0
-xchg [GUI_PARMS.silentMode],al
-cmp al,0
-je .backgroundSkip
-mov eax,[GUI_PARMS.childWinHandle]
-test eax,eax
-jz .backgroundSkip
-push 0                 ; Parm#3 = Background erase flag, 0=Background unchanged
-push 0                 ; Parm#2 = Pointer to invalidated region, 0=All window
-push eax               ; Parm#1 = Window handle
-call [InvalidateRect]  ; This cause callback WM_PAINT operation
-jmp .backgroundSkip 

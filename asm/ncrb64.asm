@@ -48,12 +48,12 @@ include 'win64a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.1.3.0'
+RESOURCE_VERSION        EQU '2.2.4.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.01.03 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.02.04 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -255,7 +255,7 @@ xor r8d,r8d
 xor edx,edx
 sub rsp,32
 call [CreateFont]
-add rsp,32+80
+add rsp,32 + 80
 test rax,rax
 jz .createFontFailed
 stosq
@@ -363,7 +363,7 @@ jz .dialogueFailed             ; Go if create dialogue return error
 cmp rax,-1
 je .dialogueFailed             ; Go if create dialogue return error
 ;---------- Application exit point with release resource ----------------------; 
-xor r13d,r13d                      ; R13 = Exit Code, 0 means no errors
+xor r13d,r13d                  ; R13 = Exit Code, 0 means no errors
 .exitResources:
 mov r14,[APP_MEMORY]
 test r14,r14
@@ -966,7 +966,7 @@ mov edx,eax
 mov ecx,eax
 shr eax,6
 and eax,00001FFFh       ; EAX = first 13-bit parameter
-shr edx,6+13
+shr edx,6 + 13
 and edx,00001FFFh       ; EDX = second 13-bit parameter
 and ecx,00111111b
 push rsi
@@ -1378,6 +1378,7 @@ RAW_LIST       DW  IDS_STRINGS_POOL
                DW  IDS_IMPORT_POOL
                DW  IDS_FONTS_POOL
                DW  IDS_BRUSHES_POOL
+               DW  IDS_PENS_POOL
                DW  IDS_BITMAP_INFO
                DW  IDS_REPORT_INFO
                DW  0
@@ -1670,6 +1671,7 @@ lockedDataAcpi          dq ?     ; Data base for ACPI tables detection
 lockedImportList        dq ?     ; List for WinAPI dynamical import
 lockedFontList          dq ?     ; List of fonts names
 lockedBrushesList       dq ?     ; List of color brushes
+lockedPensList          dq ?     ; List of color pens
 lockedBitmapInfo        dq ?     ; Bitmap info header for draw window
 lockedReportInfo        dq ?     ; Strings IDs for report table headers
 hFont1                  dq ?     ; Handles of created fonts
@@ -1867,7 +1869,6 @@ DEFAULT_Y_MBPS_PER_GRID = Y_RANGE_MAX_BANDWIDTH / Y_DIV  ; Default units per gri
 DEFAULT_Y_NS_PER_GRID = Y_RANGE_MAX_LATENCY / Y_DIV      ; Default units per grid Y , nanoseconds
 ; Benchmarks visualization timings parameters
 TIMER_TICK_SHOW    = 50      ; Milliseconds per tick, benchmarks progress timer
-TIMER_TICK_SILENT  = 60000   ; 1 revisual per 1 minute, for silent mode
 ;--- Parallel thread for measurements at draw window, state parameters --------;
 ; Number of pixels by X, used for drawings, means number of measurements per draw
 DRAW_POINTS_COUNT  =  640
@@ -1886,14 +1887,14 @@ valueGridX       dd  ?      ; Units per horizontal grid cell
 valueGridY       dd  ?      ; Units per vertical grid cell
 selectUnits      dd  ?      ; Units select: 0=Bytes, 1=Kilobytes, 2=Megabytes
 selectMode       dd  ?      ; Measurement mode: 0=Bandwidth, 1=Latency
-; Drawings X-counter and X-drawings support
-timerCount       dd  ?      ; Timer ticks count ; OLD = Pixels counter for X-progress when drawing
-drawPreviousY    dd  ?      ; Previous coordinate for vertical lines draw if required, when ABS(X(i)-X(i+1)) > 1
 ; Benchmark drawings scale parameters
 ; Better store value for multiply (not divide) at each iteration, for minimize CPU resources utilization
 ; A / B  replace to:  A * C , when C = 1/B. Store C.
 ; Also, vertical offset must be negative, upper means smaller offset, biggest MBPS/ns value
 yMultiplier      dq  ?      ; Y pixels scale factor, floating point, double
+; Flag for show static elements of drawings window at first pass,
+; static elements - not requires update by measurement results: axises, dump ...
+showStatic       dd  ?
 ends
 align 8
 DRAW_PARMS DRPM ?
@@ -1931,26 +1932,22 @@ statMbpsSum      dq  ?
 ; Array of measurements results, double precision floating point, 64-bit, [delta TSC]
 ; under measurement ordered for median, remember it before get value for drawings  
 measureArray     dq  DRAW_POINTS_COUNT dup (?)
+calculateArray   dq  DRAW_POINTS_COUNT dup (?)
+; Array of POINT structures for [PolyLine] WinAPI function
+polylineArray    dq  DRAW_POINTS_COUNT dup (?)
 ends
 align 8
 DRAW_THREAD_PARMS DTHP ?
-;---------- Variables for drawings GUI window management ----------------------;
-struct GUIPARMS
-childWinHandle   dq  ?    ; Handle for drawings window, used for revisual
-silentMode       db  ?    ; Silent mode flag, 1 = Slow screen refresh
-childWinRunning  db  ?
-ends
-align 8
-GUI_PARMS GUIPARMS ?
 ;---------- Variables for graphics controller context -------------------------; 
 ; Video output control
 struct GCPARMS
+handleDC         dq  ?          ; Handle Graphical Device Context
 handleMemDC      dq  ?          ; Handle for Device Context, video controller
 bitmapPointer    dq  ?          ; Bitmap pointer
 handleBitmap     dq  ?          ; Handle of bitmap for graphics draw
+handlePen        dq  ?          ; Handle for color pen
 handlesBrushes   dq  4 dup (?)  ; Handle for color brushes
 handleFont       dq  ?          ; Handle for font in the drawings window
-handleDC         dq  ?          ; Handle Graphical Device Context
 ends
 align 8
 GC_PARMS GCPARMS ?

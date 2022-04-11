@@ -92,7 +92,7 @@ jmp .statusZero
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmpaint:
-lea esi,[WAIT_BOX.ps]
+mov esi,WAIT_BOX.ps
 push esi                   ; Parm#2 = Pointer to PAINT structure
 push ebx                   ; Parm#1 = Window handle
 call [BeginPaint]
@@ -103,11 +103,11 @@ xchg ebp,eax
 ; Note don't use RECT after BeginPaint,
 ; it can be partial area, required [GetClientRect].
 push esi
-lea esi,[WAIT_BOX.backRect]
+mov esi,WAIT_BOX.backRect
 push esi                       ; Parm#2 = Pointer to RECT structure 
 push ebx                       ; Parm#1 = Window handle 
 call [GetClientRect]
-lea edi,[WAIT_BOX.rect]
+mov edi,WAIT_BOX.rect
 push edi
 mov ecx,4
 cld

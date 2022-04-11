@@ -7,18 +7,18 @@
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 InfoOperatingSystem:
-lea ebx,[DYNA_IMPORT]
-lea edi,[OS_DATA]
+mov ebx,DYNA_IMPORT
+mov edi,OS_DATA
 mov eax,[ebx + DYNAIMPORT._GlobalMemoryStatusEx]
 test eax,eax
 jz .error     ; Go error if this required function not found
-lea ecx,[OS_DATA.memoryStatusEx]
+mov ecx,OS_DATA.memoryStatusEx
 mov [ecx + MEMORYSTATUSEX_DEF.dwLength],sizeof.MEMORYSTATUSEX_DEF
 push ecx
 call eax 
 test eax,eax
 jz .error     ; Go error if this required function failed
-lea ecx,[OS_DATA.systemInfo]
+mov ecx,OS_DATA.systemInfo
 push ecx
 call [GetSystemInfo]
 mov eax,[ebx + DYNAIMPORT._GetActiveProcessorGroupCount]
@@ -38,7 +38,7 @@ mov [OS_DATA.activeProcessorCount],eax
 mov eax,[ebx + DYNAIMPORT._GetNumaHighestNodeNumber]
 test eax,eax
 jz @f
-lea ecx,[OS_DATA.numaNodeCount]
+mov ecx,OS_DATA.numaNodeCount
 push ecx
 call eax
 test eax,eax
@@ -296,15 +296,15 @@ movzx eax,al
 push ecx
 cmp bl,0FFh
 je .sysinfo
-lea ecx,[OS_DATA.memoryStatusEx]
+mov ecx,OS_DATA.memoryStatusEx
 jmp .done
 .sysinfo:
 test bh,bh
 jnz .nativeInfo
-lea ecx,[OS_DATA.systemInfo]
+mov ecx,OS_DATA.systemInfo
 jmp .done
 .nativeInfo:
-lea ecx,[OS_DATA.nativeSystemInfo]
+mov ecx,OS_DATA.nativeSystemInfo
 .done:
 mov edx,[ecx + eax + 4]
 mov eax,[ecx + eax + 0]

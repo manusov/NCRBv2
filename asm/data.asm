@@ -50,7 +50,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.1.3.0'
+RESOURCE_VERSION      EQU  '2.2.4.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -272,7 +272,7 @@ dialogitem  'BUTTON'      , '', IDB_MEMORY_CRF_A    , 248, 196,  70,   9, WS_VIS
 dialogitem  'BUTTON'      , '', IDB_MEMORY_ALL_P    , 327, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_X_16     , 327, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP 
 dialogitem  'BUTTON'      , '', IDB_MEMORY_X_32     , 327, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP 
-dialogitem  'BUTTON'      , '', IDB_MEMORY_3D_DRAW  , 248, 214,  150,  9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_SILENT   , 248, 214,  150,  9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_DRAW     , 245, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 dialogitem  'BUTTON'      , '', IDB_MEMORY_RUN      , 284, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 dialogitem  'BUTTON'      , '', IDB_MEMORY_DEFAULTS , 323, 234,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
@@ -416,9 +416,8 @@ dialogitem  'STATIC'      , '', IDC_MD_THREADS      ,  56, 265,  50,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_MD_REPEATS      , 111, 265,  60,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_PAGES        , 180, 265,  50,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_NUMA         , 230, 265,  50,  10, WS_VISIBLE
-dialogitem  'BUTTON'      , '', IDB_MD_RESIZE       , 290, 260,  30,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
-dialogitem  'BUTTON'      , '', IDB_MD_SILENT       , 321, 260,  30,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
-dialogitem  'BUTTON'      , '', IDB_MD_CANCEL       , 352, 260,  30,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
+dialogitem  'BUTTON'      , '', IDB_MD_REFRESH      , 305, 260,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
+dialogitem  'BUTTON'      , '', IDB_MD_CANCEL       , 344, 260,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog
 ;---------- Child window = vector brief benchmark -----------------------------;
 dialog      childVectorBrief,  '',                     20,  20, 405, 270, WS_CAPTION + WS_SYSMENU, 0, 0, 'Verdana', 10
@@ -509,16 +508,17 @@ menuitem '&About...'    , IDM_ABOUT, MFR_END
 ; compact encoding: 1 byte per char.  
 resource raws, \
 IDS_STRINGS_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , stringsPool       , \
-IDS_BINDERS_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , bindersPool       , \ 
-IDS_CPU_COMMON_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , cpuCommonFeatures , \ 
+IDS_BINDERS_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , bindersPool       , \
+IDS_CPU_COMMON_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , cpuCommonFeatures , \
 IDS_CPU_AVX512_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , cpuAvx512Features , \
 IDS_OS_CONTEXT_POOL  , LANG_ENGLISH + SUBLANG_DEFAULT , osContextFeatures , \
 IDS_INTEL_CACHE      , LANG_ENGLISH + SUBLANG_DEFAULT , intelCache        , \
-IDS_SMBIOS_DATA_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , smbiosData        , \ 
+IDS_SMBIOS_DATA_POOL , LANG_ENGLISH + SUBLANG_DEFAULT , smbiosData        , \
 IDS_ACPI_DATA_POOL   , LANG_ENGLISH + SUBLANG_DEFAULT , acpiData          , \
-IDS_IMPORT_POOL      , LANG_ENGLISH + SUBLANG_DEFAULT , importList        , \ 
+IDS_IMPORT_POOL      , LANG_ENGLISH + SUBLANG_DEFAULT , importList        , \
 IDS_FONTS_POOL       , LANG_ENGLISH + SUBLANG_DEFAULT , fontList          , \
-IDS_BRUSHES_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , brushesList       , \ 
+IDS_BRUSHES_POOL     , LANG_ENGLISH + SUBLANG_DEFAULT , brushesList       , \
+IDS_PENS_POOL        , LANG_ENGLISH + SUBLANG_DEFAULT , pensList          , \
 IDS_BITMAP_INFO      , LANG_ENGLISH + SUBLANG_DEFAULT , bitmapInfo        , \
 IDS_REPORT_INFO      , LANG_ENGLISH + SUBLANG_DEFAULT , reportInfo 
 ;---------- Raw resource for strings pool -------------------------------------;
@@ -741,7 +741,7 @@ DB  'Carefull adaptive'                    , 0
 DB  'All pixels'                           , 0
 DB  'X / 16'                               , 0
 DB  'X / 32'                               , 0
-DB  'Draw 3D chart by repeat measurements' , 0
+DB  'Silent draw mode, no realtime show '  , 0
 ;---------- Buttons names -----------------------------------------------------;
 DB  'Vector brief' , 0
 DB  'Draw'         , 0
@@ -904,8 +904,7 @@ DB  'PD default'          , 0
 DB  'PD medium'           , 0
 DB  'PD long'             , 0
 DB  'PD ?'                , 0
-DB  'Resize'              , 0
-DB  'Silent'              , 0
+DB  'Refresh'             , 0
 DB  'Threads='            , 0
 DB  ' '                   , 0  ; This for large pages not available
 DB  '4K pages'            , 0
@@ -1260,7 +1259,7 @@ SET_STRING  STR_CAREF_ADAPTIVE   , IDB_MEMORY_CRF_A
 SET_STRING  STR_ALL_POINTS       , IDB_MEMORY_ALL_P
 SET_STRING  STR_X_16_POINTS      , IDB_MEMORY_X_16
 SET_STRING  STR_X_32_POINTS      , IDB_MEMORY_X_32
-SET_STRING  STR_3D_DRAW          , IDB_MEMORY_3D_DRAW 
+SET_STRING  STR_SILENT_DRAW      , IDB_MEMORY_SILENT 
 SET_STRING  STR_DRAW             , IDB_MEMORY_DRAW  
 SET_STRING  STR_RUN              , IDB_MEMORY_RUN
 SET_STRING  STR_DEFAULTS         , IDB_MEMORY_DEFAULTS
@@ -1438,8 +1437,7 @@ SET_INFO    BINDLIST.mdThreads     , IDC_MD_THREADS
 SET_INFO    BINDLIST.mdRepeats     , IDC_MD_REPEATS
 SET_INFO    BINDLIST.mdPages       , IDC_MD_PAGES
 SET_INFO    BINDLIST.mdNuma        , IDC_MD_NUMA
-SET_STRING  STR_MD_RESIZE          , IDB_MD_RESIZE
-SET_STRING  STR_MD_SILENT          , IDB_MD_SILENT
+SET_STRING  STR_MD_REFRESH         , IDB_MD_REFRESH
 SET_STRING  STR_EXIT               , IDB_MD_CANCEL
 BIND_STOP
 ;--- GUI binder script for child screen = Vector brief performance report -----;
@@ -1637,7 +1635,7 @@ SET_SWITCH  BINDLIST.setMemMeas   + 0 , 6 , IDB_MEMORY_CRF_A
 SET_SWITCH  BINDLIST.setMemPix    + 0 , 0 , IDB_MEMORY_ALL_P
 SET_SWITCH  BINDLIST.setMemPix    + 0 , 2 , IDB_MEMORY_X_16
 SET_SWITCH  BINDLIST.setMemPix    + 0 , 4 , IDB_MEMORY_X_32
-SET_SWITCH  BINDLIST.setMem3d     + 0 , 0 , IDB_MEMORY_3D_DRAW
+SET_SWITCH  BINDLIST.setMemSilent + 0 , 0 , IDB_MEMORY_SILENT
 SET_HEX64   BINDLIST.setBlkCustom         , IDE_MEMORY_B_SIZE
 SET_HEX64   BINDLIST.setBlkMmf            , IDE_MEMORY_F_SIZE
 SET_HEX64   BINDLIST.setBlkGpu            , IDE_MEMORY_G_SIZE
@@ -1716,7 +1714,7 @@ GET_SWITCH  IDB_MEMORY_CRF_A    , BINDLIST.getMemMeas   + 0 , 3
 GET_SWITCH  IDB_MEMORY_ALL_P    , BINDLIST.getMemPix    + 0 , 0
 GET_SWITCH  IDB_MEMORY_X_16     , BINDLIST.getMemPix    + 0 , 1 
 GET_SWITCH  IDB_MEMORY_X_32     , BINDLIST.getMemPix    + 0 , 2 
-GET_SWITCH  IDB_MEMORY_3D_DRAW  , BINDLIST.getMem3d     + 0 , 0
+GET_SWITCH  IDB_MEMORY_SILENT   , BINDLIST.getMemSilent + 0 , 0
 BIND_STOP
 ;---------- Continue, binders for GUI scripts ---------------------------------;
 ; Separate binder for editable strings custom parameters get,
@@ -2239,9 +2237,15 @@ resdata brushesList
 ; Brush color values = 00bbggrrh, bb=blue, gg=green, rr=red, 1 byte per color
 ; Used for graphics window, drawings Y=F(X)
 DD  BRUSH_GRID         ; Grid with horizontal and vertical lines 
-DD  BRUSH_LINE         ; Draw Line Speed = F (Block Size)
+DD  BRUSH_LINE         ; Draw Line Speed = F (Block Size), redundant because pen
 DD  BRUSH_BACKGROUND   ; Draw window background
 DD  BRUSH_STATISTICS   ; Statistics table lines
+endres
+;---------- Raw resource for color pens used in the drawings window -----------;
+resdata pensList
+; Pen color values = 00bbggrrh, bb=blue, gg=green, rr=red, 1 byte per color
+; Used for graphics window, drawings Y=F(X)
+DD  PEN_LINE           ; Draw Line Speed = F (Block Size)
 endres
 ;---------- Raw resource for bitmap used in the drawings window ---------------;
 resdata bitmapInfo

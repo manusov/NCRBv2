@@ -49,7 +49,7 @@ push ebp
 mov ebp,esp
 push ebx esi edi
 movzx esi,al              ; ESI = Binder ID for this child window
-lea edi,[APP_DATA]        ; EDI = Pointer to application data
+mov edi,APP_DATA          ; EDI = Pointer to application data
 mov ebx,PARM_HWNDDLG      ; EBX = This window handle
 ;---------- Detect message type -----------------------------------------------;
 mov eax,PARM_MSG
@@ -115,7 +115,7 @@ cmp ax,IDB_MEMORY_DEFAULTS   ; Set defaults for memory benchmark
 je .memoryDefaults
 ;---------- Detect events for make widgets dependency -------------------------;
 ;---------- Widget "Nontemporal" ----------------------------------------------;
-lea edi,[BIND_LIST]                           ; RDI = Pointer to GUI BINDLIST
+mov edi,BIND_LIST                             ; RDI = Pointer to GUI BINDLIST
 mov si,ax                                     ; SI  = Checkbox ID
 mov ax,BINDER_GET_MEMORY
 call Binder                                   ; Read current state of widgets
@@ -263,7 +263,9 @@ mov al,WAIT_MODE_MEMORY
 call OpenPleaseWait              ; Open "Please wait" window
 call ScenarioMemoryRun           ; Target measured operation
 pushf
+push eax
 call ClosePleaseWait             ; Close "Please wait" window
+pop eax
 popf
 jc .runtimeError                 ; Go error message box if status bad
 push 0                           ; Parm#5 = Pass value
@@ -286,12 +288,25 @@ call Binder                      ; if user editable strings is incorrect
 @@:
 call CustomBlockSizeMessage      ; Error message if block size restrictions
 mov al,WAIT_MODE_MEMORY
-call OpenPleaseWait                 ; Open "Please wait" window
-call DrawSessionStart               ; Target measured operation
+call OpenPleaseWait              ; Open "Please wait" window
+call DrawSessionStart            ; Target measured operation
+;--- Conditionally wait measurements for all points if Silent mode ------------; 
 pushf
-call ClosePleaseWait                ; Close "Please wait" window
+push eax
+jc .noSilent
+test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
+jz .noSilent                         ; Go skip if non silent mode
+.waitSilent:
+push 100                             ; Units = milliseconds
+call [Sleep]
+cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
+jb .waitSilent
+.noSilent:
+call ClosePleaseWait             ; Close "Please wait" window
+pop eax
 popf
 jc .runtimeError                 ; Go error message box if status bad
+;--- Create dialogue window with drawings Performance = F ( Block Size ) ------;
 push 0
 push DialogProcChildMemoryDraw
 push ebx
@@ -307,7 +322,9 @@ mov al,WAIT_MODE_CPU
 call OpenPleaseWait              ; Open "Please wait" window
 call ScenarioVectorBrief         ; Target measured operation
 pushf
+push eax
 call ClosePleaseWait             ; Close "Please wait" window
+pop eax
 popf
 jc .runtimeError                 ; Go error message box if status bad
 push 0

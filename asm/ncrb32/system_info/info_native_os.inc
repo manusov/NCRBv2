@@ -10,7 +10,7 @@ InfoNativeOs:
 mov eax,[DYNA_IMPORT._GetNativeSystemInfo]
 test eax,eax
 jz @f
-lea ecx,[OS_DATA.nativeSystemInfo]
+mov ecx,OS_DATA.nativeSystemInfo
 push ecx
 call eax
 @@:

@@ -15,7 +15,7 @@ DialogProcChildVectorBrief:
 push ebp
 mov ebp,esp
 push ebx esi edi
-lea edi,[APP_DATA]        ; EDI = Pointer to application data
+mov edi,APP_DATA          ; EDI = Pointer to application data
 mov ebx,PARM_HWNDDLG      ; EBX = Window handle
 ;---------- Detect message type -----------------------------------------------;
 mov eax,PARM_MSG

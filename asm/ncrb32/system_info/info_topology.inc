@@ -171,7 +171,7 @@ dec ecx
 jnz .scanRelations
 ;---------- Support screen 0 threads, cores, sockets --------------------------;
 mov esi,[esp + 12]
-lea ebx,[SYS_PARMS.summaryTopology]
+mov ebx,SYS_PARMS.summaryTopology
 pop dword [ebx + SUMMARYTOPOLOGY.threads]
 pop dword [ebx + SUMMARYTOPOLOGY.cores]
 pop dword [ebx + SUMMARYTOPOLOGY.sockets]
@@ -436,7 +436,7 @@ ret
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperSummaryCache:
-lea ebx,[SYS_PARMS.summaryCache]
+mov ebx,SYS_PARMS.summaryCache
 lea esi,[ebx + SUMMARYCACHE.sizeL1C]
 cmp ax,0101h
 je .detected 

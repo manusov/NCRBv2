@@ -46,8 +46,9 @@ IDS_ACPI_DATA_POOL      = 147
 IDS_IMPORT_POOL         = 148
 IDS_FONTS_POOL          = 149
 IDS_BRUSHES_POOL        = 150
-IDS_BITMAP_INFO         = 151
-IDS_REPORT_INFO         = 152
+IDS_PENS_POOL           = 151
+IDS_BITMAP_INFO         = 152
+IDS_REPORT_INFO         = 153
 ;---------- Identifiers for icons ---------------------------------------------;
 IDI_SYSINFO             = 160    ; First tab sheet icon
 IDI_MEMORY              = 161
@@ -264,7 +265,7 @@ IDB_MEMORY_CRF_A        = 580
 IDB_MEMORY_ALL_P        = 581
 IDB_MEMORY_X_16         = 582 
 IDB_MEMORY_X_32         = 583 
-IDB_MEMORY_3D_DRAW      = 584
+IDB_MEMORY_SILENT       = 584
 IDB_MEMORY_DRAW         = 585
 IDB_MEMORY_RUN          = 586
 IDB_MEMORY_DEFAULTS     = 587
@@ -386,9 +387,8 @@ IDC_MD_THREADS          = 3103
 IDC_MD_REPEATS          = 3104
 IDC_MD_PAGES            = 3105
 IDC_MD_NUMA             = 3106
-IDB_MD_RESIZE           = 3107
-IDB_MD_SILENT           = 3108
-IDB_MD_CANCEL           = 3109
+IDB_MD_REFRESH          = 3107
+IDB_MD_CANCEL           = 3108
 ;--- Identifiers for child screen = Vector brief performance report -----------;
 IDC_VB_CPU_NAME         = 3300
 IDC_VB_TSC_CLK          = 3301
@@ -674,9 +674,9 @@ STR_CAREF_ADAPTIVE     = STR_MEASURE_BRIEF + 3
 STR_ALL_POINTS         = STR_MEASURE_BRIEF + 4
 STR_X_16_POINTS        = STR_MEASURE_BRIEF + 5
 STR_X_32_POINTS        = STR_MEASURE_BRIEF + 6
-STR_3D_DRAW            = STR_MEASURE_BRIEF + 7 
+STR_SILENT_DRAW        = STR_MEASURE_BRIEF + 7 
 ;---------- Actions buttons names ---------------------------------------------;
-STR_VECTOR_BRIEF       = STR_3D_DRAW + 1
+STR_VECTOR_BRIEF       = STR_SILENT_DRAW + 1
 STR_DRAW               = STR_VECTOR_BRIEF + 1  
 STR_RUN                = STR_VECTOR_BRIEF + 2
 STR_DEFAULTS           = STR_VECTOR_BRIEF + 3
@@ -837,25 +837,24 @@ STR_MD_PD_DEFAULT     = STR_MD_PD_NOT_USED + 1
 STR_MD_PD_MEDIUM      = STR_MD_PD_NOT_USED + 2
 STR_MD_PD_LONG        = STR_MD_PD_NOT_USED + 3
 STR_MD_PD_UNKNOWN     = STR_MD_PD_NOT_USED + 4 
-STR_MD_RESIZE         = STR_MD_PD_NOT_USED + 5 
-STR_MD_SILENT         = STR_MD_PD_NOT_USED + 6   
-STR_MD_THREADS        = STR_MD_PD_NOT_USED + 7 
-STR_MD_LP_NOT_USED    = STR_MD_PD_NOT_USED + 8 
-STR_MD_4K_PAGES       = STR_MD_PD_NOT_USED + 9
-STR_MD_LARGE_PAGES    = STR_MD_PD_NOT_USED + 10
-STR_MD_NUMA_OFF       = STR_MD_PD_NOT_USED + 11
-STR_MD_NUMA_UNAWARE   = STR_MD_PD_NOT_USED + 12
-STR_MD_NUMA_SINGLE    = STR_MD_PD_NOT_USED + 13
-STR_MD_NUMA_LOCAL     = STR_MD_PD_NOT_USED + 14
-STR_MD_NUMA_REMOTE    = STR_MD_PD_NOT_USED + 15
-STR_MD_CPI            = STR_MD_PD_NOT_USED + 16
-STR_MD_NSPI           = STR_MD_PD_NOT_USED + 17
-STR_MD_MBPS           = STR_MD_PD_NOT_USED + 18
-STR_MD_MINIMUM        = STR_MD_PD_NOT_USED + 19
-STR_MD_MAXIMUM        = STR_MD_PD_NOT_USED + 20
-STR_MD_AVERAGE        = STR_MD_PD_NOT_USED + 21
-STR_MD_MEDIAN         = STR_MD_PD_NOT_USED + 22
-STR_MD_TSC_CLOCK_MHZ  = STR_MD_PD_NOT_USED + 23
+STR_MD_REFRESH        = STR_MD_PD_NOT_USED + 5 
+STR_MD_THREADS        = STR_MD_PD_NOT_USED + 6 
+STR_MD_LP_NOT_USED    = STR_MD_PD_NOT_USED + 7 
+STR_MD_4K_PAGES       = STR_MD_PD_NOT_USED + 8
+STR_MD_LARGE_PAGES    = STR_MD_PD_NOT_USED + 9
+STR_MD_NUMA_OFF       = STR_MD_PD_NOT_USED + 10
+STR_MD_NUMA_UNAWARE   = STR_MD_PD_NOT_USED + 11
+STR_MD_NUMA_SINGLE    = STR_MD_PD_NOT_USED + 12
+STR_MD_NUMA_LOCAL     = STR_MD_PD_NOT_USED + 13
+STR_MD_NUMA_REMOTE    = STR_MD_PD_NOT_USED + 14
+STR_MD_CPI            = STR_MD_PD_NOT_USED + 15
+STR_MD_NSPI           = STR_MD_PD_NOT_USED + 16
+STR_MD_MBPS           = STR_MD_PD_NOT_USED + 17
+STR_MD_MINIMUM        = STR_MD_PD_NOT_USED + 18
+STR_MD_MAXIMUM        = STR_MD_PD_NOT_USED + 19
+STR_MD_AVERAGE        = STR_MD_PD_NOT_USED + 20
+STR_MD_MEDIAN         = STR_MD_PD_NOT_USED + 21
+STR_MD_TSC_CLOCK_MHZ  = STR_MD_PD_NOT_USED + 22
 ;---------- Strings for child screen = Vector brief performance report --------;
 STR_VB_CPU_FEATURES    = STR_MD_TSC_CLOCK_MHZ + 1  
 STR_VB_AVX_256         = STR_VB_CPU_FEATURES + 1
@@ -1081,7 +1080,7 @@ getMemLpages   db  ?
 getMemPref     db  ?
 getMemMeas     db  ?
 getMemPix      db  ?
-getMem3d       db  ?
+getMemSilent   db  ?
 getBlkCustom   dq  ?
 getBlkMmf      dq  ?
 getBlkGpu      dq  ?
@@ -1104,7 +1103,7 @@ setMemLpages   db  ? , ?
 setMemPref     db  ? , ?
 setMemMeas     db  ? , ?
 setMemPix      db  ? , ?
-setMem3d       db  ? , ?
+setMemSilent   db  ? , ?
 setBlkCustom   dq  ?
 setBlkMmf      dq  ?
 setBlkGpu      dq  ?
@@ -1318,9 +1317,10 @@ SHIFTY     = 0      ; Y-shift plot sub window in the dialogue window, pixels
 ;--- Color parameters of Sub-Window with drawings Speed = F( Block Size ) -----; 
 ; Brush color values = 00bbggrrh, bb=blue, gg=green, rr=red, 1 byte per color
 BRUSH_GRID        = 00C8C8C8h         ; Grid with horizontal and vertical lines 
-BRUSH_LINE        = 000101F0h         ; Draw Line Speed = F (Block Size)
+BRUSH_LINE        = 000101F0h         ; Draw Line Speed = F (Block Size), redundant because pen
 BRUSH_BACKGROUND  = 00F9F9F9h         ; Draw window background
 BRUSH_STATISTICS  = 00E82121h         ; Statistics table lines 
+PEN_LINE          = BRUSH_LINE        ; Draw Line Speed = F (Block Size)
 COLOR_TEXT_VALUES = 00414141h         ; Text front color, grid numeric values print
 COLOR_TEXT_UNITS  = BRUSH_STATISTICS  ; Text front color, units print
 COLOR_TEXT_BACK   = BRUSH_BACKGROUND  ; Text back color

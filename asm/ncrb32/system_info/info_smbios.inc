@@ -9,7 +9,7 @@
 ;------------------------------------------------------------------------------;
 InfoSmbios:
 ;---------- Check required WinAPI support -------------------------------------;
-lea esi,[DYNA_IMPORT]
+mov esi,DYNA_IMPORT
 xor eax,eax
 cmp [esi + DYNAIMPORT._EnumSystemFirmwareTables],eax
 je .skipSmbiosList

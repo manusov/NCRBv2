@@ -254,7 +254,9 @@ mov al,WAIT_MODE_MEMORY
 call OpenPleaseWait                 ; Open "Please wait" window
 call ScenarioMemoryRun              ; Target measured operation
 pushf
+push rax
 call ClosePleaseWait                ; Close "Please wait" window
+pop rax
 popf
 jc .runtimeError                    ; Go error message box if status bad
 lea r9,[DialogProcChildMemoryRun]   ; R9  = Parm#4 = Pointer to dialogue proced.
@@ -281,10 +283,25 @@ call CustomBlockSizeMessage         ; Error message if block size restrictions
 mov al,WAIT_MODE_MEMORY
 call OpenPleaseWait                 ; Open "Please wait" window
 call DrawSessionStart               ; Target measured operation
+;--- Conditionally wait measurements for all points if Silent mode ------------; 
 pushf
+push rax
+jc .noSilent
+test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
+jz .noSilent                         ; Go skip if non silent mode
+.waitSilent:
+mov ecx,100                          ; Units = milliseconds
+sub rsp,32
+call [Sleep]
+add rsp,32
+cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
+jb .waitSilent
+.noSilent:
 call ClosePleaseWait                ; Close "Please wait" window
+pop rax
 popf
 jc .runtimeError                    ; Go error message box if status bad
+;--- Create dialogue window with drawings Performance = F ( Block Size ) ------;
 push 0 0                            ; Parm#5 = Pass value, plus alignment qword
 lea r9,[DialogProcChildMemoryDraw]
 mov r8,rbx                          ; R8  = Parm#3 = Owner window handle
@@ -302,7 +319,9 @@ mov al,WAIT_MODE_CPU
 call OpenPleaseWait                 ; Open "Please wait" window
 call ScenarioVectorBrief            ; Target measured operation
 pushf
+push rax
 call ClosePleaseWait                ; Close "Please wait" window
+pop rax
 popf
 jc .runtimeError                    ; Go error message box if status bad
 lea r9,[DialogProcChildVectorBrief]

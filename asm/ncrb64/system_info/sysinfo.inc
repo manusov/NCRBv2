@@ -549,6 +549,7 @@ mov word [rdi + BINDLIST.setMemAccess],00000010b  ; Access step
 mov word [rdi + BINDLIST.setMemPref],000000010b   ; Prefetch modes
 mov word [rdi + BINDLIST.setMemMeas],11010101b    ; Measure precision modes
 mov word [rdi + BINDLIST.setMemPix],00010111b     ; Pixels approximation modes
+mov word [rdi + BINDLIST.setMemSilent],00000001b  ; Silent draw mode
 ;---------- Text blocks for viewers -------------------------------------------;
 ; This 12 pointers MUST BE SEQUENTAL, because accessed in the cycle:
 ; 1.  Operating system information

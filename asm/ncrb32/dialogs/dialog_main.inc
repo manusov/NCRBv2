@@ -15,7 +15,7 @@ DialogProcMain:
 push ebp
 mov ebp,esp
 push ebx esi edi
-lea edi,[APP_DATA]                   ; EDI = Pointer to application data
+mov edi,APP_DATA                     ; EDI = Pointer to application data
 lea ebx,[edi + APPDATA.tabCtrlItem]  ; EBX = Pointer to tab item structure
 lea esi,[edi + APPDATA.hTabDlg]      ; ESI = Pointer to sheets handles array
 ;---------- Detect message type -----------------------------------------------;
@@ -119,7 +119,7 @@ call [SendMessage]               ; Set sheets size
 push esi edi
 mov edi,esi
 mov esi,IDD_FIRST
-lea ebx,[ProcDialogs]
+mov ebx,ProcDialogs
 mov ecx,ITEM_COUNT
 ;---------- Cycle for create dialogues per sheets -----------------------------;
 .createDialogues:

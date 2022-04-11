@@ -54,9 +54,9 @@ SessionStart:
 ; 1) UPB ( User Parameters Block ), user settings by options widgets.
 ; 2) SYSPARMS ( System Parameters ), platform configuration, detected when
 ;    NCRB application starts.
-lea esi,[MEM_UPB]    ; RSI = Pointer to user parameters block (UPB)
-lea edi,[MEM_IPB]    ; RDI = Pointer to input parameters block (IPB)  
-lea ebx,[SYS_PARMS]  ; RBX = Pointer for sys. info detected at NCRB start 
+mov esi,MEM_UPB      ; RSI = Pointer to user parameters block (UPB)
+mov edi,MEM_IPB      ; RDI = Pointer to input parameters block (IPB)  
+mov ebx,SYS_PARMS    ; RBX = Pointer for sys. info detected at NCRB start 
 ;---------- Setup benchmark method --------------------------------------------; 
 ; assembler routine = f ( user settings method, test object, system config. )
 ; test object = f ( user settings object )
@@ -189,7 +189,7 @@ mov [edi + MEMIPB.updatedLP],eax       ; Copy Large Pages option
 ;---------- Setup measurement precision ( calibration repeats ) mode ----------;
 mov eax,[esi + MEMUPB.optionMeasure]
 mov [edi + MEMIPB.updatedMeasure],eax
-lea ecx,[BENCHMARKS_REPEATS]  ; select measurements constants
+mov ecx,BENCHMARKS_REPEATS    ; select measurements constants
 ; Note for "Run simple" mode, no differentiation adaptive/non-adaptive
 ; see also gui\drawsessionstart.inc, gui\drawsessionthread.inc
 ; for adaptive modes support
@@ -301,17 +301,23 @@ mov [edi + MEMIPB.memoryPerThread],eax   ; Setup memory size per one thread
 mov ecx,[edi + MEMIPB.updatedThreads]
 mul ecx                                  ; multiply by number of threads
 mov [edi + MEMIPB.memoryTotal],eax       ; Setup memory size per all threads
+;---------- Check memory size overflow, specific for 32-bit application -------;
+test eax,eax
+js .allocError           ; Go error if low 32 bits above or equal 2 GB 
+test edx,edx             ; EDX = High 32 bits of product after MUL instruction
+jnz .allocError          ; Go error if high 32 bits non zero, means above 4 GB
 ;--- IPB initialization as  IPB = f ( UPB, SYSPARMS ) done at this point ------;
 ; next steps is resources allocation. 
 ;---------- Build NUMA nodes list ---------------------------------------------; 
 ; this is FIRST step before memory allocation
 ; NUMA unaware mode by option and by system limitations,
 ; supported by transfer R8D = option value to subroutine BuildNumaNodesList 
-lea ecx,[NUMA_LIST]                 ; ECX = Pointers to NUMA nodes list for build
+mov ecx,NUMA_LIST                   ; ECX = Pointers to NUMA nodes list for build
 mov edx,[edi + MEMIPB.updatedPG]    ; EDX = Processor Groups option
 mov eax,[edi + MEMIPB.updatedNUMA]  ; EAX = NUMA option
 call BuildNumaNodesList             ; CF returned, build list of NUMA nodes
 jnc .numaValid                      ; Go if no errors, means EAX = NUMA nodes count
+.allocError:
 mov al,MSG_RUNTIME_ALLOC            ; otherwise AL = error status
 jmp .exit                           ; Go for error handling
 .numaValid:
@@ -328,7 +334,7 @@ mov [edi + MEMIPB.domainsCount],eax
 ; Option = NUMA_NON_OPTIMAL 
 ;   NUMA not optimal = shift affinity masks by ring, example 1-2-3-4 to 4-1-2-3
 ;---------- Reduce domains count for NUMA single domain scenario --------------;
-lea ecx,[NUMA_LIST]
+mov ecx,NUMA_LIST
 cmp [edi + MEMIPB.updatedNUMA],NUMA_CURRENT_ONLY
 jne .skipSingleDomain            ; Go if not a single NUMA domain mode
 mov [edi + MEMIPB.domainsCount],1
@@ -384,7 +390,7 @@ je .skipForSingle  ; Skip if threads = 1 and all memory allocated at node 0
 xor edx,edx
 div ecx            ; Divide  allocated memory / node count  for multi-thread 
 .skipForSingle:
-lea ebx,[NUMA_LIST]      ; EBX = Base address of NUMA nodes list
+mov ebx,NUMA_LIST        ; EBX = Base address of NUMA nodes list
 mov edx,ecx              ; EDX = Number of NUMA nodes 
 xchg ecx,eax             ; ECX = Memory allocation size per one node
 mov eax,[edi + MEMIPB.updatedLP]     ; EAX = Large Pages option
@@ -393,14 +399,14 @@ mov al,MSG_RUNTIME_ALLOC             ; AL = error status
 jc .exit                             ; Go if error
 ;---------- Build threads list ------------------------------------------------;
 ; this is THIRD step after NUMA domains list build and its memory allocated
-lea ecx,[THREAD_LIST]
-lea edx,[MEM_IPB]
+mov ecx,THREAD_LIST
+mov edx,MEM_IPB
 call BuildThreadsList     ; CF returned 
 mov al,MSG_RUNTIME_ALLOC  ; AL = error status, valid if CF=1
 jc .exit                  ; Go if error
 ;---------- Update visualized block#1, block#2 bases at IPB -------------------;
 ; Update from Threads List first entry
-lea ecx,[THREAD_LIST]
+mov ecx,THREAD_LIST
 mov eax,[ecx + THCTRL.base1]
 mov [edi + MEMIPB.allocatedBlock1],eax
 mov eax,[ecx + THCTRL.base2]
@@ -411,7 +417,7 @@ mov [edi + MEMIPB.allocatedBlock2],eax
 ; Note repeat TSC frequency measurement after NCRB application start,
 ; for better adaptation to run conditions.
 ;---------- Start execution threads before per-iterations calls ---------------; 
-lea ecx,[THREAD_LIST]
+mov ecx,THREAD_LIST
 mov edx,[edi + MEMIPB.updatedThreads]
 call ThreadsStart             ; CF returned
 mov al,MSG_RUNTIME_TIMINGS    ; AL = error status, valid if CF=1 only

@@ -19,11 +19,11 @@ GetLatencyPattern:
 push ecx                          ; This routine changes output parameters only
 movzx eax,al                      ; This clears bits EAX[31-8] 
 imul eax,eax,6                    ; 6 = sizeof.LATENCY_ENTRY 
-lea ecx,[LATENCY_PATTERNS_32]     ; ECX = Pointer to set 32 or set 32x2 
+mov ecx,LATENCY_PATTERNS_32       ; ECX = Pointer to set 32 or set 32x2 
 cmp al,6                          ; EAX = Pattern index inside set
 jbe .x2                           ; Go if first set of patterns (32)
 sub al,6*2                        ; This branch for second set (32x2)
-lea ecx,[LATENCY_PATTERNS_32x2]
+mov ecx,LATENCY_PATTERNS_32x2
 .x2:
 movzx ebx,word [ecx + eax]        ; EBX = 16-bit compact offset of Builder  
 add ebx,ROUTINES_LATENCY          ; EBX = Pointer to Builder

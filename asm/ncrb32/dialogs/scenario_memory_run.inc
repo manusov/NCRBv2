@@ -14,8 +14,8 @@
 
 GuiToUserParms:
 ;---------- Build User Parameters Block, UPB = F( GUI widgets state ) ---------;
-lea edi,[MEM_UPB]
-lea esi,[BIND_LIST]
+mov edi,MEM_UPB
+mov esi,BIND_LIST
 movzx eax,al
 mov [edi + MEMUPB.runContext],eax  ; Setup run context for memory allocation multiplication mode control  
 ;---------- Option Asm --------------------------------------------------------;
@@ -139,8 +139,8 @@ jc .error            ; Go if error at termination
 ; Timeout error at second subroutine if trace by OllyDbg.
 
 ;---------- Calculating results by Output Parameters Block (OPB) --------------;
-lea ebp,[BIND_LIST]
-lea ebx,[MEM_IPB]
+mov ebp,BIND_LIST
+mov ebx,MEM_IPB
 ;---------- Build application type string -------------------------------------;
 lea edi,[ebp + BINDLIST.mrApplication]
 mov ax,STR_MR_APP_TYPE_32
@@ -304,7 +304,7 @@ mov al,0
 stosb
 ;---------- Calculate values and build Milliseconds string --------------------;
 finit
-lea ebx,[MEM_OPB]
+mov ebx,MEM_OPB
 lea edi,[ebp + BINDLIST.mrDtMs]
 fild [ebx + MEMOPB.osTimerDelta]  ; st0 = delta time in 100 ns units 
 push 0 10000                      ; 10000 units * 100 ns = 1000000 nS = 1 ms
@@ -335,7 +335,7 @@ pop ebx
 mov al,0
 stosb
 ;--- Calculate values and build Clocks per Instruction (clocks, CPI) string ---;
-lea esi,[MEM_IPB]
+mov esi,MEM_IPB
 lea edi,[ebp + BINDLIST.mrDtscIns]
 mov eax,[esi + MEMIPB.startBlockSize]  ; EAX = Block size, bytes 
 xor edx,edx

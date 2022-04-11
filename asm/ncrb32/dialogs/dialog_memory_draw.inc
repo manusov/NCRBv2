@@ -15,19 +15,19 @@ DialogProcChildMemoryDraw:
 push ebp
 mov ebp,esp
 push ebx esi edi
-mov ebx,PARM_HWNDDLG             ; EBX = Window handle
+mov ebx,PARM_HWNDDLG           ; EBX = Window handle
 ;---------- Detect message type -----------------------------------------------;
-mov eax,PARM_MSG
+mov eax,PARM_MSG               ; Use EAX for compact CMP, TODO. Optimize width.
 cmp eax,WM_INITDIALOG
-je .wminitdialog
-cmp eax,WM_COMMAND
-je .wmcommand
+je .wminitdialog               ; Go if dialogue initialization message
 cmp eax,WM_CLOSE
-je .wmclose
+je .wmclose                    ; Go if window close message
+cmp eax,WM_COMMAND
+je .wmcommand                  ; Go if command message
 cmp eax,WM_TIMER
-je .wmtimer
+je .wmtimer                    ; Go if timer tick message
 cmp eax,WM_PAINT
-je .wmpaint
+je .wmpaint                    ; Go if graphics paint message
 ;---------- Exit points -------------------------------------------------------;
 .skip:
 xor eax,eax
@@ -45,10 +45,10 @@ ret 16
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wminitdialog: 
+mov [DRAW_PARMS.showStatic],1
 mov ax,BINDER_BUILD_MEMORY_DRAW
 call Binder 
-mov [GUI_PARMS.childWinHandle],ebx
-lea edi,[APP_DATA]
+mov edi,APP_DATA
 push [edi + APPDATA.createdIcons + MEMORY_ICON_NUMBER * 4]
 push ICON_SMALL
 push WM_SETICON 
@@ -60,8 +60,6 @@ call IndexString
 push esi
 push PARM_HWNDDLG
 call [SetWindowText]
-mov [GUI_PARMS.silentMode],0         ; Pre-disable silent mode
-mov [DRAW_PARMS.drawPreviousY],0     ; Initializing drawing context
 ;---------- Initialize graphics context ---------------------------------------;
 push 0                           ; Parm#1 = Handle to exist DC, 0 = Application current screen
 call [CreateCompatibleDC]        ; Create compatible Device Context for buffered video output 
@@ -79,10 +77,17 @@ mov [GC_PARMS.handleBitmap],eax
 push eax                         ; Parm#2 = Handle to a Bitmap
 push esi                         ; Parm#1 = Handle to a Device Context
 call [SelectObject]
+;---------- Create pen(s) -----------------------------------------------------;
+mov esi,[APP_DATA.lockedPensList]  ; ESI = Pointer to color data
+push dword [esi]                   ; Parm#3 = Pen color
+push 0                             ; Parm#2 = Pen width, 0 means 1 pixel
+push PS_SOLID                      ; Parm#1 = Pen style
+call [CreatePen]
+mov [GC_PARMS.handlePen],eax
 ;---------- Create brushes ----------------------------------------------------;
 cld
 mov esi,[APP_DATA.lockedBrushesList] ; ESI = Pointer to color data
-lea edi,[GC_PARMS.handlesBrushes]    ; EDI = Pointer for store brushes handles
+mov edi,GC_PARMS.handlesBrushes      ; EDI = Pointer for store brushes handles
 mov ebp,4                            ; EBP = Number of brushes
 @@:
 lodsd                            ; EAX = Color, RSI+4, select next color 
@@ -121,8 +126,6 @@ call [SetTimer]
 push THREAD_TIME_LIMIT                ; Parm#2 = Time limit
 push [DRAW_THREAD_PARMS.eventStart]   ; Parm#1 = Handle for start event
 call [WaitForSingleObject]
-;---------- End of initialization, enable draw counter ------------------------;
-mov [GUI_PARMS.childWinRunning],1
 jmp .processed
 
 ;------------------------------------------------------------------------------;
@@ -149,9 +152,12 @@ push [GC_PARMS.handleMemDC]
 call [DeleteDC]
 push [GC_PARMS.handleBitmap]
 call [DeleteObject]
+;---------- Delete pen(s) -----------------------------------------------------;
+push [GC_PARMS.handlePen]              ; Parm#1 = Pen handle 
+call [DeleteObject]
 ;---------- Delete brushes ----------------------------------------------------;
 cld
-lea esi,[GC_PARMS.handlesBrushes]   ; ESI = Pointer for store brushes handles
+mov esi,GC_PARMS.handlesBrushes   ; ESI = Pointer for store brushes handles
 mov ebp,4                  ; EBP = Number of brushes
 @@:
 lodsd                      ; EAX = Brush handle
@@ -167,7 +173,6 @@ push 0                     ; Parm#2 = Set same as for SetTimer function
 push ebx                   ; Parm#1 = Parent window handle
 call [KillTimer]
 ;---------- Destroy window, disable draw counter ------------------------------;
-mov byte [GUI_PARMS.childWinRunning],0
 push 1                           ; Parm#2 = Result for return
 push ebx                         ; Parm#1 = Window handle
 call [EndDialog]
@@ -180,89 +185,61 @@ jmp .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmcommand:
-cmp PARM_WPARAM,IDB_MD_CANCEL  ; Detect click "Exit" button in the draw child window
-je .wmclose
-cmp PARM_WPARAM,IDB_MD_RESIZE  ; Detect click "Resize" button in the draw child window
-je .drawResize
-cmp PARM_WPARAM,IDB_MD_SILENT  ; Detect click "Silent" button in the draw child window
-jne .processed
-;------------------------ "Silent" button handler -----------------------------;
-mov eax,TIMER_TICK_SILENT ; Period (ms) for screen refresh frequency = low 
-mov cl,1                  ; Silent Mode = 1
-jmp .resizeEntry
-;------------------------ "Resize" button handler -----------------------------; 
-.drawResize:
-mov eax,TIMER_TICK_SHOW   ; Period (ms) for screen refresh frequency = high
-mov cl,0                  ; Silent Mode = 0
-;---------- Entry point for silent mode branch --------------------------------;
-.resizeEntry:
-push ecx
-push eax
+mov eax,PARM_WPARAM
+cmp eax,IDB_MD_CANCEL   ; Detect click "Exit" button in the draw child window
+je .wmclose             ; Go close window if match
+cmp eax,IDB_MD_REFRESH  ; Detect click "Refresh" button in the draw child window
+jne .processed          ; Go skip if mismatch  
+;---------- Handling "Refresh" button -----------------------------------------;
 mov al,WAIT_MODE_MEMORY
 call OpenPleaseWait                 ; Open "Please wait" window
-pop eax
-;---------- Start parameters frame here ---------------------------------------;
-;---------- Set timer for draw periodical visualization -----------------------;
-push 0                    ; Parm#4 = Notify function pointer, not used here
-push eax                  ; Parm#3 = Timer ticks period, ms
-push 0                    ; Parm#2 = Event ID
-push ebx                  ; Parm#1 = Parent window handle
-call [SetTimer]
-;---------- Set thread break flag, cause measurement thread termination -------; 
+; Set thread break flag, cause measurement thread termination 
 mov [DRAW_THREAD_PARMS.measureBreak],1
-;--- Wait for measurement thread done, this event at thread exit point --------;
-push THREAD_TIME_LIMIT               ; Parm#2 = Time limit
-push [DRAW_THREAD_PARMS.eventDone]   ; Parm#1 = Handle for done event
+; Wait for measurement thread done, this event at thread exit point
+push THREAD_TIME_LIMIT              ; Parm#2 = Time limit
+push [DRAW_THREAD_PARMS.eventDone]  ; Parm#1 = Handle for done event
 call [WaitForSingleObject]
-;---------- Wait measurement thread terminated by thread handle ---------------;
+; Wait measurement thread terminated by thread handle
 ; Note status after [WaitForSingleObject] ignored. TODO. Check it.
 push THREAD_TIME_LIMIT                 ; Parm#2 = Time limit
 push [DRAW_THREAD_PARMS.threadHandle]  ; Parm#1 = Thread handle
 call [WaitForSingleObject]
-;---------- When previous thread terminated, can set [SilentMode] -------------;
-pop ecx
-mov [GUI_PARMS.silentMode],cl 
-;---------- Remove thread and associated handles, note can corrupt pointers ---;
+; Remove thread and associated handles, note can corrupt pointers
 call DrawSessionStop
-;---------- Clear drawings variables ------------------------------------------; 
-mov [DRAW_PARMS.drawPreviousY],0
-mov [DRAW_PARMS.timerCount],0
-;---------- Rescaling ---------------------------------------------------------;
-lea edi,[DRAW_THREAD_PARMS]
-finit
-cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .nanoseconds
-fld [edi + DTHP.statMbpsMax]
-push 90 10
-jmp .scalingDone
-.nanoseconds:
-fld [edi + DTHP.statNspiMax]
-push 9 2
-.scalingDone:
-fidiv dword [esp + 4]
-fimul dword [esp]
-fistp dword [esp + 4]
-;---------- Restart -----------------------------------------------------------;
-call DrawSessionStart   ; note can corrupt pointers
-pop eax eax
-test eax,eax
-jnz @f
-inc eax
-@@:
-mov [DRAW_PARMS.valueGridY],eax
-;---------- Rescale, same operation at drawsessionstart.inc -------------------;
-push eax -GRIDSTEPY
-fild dword [esp]      ; ST0 = - grid step, pixels
-fidiv dword [esp+4]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
-fstp [DRAW_PARMS.yMultiplier]
-pop eax eax
+; Restart
+mov [DRAW_PARMS.showStatic],1
+call DrawSessionStart                ; note can corrupt pointers
+jc .runtimeError                     ; Go error message box if status bad
 ; Wait for measurement thread run, this event at thread entry point
 ; Note status after [WaitForSingleObject] ignored. TODO. Check it.
 push THREAD_TIME_LIMIT               ; Parm#2 = Time limit
 push [DRAW_THREAD_PARMS.eventStart]  ; Parm#1 = Handle for start event
 call [WaitForSingleObject]
-mov [GUI_PARMS.childWinRunning],1
-call ClosePleaseWait                    ; Close "Please wait" window
+;--- Conditionally wait measurements for all points if Silent mode ------------; 
+test [BIND_LIST.getMemSilent],0001b  ; Check Silent mode
+jz .noSilent                         ; Go skip if non silent mode
+.waitSilent:
+push 100                             ; Units = milliseconds
+call [Sleep]
+cmp [DRAW_THREAD_PARMS.measureCounter],DRAW_POINTS_COUNT
+jb .waitSilent
+.noSilent:
+call ClosePleaseWait             ; Close "Please wait" window
+jmp .processed
+;---------- Handler for runtime errors ----------------------------------------;
+.runtimeError:
+push eax
+call ClosePleaseWait                 ; Close "Please wait" window
+pop eax
+mov esi,[APP_DATA.lockedStrings]
+movzx eax,al
+add eax,STR_RUNTIME_ALLOC
+call IndexString       ; Return ESI = Selected string address 
+push MB_ICONERROR      ; Parm#4 = Attributes
+push PROGRAM_NAME      ; Parm#3 = Pointer to title (caption) string
+push esi               ; Parm#2 = Pointer to string: error name 
+push ebx               ; Parm#1 = Parent Window = NULL
+call [MessageBox]  
 jmp .processed
 
 ;------------------------------------------------------------------------------;
@@ -273,24 +250,16 @@ jmp .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmtimer:
-lea ecx,[GUI_PARMS.childWinRunning]
-lea edx,[DRAW_PARMS.timerCount]    ; For two variables: COUNT, PREVIOUS Y
-xor eax,eax
-;--------- Check session running ----------------------------------------------;
-cmp [ecx],al               ; 0=Stop, 1=First, 2=Progress
-je .skipTimer              ; Skip if halted
-inc dword [edx]            ; Counter +1
-;---------- Check session abort -----------------------------------------------;
-cmp [DRAW_THREAD_PARMS.measureBreak],0
-je .yetNotHalt 
-mov [ecx],al               ; Running=0 means HALTED
-;---------- Set revisualization request ---------------------------------------;
-.yetNotHalt:
+mov eax,[DRAW_THREAD_PARMS.measureCounter]
+test eax,eax
+jz @f                  ; Go skip visualization request if yet no results
+cmp eax,[DRAW_THREAD_PARMS.visualCounter]
+je @f                  ; Go skip visualization request if yet no new results
 push 0                 ; Parm#3 = Background erase flag, 0=Background unchanged
 push 0                 ; Parm#2 = Pointer to invalidated region, 0=All window
 push ebx               ; Parm#1 = Window handle
 call [InvalidateRect]  ; This cause callback WM_PAINT operation
-.skipTimer:
+@@:
 jmp .processed
 
 ;------------------------------------------------------------------------------;
@@ -299,692 +268,750 @@ jmp .processed
 ;  draw text strings, coordinate axises, charts performance = f( block size ). ;                                  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
+
+LINE_BASE_X = GRIDBLANKX + 1
+LINE_BASE_Y = 476
+
 .wmpaint:
+;---------- Conditionally run section for calculate statistics ----------------;
+; Calculate minimum, maximum, average, median for CPI, NSPI, MBPS.
+; CPI = Clocks per Instruction, NSPI = Nanoseconds per Instruction,
+; MBPS = Megabytes per Second. 
+mov esi,DRAW_THREAD_PARMS
+mov ebp,[esi + DTHP.measureCounter]
+
+;---------- Skip statistics if yet no results ---------------------------------;
+cmp [esi + DTHP.visualCounter],ebp
+je .skipStatistics                         ; Go skip if no measurements added
+cmp ebp,2
+jb .skipStatistics                         ; Go skip if number of points < 2
+mov [esi + DTHP.visualCounter],ebp
+
+;---------- Start calculations ------------------------------------------------;
+finit
+fld [MEM_OPB.tscPeriodNs]
+fldz
+lea edi,[esi + DTHP.measureArray]
+mov edx,DRAW_POINTS_COUNT * 8
+push 0 0 ebp                                              ; + 3 dwords to stack
+; Copy CPI (Clock Per Instruction) array and sum for averaging CPI
+.cpiCopySum:
+fadd qword [edi]
+mov eax,[edi + 0]
+mov ecx,[edi + 4]
+mov [edi + edx + 0],eax
+mov [edi + edx + 4],ecx
+add edi,8
+dec ebp
+jnz .cpiCopySum
+fidiv dword [esp]
+; Sorting CPI for median,
+; note can use integer 64-bit compare for floating point values 
+.cpiReSort:
+lea edi,[esi + DTHP.calculateArray]
+mov ebp,[esi + DTHP.visualCounter]
+dec ebp
+xor eax,eax
+.cpiSort:
+mov ecx,[edi + 0 + 4]
+cmp ecx,[edi + 8 + 4]
+jb .cpiSorted
+ja .cpiSortRequired
+mov ecx,[edi + 0 + 0]
+cmp ecx,[edi + 8 + 0]
+jbe .cpiSorted 
+.cpiSortRequired:
+mov ecx,[edi + 0 + 0]
+xchg ecx,[edi + 8 + 0]
+mov [edi + 0 + 0],ecx
+mov ecx,[edi + 0 + 4]
+xchg ecx,[edi + 8 + 4]
+mov [edi + 0 + 4],ecx
+mov eax,1
+.cpiSorted:
+add edi,8
+dec ebp
+jnz .cpiSort
+test eax,eax
+jnz .cpiReSort 
+; Get minimum and maximum CPI
+mov eax,[esi + DTHP.visualCounter]
+mov edx,eax
+dec eax
+fld [esi + DTHP.calculateArray + 0]
+fld [esi + DTHP.calculateArray + eax * 8]
+; Calculate median CPI, note assume DRAW_POINTS_COUNT even 
+shr edx,1
+jc .cpiMedianOdd
+fld [esi + DTHP.calculateArray + edx * 8 - 8]
+fadd [esi + DTHP.calculateArray + edx * 8 - 0]
+fld1
+fadd st0,st0
+fdivp st1,st0
+jmp .cpiMedianDone
+.cpiMedianOdd:
+fld [esi + DTHP.calculateArray + edx * 8 - 0]
+.cpiMedianDone:
+; Write statistics to thread parameters variables, 
+; CPI (Clocks Per Instruction) and nsPI (Nanoseconds Per Instruction)
+fst [esi + DTHP.statCpiMedian]
+fmul st0,st4
+fstp [esi + DTHP.statNspiMedian]
+fst [esi + DTHP.statCpiMax]
+fmul st0,st3
+fstp [esi + DTHP.statNspiMax]
+fst [esi + DTHP.statCpiMin]
+fmul st0,st2
+fstp [esi + DTHP.statNspiMin]
+fst [esi + DTHP.statCpiAverage]
+fmulp st1,st0
+fstp [esi + DTHP.statNspiAverage]
+; Calculate constant for convert CPI array to MBPS array
+mov eax,[MEM_IPB.operandWidth]   ; EAX = bits per instruction
+shr eax,3                        ; EAX = bytes per instruction 
+mov edx,[MEM_IPB.updatedThreads]
+mul edx
+mov ecx,NSPI_TO_MBPS             ; This constant for decimal megabytes and ns.
+mul ecx
+push edx eax
+fild qword [esp]
+fdiv [MEM_OPB.tscPeriodNs]
+pop edx eax
+fst qword [esp + 4]              ; Save value for convert CPI to MBPS
+lea edi,[esi + DTHP.calculateArray]
+mov ebp,[esi + DTHP.visualCounter]
+fldz
+; Convert CPI array to MBPS array, calculate MBPS sum
+.mbpsCalcSum:
+fld st1
+fdiv qword [edi]
+fadd st1,st0
+fstp qword [edi]
+add edi,8
+dec ebp
+jnz .mbpsCalcSum
+fidiv dword [esp]
+; Get minimum and maximum MBPS, reverse from CPI
+mov eax,[esi + DTHP.visualCounter]
+mov edx,eax
+dec eax
+fld [esi + DTHP.calculateArray + eax * 8]
+fld [esi + DTHP.calculateArray + 0]
+; Calculate median MBPS 
+shr edx,1
+jc .mbpsMedianOdd
+fld [esi + DTHP.calculateArray + edx * 8 - 8]
+fadd [esi + DTHP.calculateArray + edx * 8 - 0]
+fld1
+fadd st0,st0
+fdivp st1,st0
+jmp .mbpsMedianDone
+.mbpsMedianOdd:
+fld [esi + DTHP.calculateArray + edx * 8 - 0]
+.mbpsMedianDone:
+; Write statistics to thread parameters variables, 
+; MBPS (Megabytes Per Second) 
+fstp [esi + DTHP.statMbpsMedian]
+fstp [esi + DTHP.statMbpsMax]
+fstp [esi + DTHP.statMbpsMin]
+fstp [esi + DTHP.statMbpsAverage]
+ffree st0
+fincstp
+; Select Y-scale by statistics
+; Note FPU rounding mode temporary changed for this operation
+cmp [DRAW_PARMS.selectMode],0
+jne .nanoseconds 
+fld [esi + DTHP.statMbpsMax]  ; Get maximum MBPS if Bandwidth mode
+jmp .unitsSelected
+.nanoseconds:
+fld [esi + DTHP.statNspiMax]  ; Get maximum nsPI if Latency mode
+.unitsSelected:
+push 0 9             ; Divisor = coordinate grid count = 9
+fidiv dword [esp]
+fstcw [esp + 4]      ; Store FPU Control Word
+mov ax,[esp + 4]
+and ax,0F3FFh        ; Mask RC (Rounding Control), bits [11,10]
+or ax,00800h         ; Set RC = 10b = Round Up
+mov [esp + 6],ax
+fldcw [esp + 6]      ; Load changed FPU Control Word
+fistp dword [esp]    ; Store result (valueGridY) at Round Up mode
+fldcw [esp + 4]      ; Restore original FPU Control Word
+pop eax edx          ; EAX = calculated valueGridY, POP EDX for stack release 
+; Check for underflow (units per grid = 0) and correct to units per grid = 1
+test eax,eax
+jnz @f
+inc eax
+@@:
+; Set selected Y-scale and calculate multiplier for pixel coordinates
+cmp [DRAW_PARMS.valueGridY],eax
+je @f
+mov [DRAW_PARMS.showStatic],1
+@@:
+mov [DRAW_PARMS.valueGridY],eax
+push eax -GRIDSTEPY                                       ; + 2 dwords to stack
+fild dword [esp]        ; ST0 = - grid step, pixels
+fidiv dword [esp + 4]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
+fstp [DRAW_PARMS.yMultiplier]
+; Calculate data array for polyline Performance = f( Block size )
+lea edi,[esi + DTHP.measureArray]
+mov ebp,[esi + DTHP.visualCounter]
+mov eax,LINE_BASE_X
+push LINE_BASE_Y
+fild dword [esp]
+pop edx
+mov edx,DRAW_POINTS_COUNT * 8 * 2
+cmp [DRAW_PARMS.selectMode],0
+jne .branchLatency 
+; Line for bandwidth
+fld qword [esp + 4 * 3]           ; Load value for convert CPI to MBPS
+fmul [DRAW_PARMS.yMultiplier]
+.lineWriteBandwidth:
+fld st0
+fdiv qword [edi + 0]
+fadd st0,st2
+mov [edi + edx + 0],eax           ; Store POINT.x
+fistp dword [edi + edx + 4]       ; Store POINT.y 
+inc eax
+add edi,8
+dec ebp
+jnz .lineWriteBandwidth
+jmp .linesDone
+; Line for latency  
+.branchLatency:
+fld [MEM_OPB.tscPeriodNs] 
+fmul [DRAW_PARMS.yMultiplier]
+.lineWriteLatency:
+fld qword [edi + 0]
+fmul st0,st1
+fadd st0,st2 
+mov [edi + edx + 0],eax           ; Store POINT.x
+fistp dword [edi + edx + 4]       ; Store POINT.y
+inc eax
+add edi,8
+dec ebp
+jnz .lineWriteLatency
+; Done for bandwidth and latency
+.linesDone:
+ffree st0
+fincstp
+ffree st0
+fincstp
+add esp,4 * 5          ; Release stack
+
+.skipStatistics:
+;---------- End of conditionally run section for calculate statistics ---------;
+
+;---------- Setup paint context -----------------------------------------------;
 push ebx
-;---------- Make paint context ------------------------------------------------;
 push PAINT_STRUCT     ; Parm#2 = Pointer to PAINTSTRUCT structure
 push ebx              ; Parm#1 = Parent window handle
 call [BeginPaint]
 mov [GC_PARMS.handleDC],eax
-;---------- Prepare non-volatile parms, select handler = F (execution phase) --; 
-mov al,[GUI_PARMS.childWinRunning]
-cmp al,0                   ; 0 = Halted
-je .endPaint
-cmp al,1                   ; 1 = First drawings (grid)
-je .firstPaint             ; Go if this is first pass, draw axes
-;---------- Continue draw y=f(x), not a first pass, setup drawings ------------;
-lea ecx,[DRAW_THREAD_PARMS]            ; ECX = Pointer to draw parameters block
-lea edi,[ecx + DTHP.measureArray]      ; EDI = Pointer to measure data array
-mov ebp,[ecx + DTHP.measureCounter]    ; EBP = Measure counter
-mov ebx,[ecx + DTHP.visualCounter]     ; EBX = Visual counter
-lea esi,[ebx+1]                        ; ESI = Divisor for averaging 
-mov eax,ebx
-shl eax,3         ; 2^3 = 8 bytes per entry (QWORD)
-add edi,eax       ; EDI = Positioning pointer to current entry
-mov [ecx + DTHP.visualCounter],ebp
-sub ebp,ebx       ; EBP = Required number of pixels for visual now
-jbe .endLine      ; Go if now present data already visualized
-add ebx,GRIDBLANKX + 1 
-;---------- This cycle for EBP points draw per one timer tick -----------------;
-.drawLine: 
-; Calculate EAX = F(measurement result)
-; Remember about can use integer compare for floation point operands,
-; because shifted order. Instead FCOM / FSTSW AX / SAHF.
-; Optimize registers usage, offsets relative R8 many times is not optimal.
-; Better use 2 indexes: base and offset [ecx+edx] ?
-; Better use helpers subroutines for comparision and conditional update ?
-; Use median ordering for min-max also.
-; Remove finit from body of cycle ? 
-; Get current measurement, must be before ordering
-; at this point FPU x87 initialized
-finit
-fld qword [edi]       ; ST0 = Current measured Clocks per Instruction (CPI)
-;---------- Calculate average CPI, nsPI, MBPS ---------------------------------;
-push esi              ; ESI = divisor for averaging
-fld st0               ; ST1 = ST0 = current measured value
-fadd [DRAW_THREAD_PARMS.statCpiSum]
-fst [DRAW_THREAD_PARMS.statCpiSum]
-fidiv dword [esp]                        ; this access to R13 in the stack
-fst [DRAW_THREAD_PARMS.statCpiAverage]   ; store average CPI
-call HelperCPItoNSPI
-fst [DRAW_THREAD_PARMS.statNspiAverage]  ; store average nsPI = f (average CPI)
-call HelperNSPItoMBPS
-fadd [DRAW_THREAD_PARMS.statMbpsSum]
-fst [DRAW_THREAD_PARMS.statMbpsSum]  ; store average MBPS, averaging separately
-fidiv dword [esp]                    ; this access to ESI in the stack
-fstp [DRAW_THREAD_PARMS.statMbpsAverage]
-pop esi
-;--- Median sorting, also used for min/max, sorting by "bubble" method --------;
-; Note floating point values can be sorted by integer compare,
-; because shifted exponent used at FP format
-push ebx edi ebp
-.sortingRestart:
-lea ecx,[esi - 1]
-lea edx,[DRAW_THREAD_PARMS.measureArray]
-mov ebx,edx                ; EBX  = Pointer to array first element, used later
-lea edi,[edx + ecx*8]      ; EDI = Pointer to array last element, used later
-jecxz .sortingStop                 
-xor eax,eax
-.sortingCycle:
-mov ebp,[edx + 0 + 4]
-cmp ebp,[edx + 8 + 4]
-jb .sorted
-ja .unsorted
-mov ebp,[edx + 0 + 0]
-cmp ebp,[edx + 8 + 0]
-jbe .sorted
-.unsorted:
-mov ebp,[edx + 0 + 0]
-xchg ebp,[edx + 8 + 0]
-mov [edx + 0 + 0],ebp
-mov ebp,[edx + 0 + 4]
-xchg ebp,[edx + 8 + 4]
-mov [edx + 0 + 4],ebp
-mov al,1
-.sorted:
-add edx,8
-dec ecx
-jnz .sortingCycle                  ; DEC/JNZ faster then LOOP
-test eax,eax
-jnz .sortingRestart 
-.sortingStop:
-;---------- Get minimum and maximum after median ordering ---------------------;
-; minimum time - maximum bandwidth
-fld qword [ebx]                    ; ST0 = first element, minimum CPI
-fst [DRAW_THREAD_PARMS.statCpiMin]
-call HelperCPItoNSPI
-fst [DRAW_THREAD_PARMS.statNspiMin]
-call HelperNSPItoMBPS
-fstp [DRAW_THREAD_PARMS.statMbpsMax]
-;---------- Maximum time - minimum bandwidth ----------------------------------;
-fld qword [edi]                   ; ST0 = last element, maximum CPI
-fst [DRAW_THREAD_PARMS.statCpiMax]
-call HelperCPItoNSPI
-fst [DRAW_THREAD_PARMS.statNspiMax]
-call HelperNSPItoMBPS
-fstp [DRAW_THREAD_PARMS.statMbpsMin]
-;--- Get median CPI, nsPI after median ordering, note FPU already initialized -; 
-lea ecx,[esi - 1]
-shr ecx,1                     ; This branch for median ODD-sized array
-fld qword [ebx + ecx*8]       ; Get median
-jnc .oddMedianCpi             ; Go if median for ODD size
-fadd qword [ebx + ecx*8 + 8]
-fld1
-fadd st0,st0
-fdivp st1,st0
-.oddMedianCpi:
-fst [DRAW_THREAD_PARMS.statCpiMedian]
-call HelperCPItoNSPI
-fstp [DRAW_THREAD_PARMS.statNspiMedian]
-;---------- Get median MBPS, recalculate because reciprocal restrictions ------;
-lea ecx,[esi - 1]
-shr ecx,1                      ; This branch for median ODD-sized array
-fld qword [ebx + ecx*8]        ; Get median
-pushf
-call HelperCPItoNSPI
-call HelperNSPItoMBPS
-popf
-jnc .oddMedianMbps             ; Go if median for ODD size
-fld qword [ebx + ecx*8 + 8]
-call HelperCPItoNSPI
-call HelperNSPItoMBPS
-faddp st1,st0
-fld1
-fadd st0,st0
-fdivp st1,st0
-.oddMedianMbps:
-fstp [DRAW_THREAD_PARMS.statMbpsMedian]
-pop ebp edi ebx
-;---------- Start calculations for drawings Y = f( CPI ) ----------------------;
-; ST0 = current value, loaded before re-ordering
-call HelperCPItoNSPI
-cmp [MEM_IPB.updatedAsm],LATENCY_MODE
-jae .skipMbpsConversion
-call HelperNSPItoMBPS
-.skipMbpsConversion:
-fmul [DRAW_PARMS.yMultiplier]  ; ST0 = Pixel offset from BaseY=0, negative offset
-push eax
-fistp dword [esp]
-pop eax
-;---------- Setup coordinates for GUI -----------------------------------------;
-; note at this point can set EAX=0 for draw horizontal line DEBUG.
-add eax,SUBWINY - GRIDBLANKY - 1
-lea edx,[ebx + 1]
-lea ecx,[eax + 1]
-;--- Work with Y-coordinate, adjust Y-coordinates for make solid line by Y ----;
-push esi
-mov esi,[DRAW_PARMS.drawPreviousY]   ; ESI = DrawPreviousY
-test esi,esi
-jz @f
-mov ecx,esi
-@@:
-mov [DRAW_PARMS.drawPreviousY],eax   ; Set DrawPreviousY
-jnz @f
-inc ecx
-inc eax
-@@:
-cmp eax,ecx
-jbe @f
-xchg eax,ecx      ; Must be Down > Top
-@@:
-jne @f
-inc ecx           ; Make Down+1 if Top=Down
-@@:
-mov esi,ecx
-sub esi,eax
-cmp esi,1
-jbe @f
-inc ecx           ; Make down extra-pixel for vertical line  
-@@:
-pop esi
-;---------- Store coordinates for rectangle as part of line Y=F(X) ------------;
-; Add support approximation modes
-push ebp edi
-mov ebp,[MEM_IPB.updatedApprox]
-test ebp,ebp
-jz .noApproxMode
-mov edi,00001111b
-cmp ebp,APPROX_X16
-je .checkApproxMode
-mov edi,00011111b
-.checkApproxMode:
-test esi,edi
-jnz .noApproxMode
-dec ebx
-dec eax
-add edx,2  
-add ecx,2
-.noApproxMode:
-pop edi ebp
-;---------- Build RECT structure with rectangle points coordinates ------------;
-push edi
-mov [GRAPH_RECT.left],ebx
-mov [GRAPH_RECT.top],eax
-mov [GRAPH_RECT.right],edx
-mov [GRAPH_RECT.bottom],ecx
-;---------- Draw current point Y=F(X) -----------------------------------------;
-push [GC_PARMS.handlesBrushes + 04]   ; Parm#3 = Handle to a color brush
-push GRAPH_RECT                       ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]           ; Parm#1 = Handle to a Device Context
-call [FillRect]
-pop edi
-;---------- Cycle with update parameters --------------------------------------;
-add edi,8      ; EDI = Pointer to measurement results array
-inc esi        ; ESI = Divisor for averaging
-inc ebx        ; EBX = X-coordinate offset by visualization position
-dec ebp        ; EBP = Number of pixels per timer tick
-jnz .drawLine  ; This cycle for EBP points draw per one timer tick
-.endLine:
-jmp .redrawTexts
-;--- This branch for first paint ----------------------------------------------;
-; draw statical elements, not changed when draw
-.firstPaint:
-mov [GUI_PARMS.childWinRunning],2
-mov [DRAW_PARMS.timerCount],0
-;---------- Draw --------------------------------------------------------------;
-push [GC_PARMS.handleFont]     ; Parm#2 = Handle to Selected Object
-push [GC_PARMS.handleMemDC]    ; Parm#1 = Handle to a Device Context
+mov esi,[GC_PARMS.handleMemDC]  ; ESI = Graphics transit buffer handle
+mov edi,GRAPH_RECT              ; EDI = Pointer to rectangle structure
+;---------- Setup font and color ----------------------------------------------;
+push [GC_PARMS.handleFont]   ; Parm#2 = Handle to Selected Object
+push esi                     ; Parm#1 = Handle to a Device Context
 call [SelectObject]
-push COLOR_TEXT_VALUES         ; Parm#2 = RDX = Text front color value = 00bbggrrh
-push [GC_PARMS.handleMemDC]    ; Parm#1 = RCX = Handle to a Device Context
+push COLOR_TEXT_VALUES       ; Parm#2 = Text front color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
 call [SetTextColor]
-push COLOR_TEXT_BACK           ; Parm#2 = Text background color value = 00bbggrrh
-push [GC_PARMS.handleMemDC]    ; Parm#1 = Handle to a Device Context
+push COLOR_TEXT_BACK         ; Parm#2 = Text background color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
 call [SetBkColor]
-;---------- Blank work field --------------------------------------------------;
+
+;---------- Skip static GUI objects if not a first pass -----------------------;
 xor eax,eax
-lea ebx,[GRAPH_RECT]
-mov [ebx + RECT.left],eax
-mov [ebx + RECT.top],eax
-mov [ebx + RECT.right],SUBWINX
-mov [ebx + RECT.bottom],SUBWINY
-push [GC_PARMS.handlesBrushes + 8]   ; Parm#3 = Handle to a color brush
-push ebx                             ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
+xchg eax,[DRAW_PARMS.showStatic]
+test eax,eax
+jz .skipStatic
+
+;---------- Blank work field, background color --------------------------------;
+mov [edi + RECT.left],0
+mov [edi + RECT.top],0
+mov [edi + RECT.right],SUBWINX
+mov [edi + RECT.bottom],SUBWINY
+push [GC_PARMS.handlesBrushes + 8]  ; Parm#3 = Handle to a color brush
+push edi                            ; Parm#2 = Pointer to RECT structure
+push esi                            ; Parm#1 = Handle to a Device Context
 call [FillRect]
 ;---------- Coordinate X-grid, vertical lines ---------------------------------;
-mov esi,GRIDBLANKX          ; ESI = Base point, X
-mov edi,GRIDX               ; EDI = Number of lines
+mov ebx,GRIDBLANKX         ; EBX = Base point, X
+mov ebp,GRIDX              ; EBP = Number of vertical lines
+mov [edi + RECT.top],0
+mov [edi + RECT.bottom],SUBWINY - GRIDBLANKY  ; Base point, Y
 .xVgrid:
-lea eax,[esi + 1]           ; Line width = 1 pixel
-mov [ebx + RECT.left],esi
-mov [ebx + RECT.top],0
-mov [ebx + RECT.right],eax
-mov [ebx + RECT.bottom],SUBWINY-GRIDBLANKY
+lea eax,[ebx + 1]          ; Line width = 1 pixel
+mov [edi + RECT.left],ebx
+mov [edi + RECT.right],eax
 push [GC_PARMS.handlesBrushes + 00]  ; Parm#3 = Handle to a color brush
-push ebx                             ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
-call [FillRect]             ; Fill rectangle function
-add esi,GRIDSTEPX           ; Add X grid step
-dec edi                     ; Cycle for X-grid vertical lines
+push edi                   ; Parm#2 = Pointer to RECT structure
+push esi                   ; Parm#1 = Handle to a Device Context
+call [FillRect]            ; Fill rectangle function
+add ebx,GRIDSTEPX          ; Add X grid step
+dec ebp                    ; Cycle for X-grid vertical lines
 jnz .xVgrid
 ;---------- Coordinate Y-grid, horizontal lines -------------------------------;
-mov esi,SUBWINY-GRIDBLANKY  ; ESI = Base point, Y
-mov edi,GRIDY               ; EDI = Number of lines
+mov ebx,SUBWINY - GRIDBLANKY  ; EBX = Base point, Y
+mov ebp,GRIDY                 ; EBP = Number of horizontal lines
+mov [edi + RECT.left],GRIDBLANKX
+mov [edi + RECT.right],SUBWINX
 .yHgrid:
-lea eax,[esi - 1]
-mov [ebx + RECT.left],GRIDBLANKX
-mov [ebx + RECT.top],eax
-mov [ebx + RECT.right],SUBWINX
-mov [ebx + RECT.bottom],esi
+lea eax,[ebx - 1]             ; Line width = 1 pixel
+mov [edi + RECT.top],eax
+mov [edi + RECT.bottom],ebx
 push [GC_PARMS.handlesBrushes + 00]  ; Parm#3 = Handle to a color brush
-push ebx                             ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
-call [FillRect]             ; Fill rectangle function
-sub esi,GRIDSTEPY           ; Subtract Y grid step
-dec edi                     ; Cycle for Y-grid vertical lines
+push edi                   ; Parm#2 = Pointer to RECT structure
+push esi                   ; Parm#1 = Handle to a Device Context
+call [FillRect]            ; Fill rectangle function
+sub ebx,GRIDSTEPY          ; Subtract Y grid step
+dec ebp                    ; Cycle for Y-grid vertical lines
 jnz .yHgrid
-;---------- Initializing for grid texts write ---------------------------------;
-; Initializing values for X-grid vertical lines and
-; Y-grid horizontal lines texts
-mov bx,200h + GRIDX     ; BH = Counter, Pass#1 = XGrid (BH=2), Pass#2 = YGrid (BH=1), BL = Number of lines, X
-mov esi,GRIDBLANKX      ; ESI = Base point, X
-mov edi,SUBWINY-20      ; EDI = Base point Y, 20 pixels up
-xor ebp,ebp             ; EBP = Units value, X starts from 0
-;---------- This cycle both for X and Y grids texts ---------------------------; 
-; X/Y logic dynamically selected 
-.bothGrids:
+;---------- Initializing values for X grid text write cycle -------------------;
+; Note. X text don't depends on measurements, Y text depends on measurements.
+push GRIDX                 ; Dword [esp + 8] = Number of lines, X
+push GRIDBLANKX            ; Dword [esp + 4] = Base point, X
+push SUBWINY - 20          ; Dword [esp + 0] = Base point Y, 20 pixels up
+xor ebp,ebp                ; EBP = 0 = Units value, X starts from 0
+;---------- X grid text write cycle -------------------------------------------;
+.xGrid:
 ;---------- Build ASCII string ------------------------------------------------;
-push ebx edi
-lea edi,[TEMP_BUFFER]
+push edi
+mov edi,TEMP_BUFFER     ; EDI = Pointer for print decimal string as ASCII
 mov edx,edi
-mov bl,0             ; BL = Template control for print number, 0=No template
-mov eax,ebp          ; EAX = Value for print, Bytes/KB/MB
-call DecimalPrint32  ; Print number
+mov bl,0                ; BL = Template control for print number, 0=No template
+mov eax,ebp             ; EAX = Value for print, Bytes/KB/MB
+call DecimalPrint32     ; Print number
 mov ecx,edi
 sub ecx,edx
 mov al,0
-stosb                ; Store terminator byte = 0
-pop edi ebx
+stosb                   ; Store terminator byte = 0
+pop edi
+;---------- Set region for text string write ----------------------------------;
+mov eax,[esp + 00 + 00]
+add eax,18  
+push eax                    ; Parm#5 = Y coordinate down/right corner
+mov eax,[esp + 04 + 04]
+add eax,65
+push eax                    ; Parm#4 = X coordinate down/right corner
+push dword [esp + 00 + 08]  ; Parm#3 = Y coordinate up/left corner
+push dword [esp + 04 + 12]  ; Parm#2 = X coordinate up/left corner
+push edi                    ; Parm#1 = Pointer to RECT structure to store parameters
+call [SetRect]              ; Set region rectangle function 
+;---------- Draw text ---------------------------------------------------------;
+push DT_LEFT      ; Parm#5 = Method of formatting/alignment of text string
+push edi          ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
+push -1           ; Parm#3 = String length, -1 means NULL-terminated string
+push TEMP_BUFFER  ; Parm#2 = Pointer to text string
+push esi          ; Parm#1 = Handle to a Device Context
+call [DrawText]   ; Draw text function 
+;---------- Modify parameters and make cycle ----------------------------------;
+add ebp,[DRAW_PARMS.valueGridX]   ; Addend per X grid
+add dword [esp + 04 + 00],GRIDSTEPX
+dec dword [esp + 08 + 00]
+jnz .xGrid 
+;---------- X-units name (B/KB/MB), change color, select string, write --------;
+push COLOR_TEXT_UNITS        ; Parm#2 = Text front color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
+call [SetTextColor]
+mov eax,[DRAW_PARMS.selectUnits]
+mov ebp,[UNITS_TEXTS.bytes]  ; EBP = Pointer to text string, Cache&RAM mode
+cmp al,0
+je @f
+mov ebp,[UNITS_TEXTS.kb]
+cmp al,1
+je @f
+mov ebp,[UNITS_TEXTS.mb]
+@@:
+mov eax,SUBWINX - 49      ; Transit parm#2 = X coordinate up/left corner
+mov ebx,SUBWINY - 43      ; Transit parm#3 = Y coordinate up/left corner
+mov ecx,SUBWINX - 13      ; Transit parm#4 = X coordinate down/right corner
+mov edx,SUBWINY - 25      ; Transit parm#5 = Y coordinate down/right corner
+call HelperTextConstDraw
+;---------- Y-units name (MBPS/nanoseconds), use color from previous step -----;
+mov ebp,[UNITS_TEXTS.mbps]   ; EBP = Pointer to text string , Mode = Cache&RAM
+cmp [DRAW_PARMS.selectMode],0
+je @f
+mov ebp,[UNITS_TEXTS.nanoseconds]
+@@:
+mov eax,7                 ; Transit parm#2 = X coordinate up/left corner
+mov ebx,5                 ; Transit parm#3 = Y coordinate up/left corner
+mov ecx,40 + 7 + 20 + 24  ; Transit parm#4 = X coordinate down/right corner
+mov edx,18 + 5            ; Transit parm#5 = Y coordinate down/right corner
+call HelperTextConstDraw
+;---------- Print statistics table, lines and texts ---------------------------;
+; Horizontal sequence of strings:  CPI, nsPI, MBPS
+mov dword [esp + 04],CLKS_MBPS_TEXTS      ; Dword [esp + 04] = Pointer to text strings pointers table
+mov dword [esp + 00],DRAW_TABLE_UP_COUNT  ; Dword [esp + 00] = Strings count
+mov eax,522               ; Transit parm#2 = X coordinate up/left corner
+mov ecx,522 + 40          ; Transit parm#4 = X coordinate down/right corner
+mov edx,27 + 17           ; Transit parm#5 = Y coordinate down/right corner
+@@:
+mov ebx,[esp + 04]        ; EBP = Pointer to text string
+add dword [esp + 04],4    ; Update pointer to next offset
+mov ebp,[ebx]             ; Can mov ebp,[ebp] but don't use stack segment
+mov ebx,27                ; Transit parm#3 = Y coordinate up/left corner
+call HelperTextConstDraw
+add eax,64                ; Shift 64 points right, X + 64
+add ecx,64                ; Shift 64 points right, X + 64
+dec dword [esp + 00]
+jnz @b                    ; Cycle for: CPI, nsPI, MBPS 
+;---------- Vertical sequence of strings: maximum, minimum, average, median ---;
+; dword [esp + 04] = Pointer to continue of text strings pointers table
+mov dword [esp + 00],DRAW_TABLE_LEFT_COUNT  ; Dword [esp + 00] = Strings count
+mov ebx,27 + 19           ; Transit parm#3 = Y coordinate up/left corner
+mov ecx,458 + 60          ; Transit parm#4 = X coordinate down/right corner
+mov edx,27 + 19 + 17      ; Transit parm#5 = Y coordinate down/right corner
+@@:
+mov eax,[esp + 04]        ; Get pointer to text string
+add dword [esp + 04],4    ; Update pointer to next offset
+mov ebp,[eax]             ; Can mov ebp,[ebp] but don't use stack segment
+mov eax,458               ; Transit parm#2 = X coordinate up/left corner
+call HelperTextConstDraw
+add ebx,15                ; Shift 15 points down, Y + 15
+add edx,15                ; Shift 15 points down, Y + 15
+dec dword [esp + 00]
+jnz @b                    ; Cycle for: maximum, minimum, average, median
+;---------- Lines of table, up horizontal line and left vertical line ---------;
+mov [edi + RECT.left],519
+mov [edi + RECT.top],27 + 17
+mov [edi + RECT.right],519 + 240
+mov [edi + RECT.bottom],27 + 17 + 2
+push [GC_PARMS.handlesBrushes + 12]  ; Parm#3 = Handle to a color brush
+push edi                             ; Parm#2 = Pointer to RECT structure
+push esi                             ; Parm#1 = Handle to a Device Context
+call [FillRect]               ; Fill rectangle function, up horizontal line
+mov [edi + RECT.left],518
+mov [edi + RECT.top],27 + 19
+mov [edi + RECT.right],518 + 2
+mov [edi + RECT.bottom],27 + 19 + 17*4
+push [GC_PARMS.handlesBrushes + 12]  ; Parm#3 = Handle to a color brush
+push edi                             ; Parm#2 = Pointer to RECT structure
+push esi                             ; Parm#1 = Handle to a Device Context
+call [FillRect]               ; Fill rectangle function, left vertical line
+;---------- Target method CPU instructions dump -------------------------------;
+mov ebx,MEM_IPB
+mov dword [esp + 08],0
+mov eax,[ebx + MEMIPB.dumpMethodStart]
+mov [esp + 04],eax
+mov eax,[ebx + MEMIPB.dumpMethodLength]
+mov [esp + 00],eax
+test eax,eax
+jz .skipAsmDump
+cmp eax,128
+jbe @f
+mov dword [esp + 00],128
+@@:
+push COLOR_TEXT_DUMP      ; Parm#2 = Text front color value = 00bbggrrh
+push esi                  ; Parm#1 = Handle to a Device Context
+call [SetTextColor]
+.asmDump:
+mov ebp,TEMP_BUFFER
+push edi
+mov edi,ebp
+mov eax,[esp + 04 + 04]
+add eax,[esp + 08 + 04]
+mov al,[eax]
+call HexPrint8
+mov al,0
+stosb
+pop edi
+;---------- Set coordinates for dump ------------------------------------------;
+mov eax,SUBWINX - 250 + 64   ; Transit parm#2 = X coordinate, up left corner
+mov ebx,95 + 48              ; Transit parm#3 = Y coordinate up/left corner
+mov ecx,SUBWINX - 005 + 64   ; Transit parm#4 = X coordinate down/right corner
+mov edx,95 + 18 + 48         ; Transit parm#5 = Y coordinate down/right corner 
+;---------- Adjust coordinates for dump, print dump ---------------------------;
+push esi
+mov esi,[esp + 08 + 04]       ; dword [esp + 00] = counter, ESI = counter temporary copy
+and esi,07h                   ; Bits 0-2 used for X-positioning
+imul esi,esi,21               ; X scale = 21 pixels per char
+add eax,esi                   ; Add offset to X-start
+add ecx,esi                   ; Add offset to X-end
+mov esi,[esp + 08 + 04]       ; dword [esp + 00] = counter, ESI = counter temporary copy
+shr esi,3
+and esi,0Fh                   ; Bits 3-6 used for Y-positioning
+imul esi,esi,18               ; Y scale = 18 pixels per char 
+add ebx,esi                   ; Add offset to Y-start
+add edx,esi                   ; Add offset to Y-end
+pop esi
+call HelperTextConstDraw
+inc dword [esp + 08]
+dec dword [esp + 00]
+jnz .asmDump 
+.skipAsmDump:
+;---------- TSC clock frequency -----------------------------------------------;
+push edi
+mov edi,DRAW_TSC_VALUE
+mov word [edi],0000h + '?'                   ; This char '?' used if error
+mov eax,dword [MEM_OPB.tscFrequencyMHz + 0]  ; EDX:EAX = TSC Frequency, MHz
+mov edx,dword [MEM_OPB.tscFrequencyMHz + 4]
+mov ecx,eax                                  ; Frequency = 0 means error
+or ecx,edx
+jz @f                                  ; Go skip value write if error
+mov bx,0100h                           ; BX=Template X.Y , 1 digit after '.'
+call DoublePrint
+mov al,0
+stosb
+@@:
+pop edi
+push COLOR_TEXT_INFO         ; Parm#2 = Text front color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
+call [SetTextColor]
+mov eax,SUBWINX - 187        ; Transit Parm#2 = X coordinate up/left corner
+mov ebx,6                    ; Transit Parm#3 = Y coordinate up/left corner
+mov ecx,SUBWINX - 5          ; Transit Parm#4 = X coordinate down/right corner
+mov edx,6+18                 ; Transit Parm#5 = Y coordinate down/right corner
+mov ebp,DRAW_TSC             ; EBP = Pointer to text string
+call HelperTextConstDraw
+
+;---------- Point for skip static GUI objects if not a first pass -------------;
+add esp,12
+.skipStatic:
+sub esp,12
+
+;---------- Skip results visualization if yet no results ----------------------;
+cmp [DRAW_THREAD_PARMS.visualCounter],2
+jb .skipDynamic                             ; Go skip if no measurements added
+
+;---------- Conditionally run section for visual measurement results ----------;
+; Draw Y-axis text depend on re-scale, write statistics and line Y=F(X). 
+;---------- Setup font and color ----------------------------------------------;
+push [GC_PARMS.handleFont]   ; Parm#2 = Handle to Selected Object
+push esi                     ; Parm#1 = Handle to a Device Context
+call [SelectObject]
+push COLOR_TEXT_VALUES       ; Parm#2 = Text front color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
+call [SetTextColor]
+push COLOR_TEXT_BACK         ; Parm#2 = Text background color value = 00bbggrrh
+push esi                     ; Parm#1 = Handle to a Device Context
+call [SetBkColor]
+;---------- Initializing values for Y grid text write cycle -------------------;
+; Note. X text don't depends on measurements, Y text depends on measurements.
+mov dword [esp + 08],GRIDY - 1                              ; Dword [esp + 8] = Number of lines, Y
+mov dword [esp + 04],GRIDBLANKX - 68                        ; Dword [esp + 4] = X coordinate
+mov dword [esp + 00],SUBWINY - GRIDBLANKY - GRIDSTEPY - 15  ; Dword [esp + 0] = Y coordinate
+mov ebp,[DRAW_PARMS.valueGridY]     ; EBP = Units value, Y starts with offset
+;---------- Y grid text write cycle -------------------------------------------;
+.yGrid:
+;---------- Build ASCII string ------------------------------------------------;
+push edi
+mov edi,TEMP_BUFFER     ; EDI = Pointer for print decimal string as ASCII
+mov edx,edi
+mov bl,0                ; BL = Template control for print number, 0=No template
+mov eax,ebp             ; EAX = Value for print, Bytes/KB/MB
+call DecimalPrint32     ; Print number
+mov ecx,edi
+sub ecx,edx
+mov al,0
+stosb                   ; Store terminator byte = 0
+pop edi
 ;---------- Calculate correction value for Y axis grid values print -----------;
 mov edx,9
-sub edx,ecx         ; R10 = chars positions count
-jbe .rejectAddend   ; Go skip if correction not required 
+sub edx,ecx             ; EDX = chars positions count
+jbe .rejectAddend       ; Go skip if correction not required 
 imul edx,edx,7
-;---------- Reject corrections if horizontal axis or overflow -----------------;
-cmp bh,1            ; BH=1 means Y-mode , BH=2 means X-mode
-je .doneAddend      ; Go with EDX = correction if branch for vertical axis text 
+jmp .doneAddend 
 .rejectAddend:
 xor edx,edx
 .doneAddend:
 ;---------- Set region for text string write ----------------------------------;
-lea eax,[edi + 18]    ; EAX = Y coordinate down/right corner  
-push eax              ; Parm#5 = Y coordinate down/right corner
-lea eax,[esi + edx + 65]
-push eax              ; Parm#4 = X coordinate down/right corner
-push edi              ; Parm#3 = Y coordinate up/left corner
-lea eax,[esi + edx]   
-push eax              ; Parm#2 = X coordinate up/left corner
-push GRAPH_RECT       ; Parm#1 = Pointer to RECT structure to store parameters
-call [SetRect]        ; Set region rectangle function 
+mov eax,[esp + 00 + 00]
+add eax,18
+push eax                    ; Parm#5 = Y coordinate down/right corner
+mov eax,[esp + 04 + 04]
+lea eax,[eax + edx + 65]
+push eax                    ; Parm#4 = X coordinate down/right corner
+push dword [esp + 00 + 08]  ; Parm#3 = Y coordinate up/left corner
+mov eax,[esp + 04 + 12]
+add eax,edx
+push eax                    ; Parm#2 = X coordinate up/left corner
+push edi                    ; Parm#1 = Pointer to RECT structure to store parameters
+call [SetRect]              ; Set region rectangle function 
 ;---------- Draw text ---------------------------------------------------------;
-push DT_LEFT          ; Parm#5 = Method of formatting/alignment of text string
-push GRAPH_RECT       ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
-push -1               ; Parm#3 = String length, -1 means NULL-terminated string
-push TEMP_BUFFER      ; Parm#2 = Pointer to text string
-push [GC_PARMS.handleMemDC]    ; Parm#1 = Handle to a Device Context
-call [DrawText]        ; Draw text function 
-;---------- Cycle for lines of selected grid ----------------------------------;
-lea ecx,[DRAW_PARMS]
-cmp bh,1                          ; BH=1 means Y-mode , BH=2 means X-mode
-je .yGrid
-;---------- X-mode entry point ------------------------------------------------;
-add ebp,[ecx + DRPM.valueGridX]   ; Addend per X grid
-add esi,GRIDSTEPX
-jmp .cycleGrids
-;---------- Y-mode entry point ------------------------------------------------;
-.yGrid:
-add ebp,[ecx + DRPM.valueGridY]   ; Addend per Y grid
-sub edi,GRIDSTEPY
-.cycleGrids:
-dec bl
-jnz .bothGrids
-;---------- Cycle for horizontal and vertical grids ---------------------------;
-mov bl,GRIDY - 1                              ; BL = Number of lines, Y
-mov esi,GRIDBLANKX - 68                       ; ESI = X coordinate
-mov edi,SUBWINY-GRIDBLANKY - GRIDSTEPY - 15   ; EDI = Y coordinate
-mov ebp,[ecx + DRPM.valueGridY]  ; EBP = Units value, Y starts with offset
-dec bh             ; BH = Counter, Pass#1 = XGrid (BH=2), Pass#2 = YGrid (BH=1)
-jnz .bothGrids
-push COLOR_TEXT_UNITS     ; Parm#2 = Text front color value = 00bbggrrh
-push [GC_PARMS.handleMemDC]        ; Parm#1 = Handle to a Device Context
+push DT_LEFT      ; Parm#5 = Method of formatting/alignment of text string
+push edi          ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
+push -1           ; Parm#3 = String length, -1 means NULL-terminated string
+push TEMP_BUFFER  ; Parm#2 = Pointer to text string
+push esi          ; Parm#1 = RCX = Handle to a Device Context
+call [DrawText]   ; Draw text function 
+;---------- Modify parameters and make cycle ----------------------------------;
+add ebp,[DRAW_PARMS.valueGridY]   ; Addend per Y grid
+sub dword [esp + 00 + 00],GRIDSTEPY
+dec dword [esp + 08 + 00]
+jnz .yGrid 
+;---------- Visual statistics -------------------------------------------------;     
+; Set color for text
+push COLOR_TEXT_INFO     ; Parm#2 = Text front color value = 00bbggrrh
+push esi                 ; Parm#1 = Handle to a Device Context
 call [SetTextColor]
-mov eax,[DRAW_PARMS.selectUnits]
-mov esi,[UNITS_TEXTS.bytes]   ; ESI = Pointer to text string, size units select
-cmp al,0
-je @f
-mov esi,[UNITS_TEXTS.kb]
-cmp al,1
-je @f
-mov esi,[UNITS_TEXTS.mb]
-@@:
-mov edx,SUBWINX-49        ; EDX = X coordinate up/left corner
-mov ecx,SUBWINY-43        ; ECX = Y coordinate up/left corner
-mov ebx,SUBWINX-13        ; EBX = X coordinate down/right corner
-mov eax,SUBWINY-25        ; EAX = Y coordinate down/right corner
-call HelperTextConstDraw
-;---------- Prepare for Y-units, use color from previous step -----------------;
-mov esi,[UNITS_TEXTS.mbps]   ; ESI = Pointer to text string, performance units 
-cmp [DRAW_PARMS.selectMode],0
-je @f
-mov esi,[UNITS_TEXTS.nanoseconds]
-@@:
-mov edx,7                  ; EDX = X coordinate up/left corner
-mov ecx,5                  ; ECX = Y coordinate up/left corner
-mov ebx,40+7+20 + 24       ; EBX = X coordinate down/right corner
-mov eax,18+5               ; EAX = Y coordinate down/right corner
-call HelperTextConstDraw
-;---------- Print statistics table, lines and texts ---------------------------;
-;---------- Horizontal sequence of strings:  CPI, nsPI, MBPS ------------------;
-lea edi,[CLKS_MBPS_TEXTS]      ; EDI = Pointer to text strings pointers table
-mov ebp,DRAW_TABLE_UP_COUNT    ; EBP = Strings count
-mov edx,522                    ; EDX = X coordinate up/left corner
-mov ecx,27                     ; ECX = Y coordinate up/left corner
-mov ebx,522 + 40               ; EBX = X coordinate down/right corner
-mov eax,27 + 17                ; EAX = Y coordinate down/right corner
-@@:
-mov esi,[edi]                  ; ESI = Pointer to text string
-add edi,4                      ; Update pointer to next offset
-call HelperTextConstDraw
-add edx,64                     ; Shift 64 points right, X+64
-add ebx,64                     ; Shift 64 points right, X+64
-dec ebp
-jnz @b                         ; cycle for:  CPI, nsPI, MBPS 
-;---------- Vertical sequence of strings: maximum, minimum, average, median ---;
-; EDI = Pointer to continue of text strings pointers table
-mov ebp,DRAW_TABLE_LEFT_COUNT  ; EBP = Strings count
-mov edx,458                    ; EDX = X coordinate up/left corner
-mov ecx,27 + 19                ; ECX = Y coordinate up/left corner
-mov ebx,458 + 60               ; EBX = X coordinate down/right corner
-mov eax,27 + 19 + 17           ; EAX = Y coordinate down/right corner
-@@:
-mov esi,[edi]                  ; ESI = Pointer to text string
-add edi,4                      ; Update pointer to next offset
-call HelperTextConstDraw
-add ecx,15                    ; Shift 15 points down, Y+15
-add eax,15                    ; Shift 15 points down, Y+15
-dec ebp
-jnz @b                        ; cycle for:  maximum, minimum, average, median
-;---------- lines of table, up horizontal line and left vertical line ---------;
-lea ebx,[GRAPH_RECT]
-mov [ebx + RECT.left],519
-mov [ebx + RECT.top],27 + 17
-mov [ebx + RECT.right],519 + 240
-mov [ebx + RECT.bottom],27 + 17 + 2
-push [GC_PARMS.handlesBrushes + 12]    ; Parm#3 = Handle to a color brush
-push ebx                               ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]            ; Parm#1 = Handle to a Device Context
-call [FillRect]                 ; Fill rectangle function, up horizontal line
-mov [ebx + RECT.left],518
-mov [ebx + RECT.top],27 + 19
-mov [ebx + RECT.right],518 + 2
-mov [ebx + RECT.bottom],27 + 19 + 17*4
-push [GC_PARMS.handlesBrushes + 12]    ; Parm#3 = Handle to a color brush
-push ebx                               ; Parm#2 = Pointer to RECT strucnure
-push [GC_PARMS.handleMemDC]            ; Parm#1 = Handle to a Device Context
-call [FillRect]                 ; Fill rectangle function, left vertical line
-;---------- Target method CPU instructions dump -------------------------------;
-lea esi,[MEM_IPB]
-mov ebp,[esi + MEMIPB.dumpMethodLength]
-mov esi,[esi + MEMIPB.dumpMethodStart]
-test ebp,ebp
-jz .skipAsmDump
-cmp ebp,128
-jbe @f
-mov ebp,128
-@@:
-push COLOR_TEXT_DUMP         ; Parm#2 = Text front color value = 00bbggrrh
-push [GC_PARMS.handleMemDC]  ; Parm#1 = Handle to a Device Context
-call [SetTextColor]
-xor eax,eax
-.asmDump:
-;---------- Write string for one hex byte -------------------------------------;
-push eax
-push eax
-lea edi,[TEMP_BUFFER]
-lodsb
-call HexPrint8
-mov al,0
-stosb
-pop eax
-;---------- Set coordinates ---------------------------------------------------;
-push esi
-mov esi,eax                 ; EAX = counter, ESI = counter temporary copy #1
-mov edx,SUBWINX - 250 + 64  ; EDX = X coordinate, up left corner
-mov ecx,95 + 48             ; ECX = Y coordinate up/left corner
-mov ebx,SUBWINX - 005 + 64  ; EBX = X coordinate down/right corner
-mov eax,95 + 18 + 48        ; EAX = Y coordinate down/right corner 
-;---------- Adjust coordinates ------------------------------------------------;
-push esi
-and esi,07h                 ; Bits 0-2 used for X-positioning
-imul esi,esi,21             ; X scale = 21 pixels per char
-add edx,esi                 ; Add offset to X-start
-add ebx,esi                 ; Add offset to X-end
-pop esi
-shr esi,3
-and esi,0Fh                 ; Bits 3-6 used for Y-positioning
-imul esi,esi,18             ; Y scale = 18 pixels per char 
-add ecx,esi                 ; Add offset to Y-start
-add eax,esi                 ; Add offset to Y-end
-;---------- Draw one hex byte -------------------------------------------------;
-lea esi,[TEMP_BUFFER]
-call HelperTextConstDraw
-pop esi eax
-inc eax
-dec ebp
-jnz .asmDump 
-.skipAsmDump:
-;---------- TSC clock frequency -----------------------------------------------;
-lea edi,[DRAW_TSC_VALUE]
-mov word [edi],0000h + '?'                   ; This char '?' used if error
-mov eax,dword [MEM_OPB.tscFrequencyMHz + 0]  ; EDX:EAX = TSC Frequency, MHz
-mov edx,dword [MEM_OPB.tscFrequencyMHz + 4]
-mov ecx,eax
-or ecx,edx                  ; Frequency = 0 means error
-jz @f                       ; Go skip value write if error
-mov bx,0100h                ; BX=Template X.Y , 1 digit after '.'
-call DoublePrint
-mov al,0
-stosb
-@@:
-push COLOR_TEXT_INFO        ; Parm#2 = Text front color value = 00bbggrrh
-push [GC_PARMS.handleMemDC]          ; Parm#1 = Handle to a Device Context
-call [SetTextColor]
-mov edx,SUBWINX - 187       ; EDX = X coordinate up/left corner
-mov ecx,6                   ; ECX = Y coordinate up/left corner
-mov ebx,SUBWINX - 5         ; EBX = X coordinate down/right corner
-mov eax,6+18                ; EAX = Y coordinate down/right corner
-lea esi,[DRAW_TSC]          ; ESI = Pointer to text string
-call HelperTextConstDraw
-;---------- This text strings must be updated at each visualization tick ------;
-.redrawTexts:
-;--- Initializing parameters for benchmark statistics, bandwidth and timings --;
+; This text strings must be updated at each visualization tick
+; Initializing parameters for benchmark statistics, bandwidth and timings
 mov ebp,0300h
 ;---------- Print timings statistics, CPI minimum, maximum, average, median ---;
 ; note CPI = Clocks Per Instruction
-lea esi,[DRAW_THREAD_PARMS.statCpiMin]  ; ESI = variables group base
-mov edx,SUBWINX - 250
-mov ebx,SUBWINX - 190 
-call HelperWriteStatisticsYconst
+mov ebx,DRAW_THREAD_PARMS.statCpiMin   ; EBX = variables group base
+mov eax,SUBWINX - 250
+mov ecx,SUBWINX - 190 
+call HelperWriteStatistics
 ;---------- Print timings statistics, nsPI minimum, maximum, average, median --;
 ; note nsPI = nanoseconds per instruction
-lea esi,[DRAW_THREAD_PARMS.statNspiMin]  ; ESI = variables group base
-mov edx,SUBWINX - 250 + 64*1
-mov ebx,SUBWINX - 190 + 64*1 
-call HelperWriteStatisticsYconst
+mov ebx,DRAW_THREAD_PARMS.statNspiMin  ; EBX = variables group base
+mov eax,SUBWINX - 250 + 64*1
+mov ecx,SUBWINX - 190 + 64*1 
+call HelperWriteStatistics
 ;---------- This number template for Megabytes per Second ---------------------;
 mov ebp,0200h
 ;---------- Print timings statistics, MBPS minimum, maximum, average, median --;
 ; note MBPS = megabytes per second
-; Note Min/Max here swapped, because min. time means max. bandwidth
-lea esi,[DRAW_THREAD_PARMS.statMbpsMax]  ; ESI = variables group base
-mov edx,SUBWINX - 250 + 64*2
-mov ebx,SUBWINX - 150 + 64*2 
-call HelperWriteStatisticsYconst
-;---------- End of prepare, visual prepared objects ---------------------------;
-.drawVisual:
-xor eax,eax          ; EAX = 0 for compact push 0
-push SRCCOPY         ; Parm#9 = Raster operation code
-push eax             ; Parm#8 = Y source
-push eax             ; Parm#7 = X source
-push [GC_PARMS.handleMemDC]   ; Parm#6 = Handle of source Device Context
-push SUBWINY         ; Parm#5 = Height
-push SUBWINX         ; Parm#4 = Width
-push SHIFTY          ; Parm#3 = Y destination
-push SHIFTX          ; Parm#2 = X destination
-push [GC_PARMS.handleDC]      ; Parm#1 = Handle of destination Device Context
+; note Min/Max here swapped, because min. time means max. bandwidth
+mov ebx,DRAW_THREAD_PARMS.statMbpsMax  ; EBX = variables group base
+mov eax,SUBWINX - 250 + 64*2
+mov ecx,SUBWINX - 150 + 64*2 
+call HelperWriteStatistics
+;--- Draw PolyLine by measurement results Performance = F ( Block Size ) ------;
+push [GC_PARMS.handlePen]              ; Parm#2 = Pen handle
+push esi                               ; Parm#1 = Handle to a Device Context
+call [SelectObject]
+mov edi,eax
+push [DRAW_THREAD_PARMS.visualCounter] ; Parm#3 = Number of points in the array
+push DRAW_THREAD_PARMS.polylineArray   ; Parm#2 = Pointer to POINT structures array
+push esi                               ; Parm#1 = Handle to a Device Context
+call [Polyline]
+push edi                               ; Parm#2 = Pen handle, restore original
+push esi                               ; Parm#1 = Handle to a Device Context
+call [SelectObject]
+
+.skipDynamic:
+;---------- End of conditionally run section for visual measurement results ---;
+
+add esp,12                 ; Release stack
+;---------- Copy graphics objects from transit buffer to graphics memory ------;
+xor eax,eax                ; EAX = 0 for compact push 0
+push SRCCOPY               ; Parm#9 = Raster operation code
+push eax                   ; Parm#8 = Y source
+push eax                   ; Parm#7 = X source
+push esi                   ; Parm#6 = Handle of source Device Context
+push SUBWINY               ; Parm#5 = Height
+push SUBWINX               ; Parm#4 = Width
+push SHIFTY                ; Parm#3 = Y destination
+push SHIFTX                ; Parm#2 = X destination
+push [GC_PARMS.handleDC]   ; Parm#1 = Handle of destination Device Context
 call [BitBlt]                       
 ;---------- Delete paint context ----------------------------------------------;
-.endPaint:
-push PAINT_STRUCT       ; Parm#2 = Pointer to PAINTSTRUCT structure
-push dword [esp + 4]    ; Parm#1 = Parent window handle
-call [EndPaint]         ; This WinAPI returns BOOL status, but ignored
-;---------- Paint callback handling done --------------------------------------;
 pop ebx
+push PAINT_STRUCT       ; Parm#2 = Pointer to PAINTSTRUCT structure
+push ebx                ; Parm#1 = Parent window handle
+call [EndPaint]         ; This WinAPI returns BOOL status, but ignored
 jmp .processed
 
-;------------------------ Helpers for calculations ----------------------------;
-
-;--- Convert CPI (Clocks per Instruction) to nsPI (nanosec. per instr.) -------;
-;                                                                              ;
-; INPUT:  ST0 = CPI as floating point double                                   ;
-;                                                                              ;
-; OUTPUT: ST0 = nsPI as floating point double                                  ;
-;                                                                              ;
-;------------------------------------------------------------------------------;
-HelperCPItoNSPI:
-fmul [MEM_OPB.tscPeriodNs]
-ret
-;--- Convert nsPI (nanosec. per instr.) to MBPS (Megabytes per Second) --------;
-;                                                                              ;
-; INPUT:  ST0 = nsPI as floating point double                                  ;
-;                                                                              ;
-; OUTPUT: ST0 = MBPS  as floating point double                                 ;
-;                                                                              ;
-;------------------------------------------------------------------------------;
-HelperNSPItoMBPS:
-push NSPI_TO_MBPS               ; This constant for decimal megabytes and ns.
-mov eax,[MEM_IPB.operandWidth]  ; EAX = bits per instruction
-shr eax,3                       ; EAX = bytes per instruction 
-push eax
-fild dword [esp + 4]  ; ST0 = 1000, f(decimal megabytes, ns), ST1 = nsPI 
-fxch st1              ; ST0 = nsPI , ST1 = 1000 
-fdivp st1,st0         ; ST0 = 1000 / nsPI = decimal megainstructions per second
-fimul dword [esp + 0] ; ST0 = decimal megabytes per second
-fimul [MEM_IPB.updatedThreads]  ; Multiply by number of threads
-pop eax eax
-ret
-
-;-------------------------- Helpers for drawings ------------------------------;
-; Note about stack re-alignment when subroutines call
+;------------------------- Helpers for drawings -------------------------------;
 
 ;--- Print text string --------------------------------------------------------;
 ;                                                                              ;
-; INPUT:   ESI = Pointer to text string                                        ;   
-;          EDX = xLeft                                                         ; 
-;          ECX = yTop                                                          ;
-;          EBX = xRight                                                        ;
-;          EAX = yBottom                                                       ;
+; INPUT:   ESI = Handle of a Device Context                                    ;
+;          EDI = Pointer to RECT structure for draw region                     ;
+;          EBP = Pointer to text string                                        ;
+;          EAX = xLeft                                                         ;
+;          EBX = yTop                                                          ;
+;          ECX = xRight                                                        ;
+;          EDX = yBottom                                                       ;
 ;                                                                              ;
 ; OUTPUT:  None in the CPU registers                                           ;
-;          All registers (EAX, EBX, ECX, EDX, ESI, EDI, EBP)                   ; 
-;          is  non volatile for this subroutine                                ;    
+;          All registers is non volatile for this subroutine                   ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperTextConstDraw:
-push eax ecx edx
-;---------- Set region rectangle ----------------------------------------------; 
-push eax            ; Parm#5 = yBottom 
-push ebx            ; Parm#4 = xRight
-push ecx            ; Parm#3 = yTop   
-push edx            ; Parm#2 = xLeft                      
-push GRAPH_RECT     ; Parm#1 = Pointer to RECT structure to store parameters
-call [SetRect]      ; Set region rectangle function 
-;---------- Draw text ---------------------------------------------------------;
-push DT_LEFT        ; Parm#5 = Method of formatting/alignment of text string
-push GRAPH_RECT     ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
-push -1             ; Parm#3 = String length, -1 means NULL-terminated string
-push esi            ; Parm#2 = Pointer to text string
-push [GC_PARMS.handleMemDC]  ; Parm#1 = Handle of a Device Context
-call [DrawText]     ; Draw text function 
-pop edx ecx eax
+pushad
+push edx              ; Parm#5 = yBottom coordinate, down/right corner
+push ecx              ; Parm#4 = xRight coordinate, down/right corner
+push ebx              ; Parm#3 = yTop coordinate, up/left corner
+push eax              ; Parm#2 = xLeft coordinate, up/left corner
+push edi              ; Parm#1 = Pointer to RECT structure to store parameters
+call [SetRect]        ; Set region rectangle function 
+push DT_LEFT          ; Parm#5 = Method of formatting/alignment of text string
+push edi              ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
+push -1               ; Parm#3 = String length, -1 means NULL-terminated string
+push ebp              ; Parm#2 = Pointer to text string
+push esi              ; Parm#1 = Handle of a Device Context
+call [DrawText]       ; Set region rectangle function 
+popad
 ret
 ;--- Print floating point value, double ---------------------------------------;
 ;                                                                              ;
-; INPUT:   EDX = X up left position                                            ;
-;          ECX = Y up left position                                            ; 
-;          EBX = X down right position                                         ;
-;          EAX = Y down right position                                         ;
-;          EBP = numeric template for floating point print                     ;
-;          EDI:ESI = floating point value, double, 64-bit                      ;
-;                    EDI = High32 , ESI = Low32                                ;
+; INPUT:   ESI = Handle of a Device Context                                    ;
+;          EDI = Pointer to RECT structure for draw region                     ;
+;          EBP = Numeric template for floating point print                     ;
+;          EAX = xLeft                                                         ;
+;          EBX = yTop                                                          ;
+;          ECX = xRight                                                        ;
+;          EDX = yBottom                                                       ;
+;          Qword [ESP + 04] = Floating point value, double, 64-bit,            ;
+;                             after caller push qword and call store EIP       ;
 ;                                                                              ;
 ; OUTPUT:  None in the CPU registers                                           ;
-;          All registers (EAX, EBX, ECX, EDX, ESI, EDI, EBP)                   ; 
-;          is  non volatile for this subroutine                                ;    
+;          All registers is non volatile for this subroutine                   ;
 ;                                                                              ;
-;------------------------------------------------------------------------------;      
+;------------------------------------------------------------------------------;
 HelperTextVarDouble:
-push eax ecx edx
-;---------- Build text string -------------------------------------------------;
-push eax ebx ecx edx edi
-lea edi,[TEMP_BUFFER]
-mov ecx,11-3         ; 11 (not 9) for blank if variable X-size font 
-mov ax,0000h + '?'   ; Blank field with "?" means yet not determined
+pushad
+pushad
+mov edi,TEMP_BUFFER
+push edi
+mov ecx,11 - 3        ; 11 (not 9) for blank if variable X-size font 
+mov ax,0000h + '?'    ; Blank field with "?" means yet not determined
 stosw
 mov al,' '
-rep stosb            ; Blank entire field, if next value shorter then previous
+rep stosb             ; Blank entire field, if next value shorter then previous
 mov al,0
 stosb
 pop edi
-mov ebx,ebp          ; BH, BL = template
-mov eax,esi          ; EDX:EAX = value, double
-mov edx,edi
-test eax,eax
-jnz .valueGood
-test edx,edx
-jz .valueSkip
-.valueGood:
-push edi
-lea edi,[TEMP_BUFFER]
+mov ebx,ebp
+mov eax,[esp + 04 + 32*2]
+mov edx,[esp + 08 + 32*2]
+mov ecx,eax
+or ecx,edx
+jz @f
 call DoublePrint
-pop edi
-.valueSkip:
-pop edx ecx ebx eax
-;---------- Draw text string --------------------------------------------------;
-push esi
-lea esi,[TEMP_BUFFER]
-call HelperTextConstDraw
-pop esi 
-pop edx ecx eax
+@@:
+popad
+mov ebp,TEMP_BUFFER
+call HelperTextConstDraw 
+popad
 ret
 ;--- Print cycle for Min, Max, Average, Median --------------------------------;
 ;                                                                              ;
-; INPUT:   EDX = X up left position                                            ;
-;          ECX = Y up left position, for common entry point only               ; 
-;          EBX = X down right position                                         ;
-;          EAX = Y down right position, for common entry point only            ;
-;          EBP = numeric template for floating point print                     ;
-;          ESI = pointer to variables group                                    ;
+; INPUT:   ESI = Handle of a Device Context                                    ;
+;          EDI = Pointer to RECT structure for draw region                     ;
+;          EBP = Numeric template for floating point print                     ;
+;          EBX = Pointer to variables group                                    ;
+;          EAX = X up left position                                            ;
+;          ECX = X down right position                                         ;
 ;                                                                              ;
 ; OUTPUT:  None in the CPU registers                                           ;
-;          RSI, EBP is non volatile for this subroutine                        ;
+;          All registers is non volatile for this subroutine                   ;
 ;                                                                              ;
-;------------------------------------------------------------------------------;      
-HelperWriteStatisticsYconst:  ; Entry point for Y fixed (ECX, EAX pre-defined)
-mov ecx,24 + 23
-mov eax,42 + 23
-HelperWriteStatistics:        ; Common entry point
-mov edi,4
+;------------------------------------------------------------------------------;
+HelperWriteStatistics:
+pushad
+push ebx 0 0 0
+mov ebx,24 + 23              ; Y up left position
+mov edx,42 + 23              ; Y down right position
+mov dword [esp + 08],4
 @@:
-push esi edi
-mov edi,[esi+4]
-mov esi,[esi+0]
+push eax edx
+mov eax,[esp + 12 + 08]
+add dword [esp + 12 + 08],8  ; Sequental access to Min, Max, Average, Median
+mov edx,[eax + 04]
+mov eax,[eax + 00]
+mov [esp + 00 + 08],eax
+mov [esp + 04 + 08],edx
+pop edx eax
 call HelperTextVarDouble
-add ecx,15
-add eax,15
-pop edi esi
-add esi,8                  ; Sequental access to Min, Max, Average, Median
-dec edi
+add ebx,15
+add edx,15
+dec dword [esp + 08]
 jnz @b
+add esp,16
+popad
 ret

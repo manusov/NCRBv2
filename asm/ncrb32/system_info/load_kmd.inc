@@ -6,11 +6,11 @@ LoadKernelModeDriver:
 push ebx esi edi ebp
 ;---------- Initializing data structure ---------------------------------------;
 cld
-lea edi,[SCP_DATA]
+mov edi,SCP_DATA
 mov ecx,sizeof.SCPDATA
 mov al,0
 rep stosb
-lea eax,[TEMP_BUFFER]
+mov eax,TEMP_BUFFER
 mov [SCP_DATA.drvPath],eax
 mov [SCP_DATA.driver],INVALID_HANDLE_VALUE
 ;---------- Initializing full path to driver file -----------------------------;
@@ -21,7 +21,7 @@ je @f
 mov ax,STR_NAME_KMD64
 @@:
 call IndexString
-lea eax,[SCP_DATA.drvFile] 
+mov eax,SCP_DATA.drvFile 
 push eax                     ; Parm#4 = Pointer to pointer to updated path 
 push [SCP_DATA.drvPath]  ; Parm#3 = Pointer to buffer
 push SCP_PATH_BUFFER_SIZE    ; Parm#2 = Buffer size
@@ -71,7 +71,7 @@ jz .errorCreateService  ; Go if error status returned when create service
 .skipCreate:
 mov [SCP_DATA.service],eax 
 ;---------- Check service status ----------------------------------------------;
-lea edi,[SCP_DATA.status]
+mov edi,SCP_DATA.status
 push edi                    ; Parm#2 = Pointer to status structure
 push eax                    ; Parm#1 = Handle
 call [QueryServiceStatus]
@@ -80,7 +80,7 @@ jz .errorGetStatus          ; Go if error status returned when get status
 cmp [edi + SERVICE_STATUS.dwCurrentState],SERVICE_RUNNING
 je .skipStart               ; Go if service already running
 ;---------- Start service -----------------------------------------------------;
-lea eax,[SCP_DATA.vectors]
+mov eax,SCP_DATA.vectors
 push eax                    ; Parm#3 = Pointer to arguments vectors, empty 
 push 0                      ; Parm#2 = Arguments count
 push [SCP_DATA.service]   ; Parm#1 = Handle
@@ -147,7 +147,7 @@ jnz @f                      ; Go if no errors
 mov edi,[SCP_DATA.service]
 test edi,edi 
 jz .skipStop                ; Go skip if handle = 0
-lea eax,[SCP_DATA.status]
+mov eax,SCP_DATA.status
 push eax                    ; Parm#3 = Pointer to status structure
 push SERVICE_CONTROL_STOP   ; Parm#2 = Control code
 push edi                    ; Parm#1 = Handle
@@ -202,7 +202,7 @@ ret
 
 TryKernelModeDriver:
 push ebx esi edi ebp
-lea ebx,[SCP_DATA]
+mov ebx,SCP_DATA
 ;---------- Write to device file, this is requests for driver -----------------;
 push 0 0                       ; Variable for output
 push 0                         ; Parm#5 = Pointer to overlapped, 0 = not used
@@ -216,7 +216,7 @@ mov eax,RZ_REQUEST_CODE
 mov dword [edx + SERVICE_QUERY.iocode],eax
 lea eax,[esp + 20]
 mov dword [edx + SERVICE_QUERY.parm1],eax
-lea eax,[kmdRoutine]
+mov eax,kmdRoutine
 mov dword [edx + SERVICE_QUERY.userproc],eax
 mov dword [edx + SERVICE_QUERY.userproc + 4],0   ; Required for WoW 32/64
 call [WriteFile]

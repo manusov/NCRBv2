@@ -24,8 +24,8 @@ call InfoProcessor
 jc .error
 ;---------- Initializing dynamical import WinAPI list -------------------------;
 mov ebx,[APP_DATA.lockedImportList]  ; EBX = to functions names
-lea edi,[DYNA_IMPORT]
-lea esi,[NAME_KERNEL32]     ; ESI = Pointer to libraries names array
+mov edi,DYNA_IMPORT
+mov esi,NAME_KERNEL32       ; ESI = Pointer to libraries names array
 .scanLibs:
 cmp byte [esi],0
 je .doneLibs
@@ -54,7 +54,7 @@ jne .skipLib
 jmp .scanLibs               ; External cycle for libraries list
 .doneLibs:
 ;---------- Check for WoW64 process: ia32 application under Win64 -------------;
-lea edi,[OS_DATA.isWow64]
+mov edi,OS_DATA.isWow64
 mov ecx,[DYNA_IMPORT._IsWow64Process]
 jecxz .noWow64
 call [GetCurrentProcess]
@@ -96,12 +96,12 @@ call TextAffinizedCpuid
 ;---------- Data fields for system information screen ( screen 0 ) ------------;
 ; EDI = Pointer for bind buffer addressing.
 ; EBP = Pointer for CPU data addressing in the application variables
-lea edi,[BIND_LIST]
-lea ebp,[CPU_DATA.vendorString]
+mov edi,BIND_LIST
+mov ebp,CPU_DATA.vendorString
 mov ebx,ebp
 ;---------- Update threads and cores count if OS topology not available -------;
 ; This update actual for some old versions of Windows XP
-lea ecx,[SYS_PARMS.summaryTopology]
+mov ecx,SYS_PARMS.summaryTopology
 mov eax,[ecx + SUMMARYTOPOLOGY.cores]
 mov edx,[ecx + SUMMARYTOPOLOGY.threads]
 test eax,eax
@@ -176,8 +176,8 @@ stosd
 mov eax,dword [ebx + CPUDATA.extractedContextBitmap + 4]
 stosd
 ;---------- Set cache summary by CPUID info if topological WinAPI missing -----;
-lea esi,[CPU_CACHE_DATA]
-lea edi,[SYS_PARMS.summaryCache]
+mov esi,CPU_CACHE_DATA
+mov edi,SYS_PARMS.summaryCache
 mov ecx,5
 .updateCaches:
 mov eax,dword [esi + CPUCACHEDATA.cpuidTraceCache + 0]
@@ -197,7 +197,7 @@ add edi,12
 loop .updateCaches
 ;---------- Virtualization technology name string, depend on CPU vendor -------;
 ; EBX = Pointer for CPU data addressing in the application variables 
-lea edx,[BIND_LIST.bindCpu]
+mov edx,BIND_LIST.bindCpu
 mov ax,STR_SIGN_AMD
 mov esi,[APP_DATA.lockedStrings]
 call IndexString                      ; ESI = Pointer to pattern for detect AMD
@@ -220,7 +220,7 @@ call IndexString
 mov dword [edx + BINDCPU.secondVmm + 0],esi     ; Argument for SET_PTR script command 
 mov dword [edx + BINDCPU.secondVmm + 4],0
 ;---------- Operating System data fields visualized at for screen 0 -----------;
-lea ecx,[BIND_LIST.bindSys]
+mov ecx,BIND_LIST.bindSys
 lea edi,[ecx + BINDSYS.procTotal]
 mov eax,[OS_DATA.activeProcessorCount]      ; Processors total
 test eax,eax
@@ -277,13 +277,13 @@ mov al,0
 stosb
 ;---------- Platform topology by OS data fields visualized at for screen 0 ----;
 ; Instruction cache , L1
-lea ebp,[SYS_PARMS.summaryCache]
+mov ebp,SYS_PARMS.summaryCache
 lea esi,[ebp + SUMMARYCACHE.sizeL1C]
-lea edi,[BIND_LIST.bindCache.l1c]
+mov edi,BIND_LIST.bindCache.l1c
 mov cl,00000001b
 call HelperSysinfoTopologyCache           ; L1 instruction cache
 lea esi,[ebp + SUMMARYCACHE.sizeTrace]
-lea edi,[BIND_LIST.bindCache.l1c]
+mov edi,BIND_LIST.bindCache.l1c
 mov cl,00000001b
 test [BIND_LIST.bindCache.cacheBitmap],cl
 jnz @f
@@ -291,27 +291,27 @@ call HelperSysinfoTopologyTrace           ; Trace cache
 @@:
 ;---------- Data cache , L1 ---------------------------------------------------; 
 lea esi,[ebp + SUMMARYCACHE.sizeL1D]
-lea edi,[BIND_LIST.bindCache.l1d]
+mov edi,BIND_LIST.bindCache.l1d
 mov cl,00000010b
 call HelperSysinfoTopologyCache
 ;---------- Unified cache , L2 ------------------------------------------------;
 lea esi,[ebp + SUMMARYCACHE.sizeL2U]
-lea edi,[BIND_LIST.bindCache.l2u]
+mov edi,BIND_LIST.bindCache.l2u
 mov cl,00000100b
 call HelperSysinfoTopologyCache
 ;---------- Unified cache , L3 ------------------------------------------------;
 lea esi,[ebp + SUMMARYCACHE.sizeL3U]
-lea edi,[BIND_LIST.bindCache.l3u]
+mov edi,BIND_LIST.bindCache.l3u
 mov cl,00001000b
 call HelperSysinfoTopologyCache
 ;---------- Unified cache , L4 ------------------------------------------------;
 lea esi,[ebp + SUMMARYCACHE.sizeL4U]
-lea edi,[BIND_LIST.bindCache.l4u]
+mov edi,BIND_LIST.bindCache.l4u
 mov cl,00010000b
 call HelperSysinfoTopologyCache
 ;--- Support screen 0 threads, cores, sockets by extended topology WinAPI -----;
-lea edx,[BIND_LIST]
-lea ecx,[SYS_PARMS.summaryTopology]
+mov edx,BIND_LIST
+mov ecx,SYS_PARMS.summaryTopology
 mov bl,0
 lea edi,[edx + BINDLIST.bindTopology.threads]
 mov eax,[ecx + SUMMARYTOPOLOGY.threads]
@@ -335,7 +335,7 @@ stosb
 ;---------- NUMA domains affinity masks at screen 0 ---------------------------;
 mov esi,[DYNA_PTR.listNuma.objectStart]
 mov ecx,[DYNA_PTR.listNuma.objectStop]
-lea edi,[BIND_LIST.bindSys.masksList]
+mov edi,BIND_LIST.bindSys.masksList
 lodsd
 test eax,eax
 jnz .extendedNuma
@@ -404,15 +404,15 @@ stosb
 ;---------- Data fields for ACPI ----------------------------------------------;
 ; Copy from temporary buffer to BINDLIST, transit copy used for don't access
 ; BINDLIST at low level.
-lea esi,[ACPI_DATA]
+mov esi,ACPI_DATA
 lodsb
 mov [BIND_LIST.acpiEnable],al
-lea edi,[BIND_LIST.bindMadt]
+mov edi,BIND_LIST.bindMadt
 mov ecx,sizeof.BINDACPI * 2  ; * 2 because MADT and SRAT tables show at screen 0
 rep movsb
 ;--- Data fields for memory and cache benchmarks setup screen ( screen 1 ) ----;
 ; Benchmark methods availability based on CPU instructions 
-lea edi,[BIND_LIST]
+mov edi,BIND_LIST
 mov eax,dword [CPU_DATA.extractedFeaturesBitmap]
 mov edx,dword [CPU_DATA.extractedContextBitmap]
 mov ebx,00000555h       ; Latency by LCM, REP MOVS, REP STOS, NOT, MOV (3)
@@ -497,7 +497,7 @@ setc al
 mov word [edi + BINDLIST.setMemOption],ax
 ;--- Benchmark objects: cache memory, DRAM or user-defined block size ---------;
 ; Plus custom block size
-lea ecx,[SYS_PARMS.summaryCache]
+mov ecx,SYS_PARMS.summaryCache
 mov ebx,010100000000b      ; Custom block, DRAM
 xor eax,eax
 cdq
@@ -551,7 +551,7 @@ mov dword [edi + BINDLIST.setMemObject],ebx
 mov dword [edi + BINDLIST.setBlkCustom + 0],eax
 mov dword [edi + BINDLIST.setBlkCustom + 4],edx
 ;---------- Benchmark options: SMP/SMT ----------------------------------------;
-lea ecx,[SYS_PARMS.summaryTopology]
+mov ecx,SYS_PARMS.summaryTopology
 xor ebx,ebx
 mov eax,[ecx + SUMMARYTOPOLOGY.threads]
 cmp eax,2
@@ -564,7 +564,7 @@ cmp eax,[ecx + SUMMARYTOPOLOGY.cores]
 jne @f
 or bl,00000100b   ; Hyper threading (SMT)
 @@:
-lea ecx,[OS_DATA]
+mov ecx,OS_DATA
 cmp [ecx + OSDATA.activeProcessorGroupCount],2
 jb @f
 or bl,00010000b   ; Processor groups (PG)
@@ -589,6 +589,7 @@ mov word [edi + BINDLIST.setMemAccess],00000010b  ; Access step
 mov word [edi + BINDLIST.setMemPref],000000010b   ; Prefetch modes
 mov word [edi + BINDLIST.setMemMeas],11010101b    ; Measure precision modes
 mov word [edi + BINDLIST.setMemPix],00010111b     ; Pixels approximation modes
+mov word [edi + BINDLIST.setMemSilent],00000001b  ; Silent draw mode
 ;---------- Text blocks for viewers -------------------------------------------;
 ; This 12 pointers MUST BE SEQUENTAL, because accessed in the cycle:
 ; 1.  Operating system information
@@ -604,7 +605,7 @@ mov word [edi + BINDLIST.setMemPix],00010111b     ; Pixels approximation modes
 ; 11. ACPI tables, text block 2 = tables detection by data base
 ; 12. Affinized CPUID dump
 mov ecx,TEXT_SCREEN_COUNT
-lea esi,[DYNA_PTR.textOs.objectStart]
+mov esi,DYNA_PTR.textOs.objectStart
 add edi,BINDLIST.viewOs
 @@:
 movsd

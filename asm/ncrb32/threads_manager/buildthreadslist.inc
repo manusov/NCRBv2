@@ -61,10 +61,10 @@ push CREATE_SUSPENDED                  ; Parm#5 = Creating Flags = Suspended
 push ebp                               ; Parm#4 = Subroutine parameter, 0-63 or 0-255(if Groups)
 mov eax,[esp + 12 + 00]                ; EAX = Pointer to IPB
 cmp [eax + MEMIPB.updatedPG],PG_OPTIMAL   ; Processor Group option, 2=used
-lea edx,[ThreadRoutineSingleGroup]     ; EDX = Execute routine pointer
+mov edx,ThreadRoutineSingleGroup       ; EDX = Execute routine pointer
 mov [esi + THCTRL.affinityMode],1      ; This added for single-thread affinitization
 jne .afterSetRoutine                   ; Go if simple system, single group 
-lea edx,[ThreadRoutineMultiGroup]      ; This routine with affinitization with groups
+mov edx,ThreadRoutineMultiGroup        ; This routine with affinitization with groups
 mov [esi + THCTRL.affinityMode],2      ; This added for single-thread affinitization
 .afterSetRoutine:
 push edx                               ; Parm#3 = Execute routine pointer

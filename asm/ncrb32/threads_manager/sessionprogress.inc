@@ -29,15 +29,15 @@
 SessionProgress:
 push 0 0
 ;---------- Setup pointers ----------------------------------------------------;
-lea esi,[MEM_IPB]        ; ESI = Pointer to IPB, benchmarks scenario
-lea edi,[MEM_OPB]        ; EDI = Pointer to OPB, benchmarks results
+mov esi,MEM_IPB          ; ESI = Pointer to IPB, benchmarks scenario
+mov edi,MEM_OPB          ; EDI = Pointer to OPB, benchmarks results
 ;---------- Pre-heat phase for result stabilization ---------------------------;
 ; Note this pre-heat for simple only, not use this for drawings
-lea ecx,[THREAD_LIST]    ; ECX = Pointer to threads list
+mov ecx,THREAD_LIST      ; ECX = Pointer to threads list
 mov edx,[esi + MEMIPB.updatedThreads]
 call ThreadsReStart
 ;---------- Replace fill pattern to walk pattern for latency mode -------------;
-lea ebx,[THREAD_LIST]
+mov ebx,THREAD_LIST
 cmp [esi + MEMIPB.updatedAsm],LATENCY_MODE
 jb .skip                ; Go skip this update if not a LATENCY MEASUREMENT mode
 mov ecx,[esi + MEMIPB.updatedThreads]   ; ECX = Threads count
@@ -56,7 +56,7 @@ call [GetSystemTimeAsFileTime]
 cmp ebx,[esp]
 je .sync          ; Wait for next change for detect start of interval
 ;---------- Measurement pattern -----------------------------------------------;
-lea ecx,[THREAD_LIST]                   ; ECX = Pointer to threads list
+mov ecx,THREAD_LIST                     ; ECX = Pointer to threads list
 mov edx,[esi + MEMIPB.updatedThreads]   ; EDX = number of threads
 call ThreadsReStart
 mov al,MSG_RUNTIME_TIMINGS              ; AL = error status, valid if CF=1 only

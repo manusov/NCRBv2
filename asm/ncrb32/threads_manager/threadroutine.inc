@@ -10,7 +10,7 @@
 ThreadRoutineSingleGroup:
 push ebx esi edi ebp          ; Note about this 16 bytes when read parameter
 ;---------- Calculate thread control entry offset = f( thread id ) ------------;
-lea edx,[THREAD_LIST]
+mov edx,THREAD_LIST
 mov ecx,[esp + 4 + 16]        ; Read first parameter by IA32 convention
 cmp ecx,MAX_THREADS_PER_GROUP
 jb @f
@@ -65,7 +65,7 @@ ret 4
 ThreadRoutineMultiGroup:
 push ebx esi edi ebp          ; Note about this 16 bytes when read parameter
 ;---------- Calculate thread control entry offset = f( thread id ) ------------;
-lea edx,[THREAD_LIST]
+mov edx,THREAD_LIST
 mov ecx,[esp + 4 + 16]        ; Read first parameter by IA32 convention
 cmp ecx,MAX_THREADS_PER_GROUP
 jb @f

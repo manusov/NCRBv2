@@ -8,7 +8,7 @@
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 InfoAcpi:
-lea edx,[ACPI_DATA.tempMadt]
+mov edx,ACPI_DATA.tempMadt
 mov bl,2
 .writeNotAvl:
 mov ax,STR_N_A
@@ -74,7 +74,7 @@ mov esi,edx
 rep movsd
 ;--- start of addition for show ACPI tables MADT and SRAT at screen 0 ---------;
 push esi edi ebx edx ebp
-lea ebx,[ACPI_DATA.tempAcpiEnable]
+mov ebx,ACPI_DATA.tempAcpiEnable
 or byte [ebx],00000001b
 mov ebp,[edx]
 cmp ebp,'APIC'
@@ -84,11 +84,11 @@ je .sratFound
 jmp .skipTable
 .madtFound:
 or byte [ebx],00000010b
-lea ebx,[ACPI_DATA.tempMadt]
+mov ebx,ACPI_DATA.tempMadt
 jmp .copyAcpi
 .sratFound:
 or byte [ebx],00000100b
-lea ebx,[ACPI_DATA.tempSrat]
+mov ebx,ACPI_DATA.tempSrat
 ;---------- Unified ACPI table header parse -----------------------------------;
 .copyAcpi:
 lea esi,[edx + 10]

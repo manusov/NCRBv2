@@ -16,7 +16,7 @@ cld
 ;---------- Initializing parameters and run dialogue for save report ----------;
 .restartDialogue:
 mov ax,STR_REPORT_FILE_NAME
-lea edi,[FILE_PATH_BUFFER]
+mov edi,FILE_PATH_BUFFER
 mov edx,edi                    ; EDX = Pointer to file name string
 call PoolStringWrite
 mov al,0                       ; AL = 0 used later also
@@ -24,7 +24,7 @@ stosb
 mov esi,[APP_DATA.lockedStrings]
 mov ax,STR_REPORT_FILTER_1
 call IndexString               ; ESI = Pointer to file name filter string
-lea edi,[OPEN_FILE_NAME]       ; EDI = Pointer to structure for blank
+mov edi,OPEN_FILE_NAME         ; EDI = Pointer to structure for blank
 mov ebx,edi                    ; EBX = Pointer to structure 
 mov ecx,sizeof.OPENFILENAME    ; ECX = Size of structure for blank, AL = 0 
 rep stosb
@@ -66,11 +66,11 @@ jne .reportError
 ;---------- Support situation File exists -------------------------------------;
 push MB_YESNOCANCEL + MB_ICONWARNING   ; Parm#4 = Message type
 push PROGRAM_NAME                ; Parm#3 = Pointer to caption string
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 push edi                         ; Parm#2 = Pointer to message string
 mov ax,STR_REPORT_EXISTS_1
 call PoolStringWrite
-lea esi,[FILE_PATH_BUFFER]
+mov esi,FILE_PATH_BUFFER
 call StringWrite
 mov ax,STR_REPORT_EXISTS_2
 call PoolStringWrite
@@ -86,8 +86,8 @@ je .restartDialogue    ; Go restart dialogue if "No"
 jmp .noSelections      ; Otherwise, go exit dialogue by "Cancel" (IDCANCEL) 
 ;---------- Report file create OK, save report file header --------------------;
 .createOk:
-xchg ebx,eax                 ; EBX = Report file handle
-lea esi,[ABOUT_NAME]
+xchg ebx,eax           ; EBX = Report file handle
+mov esi,ABOUT_NAME
 call HelperFileStringWrite 
 jz .closeAfterError 
 ;---------- Save system information as text data ------------------------------;
@@ -100,7 +100,7 @@ jz .closeAfterError
 ; TODO.
 ;---------- Cycle for save differrent parts of report: text blocks ------------; 
 mov ebp,REPORT_TEXT_COUNT             ; EBP = Number of tables in the report
-lea edi,[DYNA_PTR.textOs]             ; EDI = Pointer to text tables list
+mov edi,DYNA_PTR.textOs               ; EDI = Pointer to text tables list
 mov edx,[APP_DATA.lockedReportInfo]   ; EDX = Pointer to report script
 .textBlocks:
 mov esi,[edi]               ; ESI = Pointer to text block
@@ -108,7 +108,7 @@ add edi,sizeof.ALLOCATOR
 test esi,esi
 jz .textSkip                ; Go skip if this text block is empty
 push esi edi edx
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 push edi
 mov ax,0A0Dh
 stosw
@@ -131,7 +131,7 @@ call HelperFileStringWrite  ; Write horizontal line
 jz @f
 pop edx
 push edx
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 push edi
 mov ax,[edx + 2]
 call PoolStringWrite
@@ -168,11 +168,11 @@ jz .reportError
 push MB_OK              ; Parm#4 = Message type
 push PROGRAM_NAME       ; Parm#3 = Pointer to caption string 
 mov esi,[APP_DATA.lockedStrings]
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 push edi                ; Parm#2 = Pointer to message string
 mov ax,STR_REPORT_SAVED
 call PoolStringWrite
-lea esi,[FILE_PATH_BUFFER]
+mov esi,FILE_PATH_BUFFER
 call StringWrite
 mov ax,0000h + '.'
 stosw
@@ -241,7 +241,7 @@ ret
 ;------------------------------------------------------------------------------; 
 HelperLineWrite:
 cld
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 mov esi,edi
 mov ax,0A0Dh
 stosw

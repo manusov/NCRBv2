@@ -20,8 +20,8 @@ call InfoProcessor
 mov al,MSG_RUNTIME_TIMINGS
 jc .error
 ;---------- Measurements ------------------------------------------------------;
-lea esi,[VECTOR_BRIEF]
-lea edi,[VECBR_OPB]
+mov esi,VECTOR_BRIEF
+mov edi,VECBR_OPB
 mov ecx,VB_REPORT_COUNT
 push edi ecx               ; Pre-blank OPB
 shl ecx,1
@@ -52,7 +52,7 @@ jmp .havePattern
 and al,07Fh
 call GetMathPattern
 .havePattern:
-lea edi,[THREAD_LIST]
+mov edi,THREAD_LIST
 mov [edi + THCTRL.entryPoint],ebx    ; EBX = Subroutine address
 mov cl,[esi + 1]                     ; CL = Count, power of 2 
 mov eax,1
@@ -65,7 +65,7 @@ mov ecx,VECTOR_BRIEF_REPEATS_SCALE
 mul ecx                              ; EDX:EAX = Repeats count
 mov dword [edi + THCTRL.repeats + 0],eax
 mov dword [edi + THCTRL.repeats + 4],edx
-lea eax,[TEMP_BUFFER]
+mov eax,TEMP_BUFFER
 mov [edi + THCTRL.base1],eax
 add eax,VECTOR_BRIEF_DATA_SIZE / 2
 mov [edi + THCTRL.base2],eax
@@ -98,9 +98,9 @@ fild qword [ebp]
 fild qword [CPU_DATA.tscClockHz]
 fdivp st1,st0
 fstp qword [ebp]
-lea esi,[VECTOR_BRIEF]
-lea edx,[VECBR_OPB]
-lea edi,[BIND_LIST]
+mov esi,VECTOR_BRIEF
+mov edx,VECBR_OPB
+mov edi,BIND_LIST
 add edi,BINDLIST.vbSse128read
 mov ecx,VB_REPORT_COUNT
 ;---------- Cycle for build text strings --------------------------------------;

@@ -190,7 +190,6 @@ pop rax                               ; This for release stack only
 ;---------- Note option: X-approximation modes --------------------------------; 
 ; interpreted and supported at drawsessionthread.inc module. 
 ; Load pointer to drawings parameters
-mov [GUI_PARMS.childWinHandle],0
 lea rdi,[DRAW_PARMS]
 ;---------- Calculate X grid step values --------------------------------------; 
 ; must be integer power of 2 for next step correct
@@ -408,15 +407,6 @@ mov rbp,rsp
 and rsp,0FFFFFFFFFFFFFFF0h
 push rbp
 sub rsp,32+8
-;--- Drawings window invalidation for silent mode: show at drawings start -----; 
-cmp [GUI_PARMS.silentMode],0
-je .skipSilent
-mov rcx,[GUI_PARMS.childWinHandle]  ; RCX = Parm#1 = Window handle
-jrcxz .skipSilent
-xor edx,edx            ; RDX = Parm#2 = Pointer to invalidated region, 0=All window
-xor r8d,r8d            ; R8  = Parm#3 = Background erase flag, 0=Background unchanged
-call [InvalidateRect]  ; This cause callback WM_PAINT operation
-.skipSilent:
 ;---------- Load pointer to thread control structure --------------------------;
 lea r15,[DRAW_THREAD_PARMS]
 ;---------- Signaling thread START --------------------------------------------;
@@ -431,8 +421,7 @@ jc .backgroundSkip  ; Go skip operations if error, note this is separate thread
 ;---------- Measurement cycle -------------------------------------------------;
 .backgroundProcess:
 cmp [r15 + DTHP.measureCounter],DRAW_POINTS_COUNT
-je .silentBranch
-ja .backgroundSkip    ; Can replace this to wait with minimum utilization ?
+jae .backgroundSkip     ; TODO. Can replace this to wait with minimum utilization ?
 lea rsi,[MEM_IPB]
 lea rdi,[MEM_OPB]
 ;---------- Update block size at threads control block ------------------------;
@@ -538,16 +527,3 @@ mov rsp,rbp
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 xor eax,eax                       ; RAX = 0, return code = 0
 ret
-;---------- Drawings window invalidation for silent mode ----------------------;
-; show at drawings end
-.silentBranch:
-mov al,0
-xchg [GUI_PARMS.silentMode],al
-cmp al,0
-je .backgroundSkip
-mov rcx,[GUI_PARMS.childWinHandle]  ; Parm#1 = Window handle
-jrcxz .backgroundSkip
-xor edx,edx            ; RDX = Parm#2 = Pointer to invalidated region, 0=All window
-xor r8d,r8d            ; R8  = Parm#3 = Background erase flag, 0=Background unchanged
-call [InvalidateRect]  ; This cause callback WM_PAINT operation
-jmp .backgroundSkip 
