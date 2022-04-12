@@ -453,26 +453,36 @@ fild dword [esp]        ; ST0 = - grid step, pixels
 fidiv dword [esp + 4]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
 fstp [DRAW_PARMS.yMultiplier]
 ; Calculate data array for polyline Performance = f( Block size )
-lea edi,[esi + DTHP.measureArray]
-mov ebp,[esi + DTHP.visualCounter]
-mov eax,LINE_BASE_X
 push LINE_BASE_Y
 fild dword [esp]
-pop edx
-mov edx,DRAW_POINTS_COUNT * 8 * 2
+pop eax
+lea edi,[esi + DTHP.measureArray]
+lea edx,[esi + DTHP.polylineArray]
+mov ebp,[esi + DTHP.visualCounter]
+mov eax,LINE_BASE_X
 cmp [DRAW_PARMS.selectMode],0
 jne .branchLatency 
 ; Line for bandwidth
 fld qword [esp + 4 * 3]           ; Load value for convert CPI to MBPS
 fmul [DRAW_PARMS.yMultiplier]
+; First extra element required because N points means N-1 Polyline intervals
+fld st0
+fdiv qword [edi]
+fadd st0,st2
+mov [edx + 0],eax           ; Store POINT.x
+fistp dword [edx + 4]       ; Store POINT.y 
+inc eax
+add edx,8
+; Cycle for other elements
 .lineWriteBandwidth:
 fld st0
-fdiv qword [edi + 0]
+fdiv qword [edi]
 fadd st0,st2
-mov [edi + edx + 0],eax           ; Store POINT.x
-fistp dword [edi + edx + 4]       ; Store POINT.y 
+mov [edx + 0],eax           ; Store POINT.x
+fistp dword [edx + 4]       ; Store POINT.y 
 inc eax
 add edi,8
+add edx,8
 dec ebp
 jnz .lineWriteBandwidth
 jmp .linesDone
@@ -480,14 +490,24 @@ jmp .linesDone
 .branchLatency:
 fld [MEM_OPB.tscPeriodNs] 
 fmul [DRAW_PARMS.yMultiplier]
-.lineWriteLatency:
-fld qword [edi + 0]
+; First extra element required because N points means N-1 Polyline intervals
+fld qword [edi]
 fmul st0,st1
 fadd st0,st2 
-mov [edi + edx + 0],eax           ; Store POINT.x
-fistp dword [edi + edx + 4]       ; Store POINT.y
+mov [edx + 0],eax           ; Store POINT.x
+fistp dword [edx + 4]       ; Store POINT.y
+inc eax
+add edx,8
+; Cycle for other elements
+.lineWriteLatency:
+fld qword [edi]
+fmul st0,st1
+fadd st0,st2 
+mov [edx + 0],eax           ; Store POINT.x
+fistp dword [edx + 4]       ; Store POINT.y
 inc eax
 add edi,8
+add edx,8
 dec ebp
 jnz .lineWriteLatency
 ; Done for bandwidth and latency
@@ -874,7 +894,9 @@ push [GC_PARMS.handlePen]              ; Parm#2 = Pen handle
 push esi                               ; Parm#1 = Handle to a Device Context
 call [SelectObject]
 mov edi,eax
-push [DRAW_THREAD_PARMS.visualCounter] ; Parm#3 = Number of points in the array
+mov eax,[DRAW_THREAD_PARMS.visualCounter]
+inc eax                                ; +1, because N points means N-1 Polyline intervals
+push eax                               ; Parm#3 = Number of points in the array
 push DRAW_THREAD_PARMS.polylineArray   ; Parm#2 = Pointer to POINT structures array
 push esi                               ; Parm#1 = Handle to a Device Context
 call [Polyline]

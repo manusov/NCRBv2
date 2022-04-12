@@ -457,26 +457,36 @@ fild dword [rsp]        ; ST0 = - grid step, pixels
 fidiv dword [rsp + 8]   ; ST0 = ( - grid step, pixels ) / ( Y units per grid )      
 fstp [DRAW_PARMS.yMultiplier]
 ; Calculate data array for polyline Performance = f( Block size )
-lea rdi,[rsi + DTHP.measureArray]
-mov ebp,[rsi + DTHP.visualCounter]
-mov eax,LINE_BASE_X
 push LINE_BASE_Y
 fild dword [rsp]
-pop rdx
-mov edx,DRAW_POINTS_COUNT * 8 * 2
+pop rax
+lea rdi,[rsi + DTHP.measureArray]
+lea rdx,[rsi + DTHP.polylineArray] 
+mov ebp,[rsi + DTHP.visualCounter]
+mov eax,LINE_BASE_X
 cmp [DRAW_PARMS.selectMode],0
 jne .branchLatency 
 ; Line for bandwidth
 fld qword [rsp + 8 * 3]         ; Load value for convert CPI to MBPS
 fmul [DRAW_PARMS.yMultiplier]
+; First extra element required because N points means N-1 Polyline intervals
+fld st0
+fdiv qword [rdi]
+fadd st0,st2
+mov [rdx + 0],eax         ; Store POINT.x
+fistp dword [rdx + 4]     ; Store POINT.y 
+inc eax
+add rdx,rcx
+; Cycle for other elements
 .lineWriteBandwidth:
 fld st0
-fdiv qword [rdi + 0]
+fdiv qword [rdi]
 fadd st0,st2
-mov [rdi + rdx + 0],eax         ; Store POINT.x
-fistp dword [rdi + rdx + 4]     ; Store POINT.y 
+mov [rdx + 0],eax         ; Store POINT.x
+fistp dword [rdx + 4]     ; Store POINT.y 
 inc eax
 add rdi,rcx
+add rdx,rcx
 dec ebp
 jnz .lineWriteBandwidth
 jmp .linesDone
@@ -484,16 +494,27 @@ jmp .linesDone
 .branchLatency:
 fld [MEM_OPB.tscPeriodNs] 
 fmul [DRAW_PARMS.yMultiplier]
-.lineWriteLatency:
-fld qword [rdi + 0]
+; First extra element required because N points means N-1 Polyline intervals
+fld qword [rdi]
 fmul st0,st1
 fadd st0,st2 
-mov [rdi + rdx + 0],eax         ; Store POINT.x
-fistp dword [rdi + rdx + 4]     ; Store POINT.y
+mov [rdx + 0],eax         ; Store POINT.x
+fistp dword [rdx + 4]     ; Store POINT.y
+inc eax
+add rdx,rcx
+; Cycle for other elements
+.lineWriteLatency:
+fld qword [rdi]
+fmul st0,st1
+fadd st0,st2 
+mov [rdx + 0],eax         ; Store POINT.x
+fistp dword [rdx + 4]     ; Store POINT.y
 inc eax
 add rdi,rcx
+add rdx,rcx
 dec ebp
 jnz .lineWriteLatency
+
 ; Done for bandwidth and latency
 .linesDone:
 ffree st0
@@ -871,6 +892,7 @@ mov rcx,rsi                                ; Parm#1 = RCX = Handle to a Device C
 call [SelectObject]
 mov rdi,rax
 mov r8d,[DRAW_THREAD_PARMS.visualCounter]  ; Parm#3 = R8  = Number of points in the array
+inc r8d                                    ; +1, because N points means N-1 Polyline intervals
 lea rdx,[DRAW_THREAD_PARMS.polylineArray]  ; Parm#2 = RDX = Pointer to POINT structures array
 mov rcx,rsi                                ; Parm#1 = RCX = Handle to a Device Context
 call [Polyline]

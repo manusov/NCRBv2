@@ -1,6 +1,10 @@
+12.04.2022. v2.02.05. Changes for x64 and ia32 versions.
+Fixed bug with X coordinates (+/-1).
+
+
 11.04.2022. v2.02.04. Changes for x64 and ia32 versions.
-Redesigned algorithm for drawings Performance = F( Block Size).
-Supported Y-axis auto-scale for drawings Performance = F( Block Size).
+Redesigned algorithm for drawings Performance = F( Block Size ).
+Supported Y-axis auto-scale for drawings Performance = F( Block Size ).
 Added option for silent draw without realtime show.
 
 

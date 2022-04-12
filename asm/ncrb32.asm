@@ -48,12 +48,12 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.2.4.0'
+RESOURCE_VERSION        EQU '2.2.5.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.02.04 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.02.05 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -1943,7 +1943,9 @@ statMbpsSum      dq  ?
 measureArray     dq  DRAW_POINTS_COUNT dup (?)
 calculateArray   dq  DRAW_POINTS_COUNT dup (?)
 ; Array of POINT structures for [PolyLine] WinAPI function
-polylineArray    dq  DRAW_POINTS_COUNT dup (?)
+; One extra element required because N points means N-1 Polyline intervals
+polylineArray    dq  ?    
+                 dq  DRAW_POINTS_COUNT dup (?)
 ends
 align 8
 DRAW_THREAD_PARMS DTHP ?
