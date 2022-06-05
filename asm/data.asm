@@ -15,7 +15,7 @@
 ; See also other components:                                                                              ;
 ; NCRB32.ASM, NCRB64.ASM, KMD32.ASM, KMD64.ASM.                                                           ;
 ;                                                                                                         ;
-; Translation by Flat Assembler version 1.73.29 ( Dec 18, 2021 ).                                         ;
+; Translation by Flat Assembler version 1.73.30 (Feb 21, 2022).                                           ;
 ; http://flatassembler.net/                                                                               ;
 ;                                                                                                         ;
 ; Edit by FASM Editor 2.0.                                                                                ; 
