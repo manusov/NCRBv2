@@ -16,7 +16,7 @@ MemAllocationNuma:
 cld
 push ebx esi edi ebp 0  ; last push 0 for local variable
 ;---------- Reload parameters to non-volatile registers -----------------------;
-              ; RBX = Base address of NUMA nodes list
+              ; EBX = Base address of NUMA nodes list
 mov esi,ecx   ; ESI = Memory block size per each NUMA node
 mov edi,edx   ; EDI = Number of nodes
 ;---------- Check for large pages ---------------------------------------------;
@@ -71,7 +71,7 @@ push ebp                  ; Parm#4 = Allocation type
 push esi                  ; Parm#3 = Block size
 push 0                    ; Parm#2 = Virtual address, 0=Auto select
 push eax                  ; Parm#1 = Process Handle
-call [VirtualAllocEx]     ; Call memory allocation WinAPI, return RAX = Pointer
+call [VirtualAllocEx]     ; Call memory allocation WinAPI, return EAX = Pointer
 ;------- Status phase, EAX = allocation result --------------------------------;
 .status:
 test eax,eax

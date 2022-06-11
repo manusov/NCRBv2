@@ -28,7 +28,7 @@ push MEM_RELEASE        ; Parm#4 = Release type
 push 0                  ; Parm#3 = Release size, here must be 0 = all block
 push ecx                ; Parm#2 = Address
 push esi                ; Parm#1 = Process Handle
-call [VirtualFreeEx]    ; Call memory release WinAPI, return RAX = Status
+call [VirtualFreeEx]    ; Call memory release WinAPI, return EAX = Status
 test eax,eax
 jz .error               ; Go if error detected
 .skip:

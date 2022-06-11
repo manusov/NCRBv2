@@ -14,7 +14,7 @@
 ;------------------------------------------------------------------------------;
 BuildNumaNodesList:
 cld
-push ebx esi edi ebp ecx 0 ; Note  push ecx 0  is create local varsiables
+push ebx esi edi ebp ecx 0 ; Note  push ecx 0  is create local variables
 mov ebx,ecx                ; EBX = Base address of build nodes list
                            ; dword [esp+4] = Number of processor groups
 ;---------- Select scenario = f( NUMA option ) --------------------------------;
@@ -36,7 +36,7 @@ lea ebp,[ebx + NUMA_LIST_SIZE]     ; EBP = Limit for nodes list
 ;---------- Cycle for build list of nodes -------------------------------------;
 .numaNodesScan:
 mov [ebx + NUMACTRL.nodeID],esi        ; Store node number
-lea eax,[ebx + NUMACTRL.nodeAffinity]  ; EDX = Pointer Processor Mask
+lea eax,[ebx + NUMACTRL.nodeAffinity]  ; EAX = Pointer to Processor Mask
 push eax                               ; Parm #2 = Pointer Processor Mask
 push esi                               ; Parm #1 = Node number
 cmp dword [esp + 8],PG_OPTIMAL         ; dword [esp+8] = PG_OPTIMAL if  
@@ -45,7 +45,7 @@ jne .getSmallMask                      ; Processor Groups: supported and enabled
 call [DYNA_IMPORT._GetNumaNodeProcessorMaskEx]  ; Write qword to [x], [x+8], mask+group
 jmp .afterGetMask
 .getSmallMask:
-call [DYNA_IMPORT._GetNumaNodeProcessorMask]    ; Write qword to [rdx], affinity mask
+call [DYNA_IMPORT._GetNumaNodeProcessorMask]    ; Write qword to [parm2], affinity mask
 mov [ebx + NUMACTRL.nodeGroup],0    ; Processor Group always 0 for this branch  
 .afterGetMask:
 test  eax,eax           ; EAX = OS API status after get mask function
@@ -82,7 +82,7 @@ jmp .exit
 ; for platform without NUMA or rejected by NUMA option settings
 ; Note about NUMA rejected, but Processor Groups supported 
 .withoutNuma:
-mov edi,ebx                     ; EDI = RBX = Base address of build nodes list
+mov edi,ebx                     ; EDI = EBX = Base address of build nodes list
 mov ecx,NUMACTRL_SIZE / 4       ; ECX = One NUMA entry size, units = dwords
 xor eax,eax                     ; EAX = write data = 0
 rep stosd                       ; Blank entry

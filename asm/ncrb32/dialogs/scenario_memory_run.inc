@@ -340,10 +340,10 @@ lea edi,[ebp + BINDLIST.mrDtscIns]
 mov eax,[esi + MEMIPB.startBlockSize]  ; EAX = Block size, bytes 
 xor edx,edx
 mov ecx,[esi + MEMIPB.operandWidth]    ; Must be not zero, otherwise divide overflow
-shr ecx,3                        ; RCX = Bytes per instr., convert bits to bytes
-div ecx                          ; RCX = Instructions per block
+shr ecx,3                        ; ECX = Bytes per instr., convert bits to bytes
+div ecx                          ; ECX = Instructions per block
 mov ecx,dword [esi + MEMIPB.measureRepeats]
-mul ecx                          ; RAX = Total instructions
+mul ecx                          ; EDX:EAX = Total instructions
 push edx eax
 fild qword [esp]                   ; st0 = total instructions
 fild qword [ebx + MEMOPB.tscTimerDelta]  ; st0 = total delta TSC, st1 = total instructions  

@@ -337,8 +337,8 @@ call HelperTextSize            ; Get EAX = sub-string width left from clickable
 add eax,[esp + 12]
 mov [edi + RECT.left],eax
 mov [ebx + CLICKSTRING.xmin],eax
-push ABOUT_CLICK_COLOR         ; Parm#2 = RDX = Color code
-push ebp                       ; Parm#1 = RCX = hDC, handle display context
+push ABOUT_CLICK_COLOR         ; Parm#2 = Color code
+push ebp                       ; Parm#1 = hDC, handle display context
 call [SetTextColor]
 push eax                       ; Parm#2 = Color code, for next set color
 mov edx,[ebx + CLICKSTRING.clickSize]

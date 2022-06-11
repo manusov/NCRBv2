@@ -17,7 +17,7 @@ push ecx               ; Parm#1 = Pointer to output variable
 call eax
 test eax,eax
 jz .error              ; dword [esp] = Maximum node number
-mov edi,ebp            ; RDI = Pointer, RBP = Start
+mov edi,ebp            ; EDI = Pointer, EBP = Start
 xor ebx,ebx            ; EBX = Node number and compare pattern
 cmp [DYNA_IMPORT._GetNumaNodeProcessorMaskEx],ebx
 je .standardTry

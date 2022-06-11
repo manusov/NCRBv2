@@ -76,7 +76,7 @@ test byte [esi + 0],80h
 jz @f
 mov [edi + THCTRL.base1],DATA_MATH
 @@:
-mov ebx,edi            ; Note can remove this if Get...Pattern return in RAX 
+mov ebx,edi            ; Note can remove this if Get...Pattern return in EBX
 call RunTarget         ; Return EDX:EAX = dTSC per pattern
 pop edi esi ecx ebx    ; Restore after performance patterns run
 jmp .next

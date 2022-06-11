@@ -89,7 +89,7 @@ Small_Gather_AVX512:
 mov edx,ecx
 and edx,00000111b           ; EDX = Extract tail length
 jz Measure_Gather_AVX512
-mov ebx,16                  ; RBX = Vertical addend * 2
+mov ebx,16                  ; EBX = Vertical addend * 2
 ;---------- Tail cycle --------------------------------------------------------;
 Tail_Gather_AVX512:
 kmovw k1,k0

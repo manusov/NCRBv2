@@ -86,6 +86,10 @@ inc eax
 call Binder
 mov ax,BINDER_SET_MEMORY
 call Binder
+;--- Mark saved draw and run windows coordinates as invalid if yet not saved --; 
+mov eax,-1
+mov [SAVE_RUN_POS.top],eax
+mov [SAVE_DRAW_POS.top],eax
 @@:
 jmp .processed
 

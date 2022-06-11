@@ -160,7 +160,7 @@ mov ebx,esi
 call ThreadsUpdatePattern
 pop ebx
 ;---------- Run measurement pattern -------------------------------------------;
-; Walk by prepared walk list, get delta TSC in the RAX
+; Walk by prepared walk list, get delta TSC in the EAX
 mov ecx,esi
 mov edx,[ebx + MEMIPB.updatedThreads]
 call ThreadsReStart
@@ -228,8 +228,8 @@ shr eax,3                 ; size / 8 , for DRAM and Custom modes
 .fastObject:
 ;---------- Set Xstart, Xdelta for drawings -----------------------------------;
 push eax                            ; EAX = Block size per X-grid
-xor edx,edx                         ; RDX = Dividend high 64 bits, =0
-mov ecx,GRIDSTEPX                   ; RCX = Pixels per X-grid
+xor edx,edx                         ; EDX = Dividend high 64 bits, =0
+mov ecx,GRIDSTEPX                   ; ECX = Pixels per X-grid
 div ecx                             ; (Block size per grid) / (pixels per grid)
 mov [ebx + MEMIPB.startBlockSize],eax  ; X start value
 mov [ebx + MEMIPB.deltaBlockSize],eax  ; X addend per draw iteration 
@@ -318,7 +318,6 @@ mov al,MSG_RUNTIME_ALLOC
 stc
 jmp .exit
 ;---------- CF=1 with AL=2  means timings measurement error -------------------; 
-; note this branch without valid RBP
 .errorTimings:
 mov al,MSG_RUNTIME_TIMINGS
 stc
@@ -471,7 +470,7 @@ mov ecx,[esi + MEMIPB.updatedThreads]
 mov eax,[esi + MEMIPB.walkRoutine]
 call ThreadsUpdatePattern
 ;---------- Run measurement pattern -------------------------------------------; 
-; Walk by prepared walk list, get delta TSC in the RAX
+; Walk by prepared walk list, get delta TSC in the EAX
 mov ecx,THREAD_LIST
 mov edx,[esi + MEMIPB.updatedThreads]
 call ThreadsReStart

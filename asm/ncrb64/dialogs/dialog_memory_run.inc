@@ -62,6 +62,22 @@ call IndexString
 mov rdx,rsi
 mov rcx,PARM_HWNDDLG
 call [SetWindowText]
+;---------- Set run test window coordinates if previously saved ---------------;
+mov r9d,[SAVE_RUN_POS.top]
+test r9d,r9d
+js @f
+xor eax,eax
+push rax
+push SWP_SHOWWINDOW + SWP_NOSIZE + SWP_NOZORDER
+push rax
+push rax
+mov r8d,[SAVE_RUN_POS.left]
+xor edx,edx
+mov rcx,rbx
+sub rsp,32
+call [SetWindowPos]
+add rsp,32 + 32 
+@@:
 jmp .processed
 
 ;------------------------------------------------------------------------------;
@@ -80,6 +96,11 @@ jne .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmclose:
+;---------- Save run window coordinates for next open -------------------------;
+lea rdx,[SAVE_RUN_POS]
+mov rcx,rbx
+call [GetWindowRect]
+;---------- Close run window --------------------------------------------------;
 mov edx,1                ; RDX = Parm#2 = Result for return
 mov rcx,PARM_HWNDDLG     ; RCX = Parm#1 = Window handle
 call [EndDialog]

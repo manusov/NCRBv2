@@ -131,7 +131,7 @@ mov eax,-1
 jmp ExitCpuId 
 
 ;---------- Subroutine, sequence of CPUID functions ---------------------------;
-; INPUT:  R9D = Start CPUID function number
+; INPUT:  R9D (temp_r9) = Start CPUID function number
 ;         EAX = Limit CPUID function number (inclusive)
 ;         EDI = Pointer to memory buffer
 ; OUTPUT: EDI = Modified by store CPUID input parms + output parms entry

@@ -21,7 +21,7 @@ push ebx esi edi ebp 0 0 0 0 edx  ; Note push after EBP for local variables
 ;---------- Reload parameters to non-volatile registers -----------------------;
 mov esi,ecx                        ; ESI  = Pointer to Threads List
 lea edi,[ecx + THREAD_LIST_SIZE]   ; EDI  = Pointer to 2 x Events Lists 
-lea ebx,[ecx + THREAD_LIST_SIZE + EVENT_LIST_SIZE * 2]  ; RBX = NUMA nodes list  
+lea ebx,[ecx + THREAD_LIST_SIZE + EVENT_LIST_SIZE * 2]  ; EBX = NUMA nodes list  
 xor ebp,ebp                         ; EBP = Threads counter
 mov eax,[edx + MEMIPB.updatedThreads]  
 mov [esp + 04],eax                  ; variable = EAX = Number of threads
@@ -99,7 +99,7 @@ mov [esi + THCTRL.entryPoint],eax
 mov eax,[ebx + NUMACTRL.alignedBase]   ; EAX = base address allocated at node
 add eax,[esp + 16]                     ; add offset
 mov [esi + THCTRL.origBase],eax        ; store base address
-mov ecx,[edx + MEMIPB.memoryPerThread] ; RCX = ALLOCATED size
+mov ecx,[edx + MEMIPB.memoryPerThread] ; ECX = ALLOCATED size
 add [esp + 16],ecx                     ; modify offset by this thread memory
 shr ecx,1
 mov [esi + THCTRL.base1],eax           ; Operational base 1 = base

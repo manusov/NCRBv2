@@ -75,6 +75,10 @@ inc eax
 call Binder
 mov ax,BINDER_SET_MEMORY
 call Binder
+;--- Mark saved draw and run windows coordinates as invalid if yet not saved --;
+mov eax,-1
+mov [SAVE_RUN_POS.top],eax
+mov [SAVE_DRAW_POS.top],eax
 @@:
 jmp .processed
 
@@ -115,7 +119,7 @@ cmp ax,IDB_MEMORY_DEFAULTS   ; Set defaults for memory benchmark
 je .memoryDefaults
 ;---------- Detect events for make widgets dependency -------------------------;
 ;---------- Widget "Nontemporal" ----------------------------------------------;
-mov edi,BIND_LIST                             ; RDI = Pointer to GUI BINDLIST
+mov edi,BIND_LIST                             ; EDI = Pointer to GUI BINDLIST
 mov si,ax                                     ; SI  = Checkbox ID
 mov ax,BINDER_GET_MEMORY
 call Binder                                   ; Read current state of widgets

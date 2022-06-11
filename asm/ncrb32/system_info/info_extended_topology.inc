@@ -238,7 +238,7 @@ push eax                     ; Parm#2 = Pointer to buffer
 movzx eax,byte [esp + 12]
 push eax                     ; Parm#1 = Relation type
 call ebx
-test eax,eax              ; check RAX plus clear CF, required if return
+test eax,eax              ; check EAX plus clear CF, required if return
 jnz .exit  ;  jnz .error  ; this variant means no data return, but no errors
 call [GetLastError]
 cmp eax,ERROR_BUFFER_LIMIT

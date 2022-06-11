@@ -226,7 +226,7 @@ ret
 
 ;--- Write relation name string for text generation by topology parsing -------;
 ;                                                                              ;
-; INPUT:   RDX = Destination base address                                      ;
+; INPUT:   EDX = Destination base address                                      ;
 ;          AX  = String ID at application strings pool                         ;
 ;                                                                              ;
 ; OUTPUT:  None                                                                ;

@@ -24,7 +24,7 @@ push ebx                ; EBX = High 32 bits of measurement repeats count
 Measurement_NtWrite_CLZERO:
 ;---------- Prepare big cycle -------------------------------------------------;
 mov eax,esi              ; EAX = Reload source address
-mov esi,64               ; ESI = Addend, this operation also clear bits RBX[63-32]
+mov esi,64               ; ESI = Addend
 mov edx,ecx              ; EDX = Reload length
 shr edx,3                ; EDX = Block length, convert from INSTRUCTIONS to 8xINSTRUCTION units
 jz Small_NtWrite_CLZERO  ; Go if Length < 8 instructions

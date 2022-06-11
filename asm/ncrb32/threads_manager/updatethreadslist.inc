@@ -84,7 +84,7 @@ test eax,eax
 jnz @f                           ; Go skip correction if repeats > 0
 inc eax                          ; correction, if repeats = 0, set repeats = 1 
 @@:
-;---------- Update IPB, note R11 = IPB base pointer ---------------------------;
+;---------- Update IPB, note EDX = IPB base pointer ---------------------------;
 pop edx
 mov dword [edx + MEMIPB.measureRepeats + 0],eax  ; Update repeats count, note 64-bit
 mov dword [edx + MEMIPB.measureRepeats + 4],0 

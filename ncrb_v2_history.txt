@@ -1,3 +1,8 @@
+11.06.2022. v2.02.06. Changes for x64 and ia32 versions.
+1) Added save and restore windows coordinates for Memory Draw and Memory Run child windows.
+2) Corrected comments for ia32 version sources, use 32-bit registers names.
+
+
 12.04.2022. v2.02.05. Changes for x64 and ia32 versions.
 Fixed bug with X coordinates (+/-1).
 

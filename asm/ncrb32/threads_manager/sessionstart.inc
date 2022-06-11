@@ -54,9 +54,9 @@ SessionStart:
 ; 1) UPB ( User Parameters Block ), user settings by options widgets.
 ; 2) SYSPARMS ( System Parameters ), platform configuration, detected when
 ;    NCRB application starts.
-mov esi,MEM_UPB      ; RSI = Pointer to user parameters block (UPB)
-mov edi,MEM_IPB      ; RDI = Pointer to input parameters block (IPB)  
-mov ebx,SYS_PARMS    ; RBX = Pointer for sys. info detected at NCRB start 
+mov esi,MEM_UPB      ; ESI = Pointer to user parameters block (UPB)
+mov edi,MEM_IPB      ; EDI = Pointer to input parameters block (IPB)  
+mov ebx,SYS_PARMS    ; EBX = Pointer for sys. info detected at NCRB start 
 ;---------- Setup benchmark method --------------------------------------------; 
 ; assembler routine = f ( user settings method, test object, system config. )
 ; test object = f ( user settings object )
@@ -206,7 +206,7 @@ jb .modeSelected
 xor edx,edx
 mov ecx,LATENCY_DIVISOR  ; Important DIVISOR CONSTANT for latency mode
 div ecx         ; If Latency mode, make measurement repeats / LATENCY_DIVISOR,
-.modeSelected:  ; note after this, bits RAX.63-32 = 0
+.modeSelected:
 mov dword [edi + MEMIPB.measureRepeats + 0],eax  ; Setup number of measurement repeats
 mov dword [edi + MEMIPB.measureRepeats + 4],0
 ; Note this measurement repeats value can be updated in the adaptive modes,
@@ -266,10 +266,10 @@ mov eax,[OS_DATA.numaNodeCount]
 mov [edi + MEMIPB.domainsCount],eax    ; Setup number of NUMA domains
 ;---------- Setup page size ---------------------------------------------------;
 ; select default ( typical 4KB ) or large ( typical 2M for x64 )
-mov eax,[OS_DATA.systemInfo.dwPageSize]    ; RAX = Std. page
+mov eax,[OS_DATA.systemInfo.dwPageSize]    ; EAX = Standard page size
 cmp [edi + MEMIPB.updatedLP],LP_USED
 jb @f
-mov eax,[OS_DATA.largePageSize]            ; RAX = Large page size 
+mov eax,[OS_DATA.largePageSize]            ; EAX = Large page size 
 @@:
 mov [edi + MEMIPB.pageSize],eax    ; Setup used Standard or Large Page size, bytes
 ;---------- Setup memory allocation parameters --------------------------------;
@@ -311,7 +311,7 @@ jnz .allocError          ; Go error if high 32 bits non zero, means above 4 GB
 ;---------- Build NUMA nodes list ---------------------------------------------; 
 ; this is FIRST step before memory allocation
 ; NUMA unaware mode by option and by system limitations,
-; supported by transfer R8D = option value to subroutine BuildNumaNodesList 
+; supported by transfer EAX = option value to subroutine BuildNumaNodesList 
 mov ecx,NUMA_LIST                   ; ECX = Pointers to NUMA nodes list for build
 mov edx,[edi + MEMIPB.updatedPG]    ; EDX = Processor Groups option
 mov eax,[edi + MEMIPB.updatedNUMA]  ; EAX = NUMA option

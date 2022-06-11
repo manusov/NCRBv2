@@ -668,8 +668,8 @@ jmp .done
 ;---------- Helper for write cache summary by platform topology WinAPI --------;
 ;           For trace cache.                                                   ;
 ;                                                                              ; 
-; INPUT:   RSI = Source pointer for cache size and count variables             ;
-;          RDI = Destination pointer for write text string                     ;
+; INPUT:   ESI = Source pointer for cache size and count variables             ;
+;          EDI = Destination pointer for write text string                     ;
 ;          CL  = Bitmap for set GUI objects (cache items) active               ;      
 ;                                                                              ;
 ; OUTPUT:  None                                                                ;

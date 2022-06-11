@@ -23,7 +23,7 @@ pop ecx ebx
 ;---------- Get start time ----------------------------------------------------;
 rdtsc              ; EDX:EAX = TSC value at start: EDX=High, EAX=Low
 push edx eax
-;---------- Call target routine ( required not destroy R14, R15 ) -------------;
+;---------- Call target routine -----------------------------------------------;
 call dword [esp + 08]    ; Run target operation
 ;---------- Get end time ------------------------------------------------------;
 rdtsc                    ; EDX:EAX = TSC value at end: EDX=High, EAX=Low

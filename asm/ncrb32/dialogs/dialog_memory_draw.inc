@@ -60,6 +60,20 @@ call IndexString
 push esi
 push PARM_HWNDDLG
 call [SetWindowText]
+;---------- Set drawings window coordinates if previously saved ---------------;
+mov edx,[SAVE_DRAW_POS.top]
+test edx,edx
+js @f
+xor eax,eax
+push SWP_SHOWWINDOW + SWP_NOSIZE + SWP_NOZORDER
+push eax
+push eax
+push edx
+push [SAVE_DRAW_POS.left]
+push eax
+push ebx
+call [SetWindowPos]
+@@: 
 ;---------- Initialize graphics context ---------------------------------------;
 push 0                           ; Parm#1 = Handle to exist DC, 0 = Application current screen
 call [CreateCompatibleDC]        ; Create compatible Device Context for buffered video output 
@@ -90,7 +104,7 @@ mov esi,[APP_DATA.lockedBrushesList] ; ESI = Pointer to color data
 mov edi,GC_PARMS.handlesBrushes      ; EDI = Pointer for store brushes handles
 mov ebp,4                            ; EBP = Number of brushes
 @@:
-lodsd                            ; EAX = Color, RSI+4, select next color 
+lodsd                            ; EAX = Color, ESI+4, select next color 
 push eax                         ; Parm#1 = Color
 call [CreateSolidBrush]
 stosd                            ; Store brush handle, EDI+4
@@ -135,6 +149,10 @@ jmp .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmclose:
+;---------- Save draw window coordinates for next open ------------------------;
+push SAVE_DRAW_POS
+push ebx
+call [GetWindowRect]
 ;---------- Stop measurement thread -------------------------------------------;
 mov [DRAW_THREAD_PARMS.measureBreak],1
 ;---------- Wait thread terminated ( 2 of 2 waits ) ---------------------------; 
@@ -853,7 +871,7 @@ push DT_LEFT      ; Parm#5 = Method of formatting/alignment of text string
 push edi          ; Parm#4 = Pointer to RECT structure, initialized by [SetRect] function
 push -1           ; Parm#3 = String length, -1 means NULL-terminated string
 push TEMP_BUFFER  ; Parm#2 = Pointer to text string
-push esi          ; Parm#1 = RCX = Handle to a Device Context
+push esi          ; Parm#1 = Handle to a Device Context
 call [DrawText]   ; Draw text function 
 ;---------- Modify parameters and make cycle ----------------------------------;
 add ebp,[DRAW_PARMS.valueGridY]   ; Addend per Y grid

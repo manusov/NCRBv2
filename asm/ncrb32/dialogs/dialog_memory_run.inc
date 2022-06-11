@@ -54,6 +54,20 @@ call IndexString
 push esi
 push PARM_HWNDDLG
 call [SetWindowText]
+;---------- Set run test window coordinates if previously saved ---------------;
+mov edx,[SAVE_RUN_POS.top]
+test edx,edx
+js @f
+xor eax,eax
+push SWP_SHOWWINDOW + SWP_NOSIZE + SWP_NOZORDER
+push eax
+push eax
+push edx 
+push [SAVE_RUN_POS.left]
+push eax
+push ebx
+call [SetWindowPos]
+@@:
 jmp .processed
 
 ;------------------------------------------------------------------------------;
@@ -72,6 +86,11 @@ jne .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmclose:
+;---------- Save run window coordinates for next open -------------------------;
+push SAVE_RUN_POS
+push ebx
+call [GetWindowRect]
+;---------- Close run window --------------------------------------------------;
 push 1                           ; Parm#2 = Result for return
 push ebx                         ; Parm#1 = Window handle
 call [EndDialog]

@@ -28,7 +28,7 @@
 ; Remember about PUSH-POP in the callers.                                      ;
 ;------------------------------------------------------------------------------;
 SessionStop:
-mov edi,MEM_IPB        ; RDI = Pointer to IPB (benchmark scenario)
+mov edi,MEM_IPB        ; EDI = Pointer to IPB (benchmark scenario)
 ;---------- Threads stop, release handles for Threads and Events --------------;
 mov ecx,THREAD_LIST                    ; ECX = Pointer to threads list
 mov edx,[edi + MEMIPB.updatedThreads]  ; EDX = Threads count

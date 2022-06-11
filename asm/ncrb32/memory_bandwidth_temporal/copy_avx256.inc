@@ -20,8 +20,8 @@ Measurement_Copy_AVX256:
 ; because offsets [-128...+127] encoded as one byte
 lea eax,[esi+256]     ; EAX = Reload source address, +256 means moddle
 lea ebx,[edi+256]     ; EBX = Reload destination address, +256 means moddle
-mov edx,ecx           ; RDX = Reload length
-shr edx,4             ; RDX = Block length, convert from INSTRUCTIONS to 16xINSTRUCTION units
+mov edx,ecx           ; EDX = Reload length
+shr edx,4             ; EDX = Block length, convert from INSTRUCTIONS to 16xINSTRUCTION units
 jz Small_Copy_AVX256  ; Go if Length < 16 instructions
 ;---------- Big cycle ---------------------------------------------------------;
 DumpStart_Copy_AVX256:

@@ -82,7 +82,7 @@ Small_Gather_AVX256:
 mov edx,ecx
 and edx,00000111b           ; EDX = Extract tail length
 jz Measure_Gather_AVX256
-mov ebx,8                   ; RBX = Vertical addend
+mov ebx,8                   ; EBX = Vertical addend
 ;---------- Tail cycle --------------------------------------------------------;
 Tail_Gather_AVX256:
 vmovapd ymm5,ymm0

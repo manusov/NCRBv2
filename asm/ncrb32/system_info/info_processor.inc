@@ -172,7 +172,7 @@ HelperGetCpuName:
 cld                          ; Clear direction, because STOSB/STOSD used
 push ebx esi
 ;---------- Blank and prepare for not support mode ----------------------------;
-mov ecx,48                   ; RCX = String length, also clear bits RCX[63-32]
+mov ecx,48                   ; ECX = String length
 mov al,' '                   ; AL = Space
 rep stosb                    ; Blank string
 mov byte [edi - 48],'?'      ; Default string, if feature not supported
@@ -209,11 +209,11 @@ mov ebx,ecx                ; EBX = Used space count = 48 - Unused space count
 lodsb                      
 dec ebx                   ; Count used space
 cmp al,0
-je .endCpuName            ; Go blank if end of string without name, here RCX=48
+je .endCpuName            ; Go blank if end of string without name, here ECX=48
 cmp al,' '
 loope .scanCpuName        ; Cycle for skip left spaces
 mov cl,48
-je .endCpuName            ; Go blank if only spaces in the string, here RCX=48
+je .endCpuName            ; Go blank if only spaces in the string, here ECX=48
 inc ebx
 dec esi
 ;---------- Copy used portion of name -----------------------------------------;
@@ -288,7 +288,7 @@ jz .error       ; Go error if frequency = 0
 stosd                   ; Store EAX = Frequency, low dword
 xchg eax,edx
 stosd                   ; Store EAX = Frequency, high dword
-;---------- Restore RSP, pop extra registers, exit ----------------------------;
+;---------- Restore ESP, pop extra registers, exit ----------------------------;
 clc             ; CF=0 (NC) means CPU clock measured OK
 .exit:
 pop eax eax ebp esi ebx
@@ -299,10 +299,9 @@ jmp .exit
 
 ;---------- Interpreting list of entries ENTRY_CPUID, ENTRY_XCR0 --------------;
 ;                                                                              ;
-; INPUT:   RSI = Pointer to builder script                                     ;
+; INPUT:   ESI = Pointer to builder script                                     ;
 ;                                                                              ;
 ; OUTPUT:  EAX = Bitmap, result of builder script                              ;
-;          RAX.[63-31] = 0                                                     ;  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperBuildBitmap:
@@ -328,7 +327,7 @@ dec eax
 jz .entryXcr0
 dec eax
 jz .prefixXcr0
-;---------- Return with RAX = bitmap, bits [31-00] only used ------------------;
+;---------- Return with EAX = bitmap, bits [31-00] used -----------------------;
 .done:
 xchg eax,ebx
 pop ebx ebp edi esi

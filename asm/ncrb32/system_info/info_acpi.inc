@@ -127,7 +127,7 @@ cmp al,1			     ; 1 = I/O APIC
 jne @f				     ; Go skip if not a I/O APIC
 inc edi            ; +1 if found
 @@:
-movzx eax,byte [esi + 1] ; RAX = Size of structure, for skip it and access next
+movzx eax,byte [esi + 1] ; EAX = Size of structure, for skip it and access next
 add esi,eax
 cmp esi,ecx
 jb .madtScanApics  ; Cycle for scan structures in the MADT
@@ -450,13 +450,13 @@ ret
 
 ;---------- Write hex number text string, 32 bit value ------------------------;
 ;                                                                              ;
-; INPUT:   RBX = Source base                                                   ;
-;          RBP = Destination base                                              ;
+; INPUT:   EBX = Source base                                                   ;
+;          EBP = Destination base                                              ;
 ;          AL  = Offset for source data contain 8-bit value                    ;
 ;          AH  = Offset for destination string                                 ;
 ;                                                                              ;
 ; OUTPUT:  EDI = Last used updated pointer                                     ;
-;          String at [RBP + AH] updated                                        ;   
+;          String at [EBP + AH] updated                                        ;   
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperHexString:
@@ -473,12 +473,12 @@ jmp HexPrint32
 
 ;--- Copy fixed size string and write last 0, verify chars printability -------;
 ;                                                                              ;
-; INPUT:   RSI = Source string                                                 ;
-;          RDI = Destination string                                            ;
-;          RCX = String size                                                   ;
+; INPUT:   ESI = Source string                                                 ;
+;          EDI = Destination string                                            ;
+;          ECX = String size                                                   ;
 ;                                                                              ;
-; OUTPUT:  RSI = Updated by copy                                               ;
-;          RDI = Updated by copy                                               ;
+; OUTPUT:  ESI = Updated by copy                                               ;
+;          EDI = Updated by copy                                               ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------; 
 HelperCopyAcpi:

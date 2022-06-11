@@ -34,7 +34,7 @@ mov [ebx + OPENFILENAME.lpstrFile],edx
 mov [ebx + OPENFILENAME.nMaxFile],FILE_PATH_MAXIMUM
 mov esi,[APP_DATA.lockedStrings]
 mov ax,STR_REPORT_DEF_EXT
-call IndexString             ; RSI = Pointer to file default extension string
+call IndexString             ; ESI = Pointer to file default extension string
 mov [ebx + OPENFILENAME.lpstrDefExt],esi
 push ebx                     ; Parm#1 = Pointer to structure
 call [GetSaveFileName]
@@ -46,7 +46,7 @@ mov edx,CREATE_NEW
 mov ecx,[ebx + OPENFILENAME.lpstrFile]
 test ecx,ecx
 jz .reportError 
-xor eax,eax                  ; RAX = 0 for compact push
+xor eax,eax                  ; EAX = 0 for compact push
 push eax                     ; Parm #7 = Template file, not used
 push FILE_ATTRIBUTE_NORMAL   ; Parm #6 = File attributes
 push edx                     ; Parm #5 = Creation disposition
