@@ -3,10 +3,13 @@
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
 ; (C)2022 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
-; Previous version v1.xx.xx                                                                               ; 
-; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
+;                                                                                                         ;
 ; This version v2.xx.xx                                                                                   ;
-; https://github.com/manusov/Prototyping                                                                  ; 
+; https://github.com/manusov/NCRBv2                                                                       ;
+; Previous version v1.xx.xx                                                                               ;
+; https://github.com/manusov/NumaCpuAndRamBenchmarks                                                      ;
+; Prototyping                                                                                             ;
+; https://github.com/manusov/Prototyping                                                                  ;
 ;                                                                                                         ;
 ; DATA.ASM = source file for FASM                                                                         ; 
 ; DATA.DLL = translation result, universal resource library for Win32 and Win64                           ;
