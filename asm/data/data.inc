@@ -33,8 +33,8 @@ IDM_SAVE_IMAGE          = 133
 IDM_ABOUT               = 134
 IDM_EXIT                = 135
 ;---------- Identifiers for raw resources: strings and binder scripts ---------;
-; Note. Strings represented as raw resources (not as string resources) for
-; compact encoding: 1 byte per char.  
+; Note. Strings represented as raw resources (not as UNICODE string resources)
+; for compact encoding: 1 byte per char.  
 IDS_STRINGS_POOL        = 140
 IDS_BINDERS_POOL        = 141
 IDS_CPU_COMMON_POOL     = 142
@@ -49,6 +49,7 @@ IDS_BRUSHES_POOL        = 150
 IDS_PENS_POOL           = 151
 IDS_BITMAP_INFO         = 152
 IDS_REPORT_INFO         = 153
+IDS_CONFIG_INFO         = 154
 ;---------- Identifiers for icons ---------------------------------------------;
 IDI_SYSINFO             = 160    ; First tab sheet icon
 IDI_MEMORY              = 161
@@ -966,6 +967,12 @@ STR_DRV_DEVICE         = STR_NAME_KMD32 + 3
 ;---------- Strings for CPU vendors detection ---------------------------------;
 STR_SIGN_INTEL         = STR_DRV_DEVICE + 1 
 STR_SIGN_AMD           = STR_SIGN_INTEL + 1
+;---------- Strings for Configuration INF file support ------------------------;
+STR_INF_TITLE          = STR_SIGN_AMD + 1 
+STR_INF_UNKNOWN_OPTION = STR_INF_TITLE + 1 
+STR_INF_BAD_OPTION     = STR_INF_TITLE + 2 
+STR_INF_FILE_BIG       = STR_INF_TITLE + 3
+STR_INF_FILE_BAD       = STR_INF_TITLE + 4  
 ;---------- Binders numbers for GUI scripts -----------------------------------;
 ; This binders for build GUI objects (widgets) by data from buffer (bindlist).
 BINDER_BUILD_SYSINFO       = 0   
@@ -1297,6 +1304,7 @@ MACRO END_CACHE
 {           ; List terminator
 DB 0        ; 0 = End of list
 }
+
 ;---------- GUI common definitions --------------------------------------------; 
 CLEARTYPE_QUALITY = 5
 ID_FONT_1         = 0
@@ -1359,3 +1367,105 @@ WAIT_ICONX       =  69    ; Icon base X-coordinate, upper-left corner
 WAIT_ICONY       =  48    ; Icon base Y-coordinate, upper-left corner
 WAIT_MODE_CPU    =  0     ; "Please wait" for CPU benchmark
 WAIT_MODE_MEMORY =  1     ; "Please wait" for Memory benchmark
+
+;---------- Definitions for parsing configuration INF file, options keys ------;
+OPTION_SCALE_MBPS_L1     = 0
+OPTION_SCALE_MBPS_L2     = 1
+OPTION_SCALE_MBPS_L3     = 2
+OPTION_SCALE_MBPS_L4     = 3
+OPTION_SCALE_MBPS_DRAM   = 4
+OPTION_SCALE_MBPS_CUSTOM = 5
+OPTION_SCALE_NS_L1       = 6
+OPTION_SCALE_NS_L2       = 7
+OPTION_SCALE_NS_L3       = 8
+OPTION_SCALE_NS_L4       = 9
+OPTION_SCALE_NS_DRAM     = 10
+OPTION_SCALE_NS_CUSTOM   = 11
+
+;---------- Definitions for parsing configuration INF file, structures --------;
+; Definitions for configuration file (NCRB.INF) support,
+; options descriptors, types of descriptors 
+XEND    EQU  0
+XKEY    EQU  1 
+XDEC    EQU  2
+XHEX    EQU  3
+XSIZE   EQU  4
+XSTR    EQU  5
+XLAST   EQU  5
+; Offsets of descriptors fields
+X0      EQU  0
+X1      EQU  1
+X2      EQU  5
+X3      EQU  9
+X4      EQU  13
+; Addends for addressing descriptors sequence
+XBIG    EQU  17
+XSMALL  EQU  13
+XDELTA  EQU  XBIG - XSMALL
+; ID = 0 = Terminator for list of options descriptors
+macro OPTION_END
+{
+DB  XEND         ; ID = 0 = Terminator for list of options descriptors
+}
+; ID = 1 = means option is list of keywords
+macro OPTION_KEYS  x1, x2, x3, x4
+{
+DB  XKEY           ; ID = 1 = means option is list of keywords
+DD  x1 - OpDesc    ; Pointer to option long name string, 0-terminated
+DD  x2 ; - OpDesc  ; Pointer to option value = byte 
+DD  x3 - OpDesc    ; Pointer to option single word short name string, for detection
+DD  x4 - OpDesc    ; Pointer to list of 0-terminated keywords, 0,0 means end of list 
+}
+; ID = 2 = means 32-bit unsigned value, interpreted as decimal
+macro OPTION_DECIMAL_32  x1, x2, x3
+{
+DB  XDEC           ; ID = 2 = means 32-bit unsigned value, interpreted as decimal
+DD  x1 - OpDesc    ; Pointer to option long name string, 0-terminated
+DD  x2 ; - OpDesc  ; Pointer to option value = dword
+DD  x3 - OpDesc    ; Pointer to option single word short name string, for detection 
+}
+; ID = 3 = means 64-bit unsigned value, interpreted as hex
+macro OPTION_HEX_64  x1, x2, x3
+{
+DB  XHEX           ; ID = 3 = means 64-bit unsigned value, interpreted as hex
+DD  x1 - OpDesc    ; Pointer to option long name string, 0-terminated
+DD  x2 ; - OpDesc  ; Pointer to option value = qword
+DD  x3 - OpDesc    ; Pointer to option single word short name string, for detection 
+}
+; ID = 3 = means 64-bit unsigned value, interpreted as hex
+macro OPTION_SIZE_64  x1, x2, x3
+{
+DB  XSIZE          ; ID = 3 = means 64-bit unsigned value, interpreted as hex
+DD  x1 - OpDesc    ; Pointer to option long name string, 0-terminated
+DD  x2 ; - OpDesc  ; Pointer to option value = qword
+DD  x3 - OpDesc    ; Pointer to option single word short name string, for detection 
+}
+; ID = 5 = means pointer to pointer to string
+macro OPTION_STRING  x1, x2, x3
+{
+DB  XSTR           ; ID = 5 = means pointer to pointer to string
+DD  x1 - OpDesc    ; Pointer to option long name string, 0-terminated
+DD  x2 ; - OpDesc  ; Pointer to option value = pointer to string, 0-terminated
+DD  x3 - OpDesc    ; Pointer to option single word short name string, for detection 
+}
+
+;--- Structure with configuration variables, located at executable file -------;
+CONFIG_VALUES_COUNT = 12
+struct CONFIGVALUES
+optionMbpsL1       dd  ?  ; Use this offset for 6 bandwidth values, f(object)
+optionMbpsL2       dd  ?
+optionMbpsL3       dd  ?
+optionMbpsL4       dd  ?
+optionMbpsDram     dd  ?
+optionMbpsCustom   dd  ?
+optionNsL1         dd  ?  ; Use this offset for 6 latency values, f(object)
+optionNsL2         dd  ?
+optionNsL3         dd  ?
+optionNsL4         dd  ?
+optionNsDram       dd  ?
+optionNsCustom     dd  ?
+ends
+
+;---------- Common definitions for parse configuration INF file routines ------;
+PATH_BUFFER_SIZE   EQU  256   ; Limit for buffers with paths, include last 0
+

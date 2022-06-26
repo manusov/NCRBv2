@@ -65,7 +65,7 @@ push r13
 call InfoOperatingSystem    ; System and memory information parameters
 jc @f
 call InfoNativeOs           ; Native operating system information
-mov rbp,[APP_MEMORY]
+mov rbp,[APP_BUFFERS.pointerSysInfo]
 call InfoTopology           ; Get platform topology by WinAPI
 jc @f
 call InfoExtendedTopology   ; Get platform extended topology by WinAPI

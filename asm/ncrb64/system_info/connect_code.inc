@@ -50,12 +50,8 @@ ends
 
 ;---------- Subroutines -------------------------------------------------------;
 
-include 'load_inf.inc'
-include 'load_kmd.inc'
 include 'sysinfo.inc'
-
 include 'cpuid_x64.inc'
-
 include 'info_os.inc'
 include 'info_native_os.inc'
 include 'info_processor.inc'

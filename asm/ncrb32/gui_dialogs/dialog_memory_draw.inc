@@ -460,6 +460,12 @@ test eax,eax
 jnz @f
 inc eax
 @@:
+; Override Y scale by INF configuration file. For measurement condition match,
+; auto-scale calculations must be executed even if fixed scale mode.
+cmp [DRAW_PARMS.fixedYscale],0
+je @f
+mov eax,[DRAW_PARMS.valueGridY]
+@@:
 ; Set selected Y-scale and calculate multiplier for pixel coordinates
 cmp [DRAW_PARMS.valueGridY],eax
 je @f

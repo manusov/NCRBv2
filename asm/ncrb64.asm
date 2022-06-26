@@ -51,12 +51,12 @@ include 'win64a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.2.6.0'
+RESOURCE_VERSION        EQU '2.3.0.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.02.06 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.03.00 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -104,7 +104,7 @@ xor ecx,ecx                        ; RCX = Parm#1 = fixed address, not used = 0
 call [VirtualAlloc]
 test rax,rax
 jz .memoryAllocError               ; Go if memory allocation error
-mov [APP_MEMORY],rax
+mov [APP_MEM_ALLOC],rax
 ;---------- Start GUI initialization ------------------------------------------;
 lea r15,[APP_DATA]
 lea rcx,[APP_CTRL]                 ; RCX = Parm#1 = Pointer to structure
@@ -299,8 +299,90 @@ jnz @b
 lea rdi,[DRAW_TSC]
 mov ax,STR_MD_TSC_CLOCK_MHZ
 call PoolStringWrite
+
 ;---------- Load configuration file ncrb.inf ----------------------------------; 
-; TODO.
+; RSI = Pointer to resource strings, not change
+; RDI = Pointer to application buffers structure 
+lea rdi,[APP_BUFFERS]
+mov rbp,[APP_MEM_ALLOC]
+lea rcx,[NAME_INF]
+lea rdx,[rdi + APPBUFFERS.handleLoadInf]
+lea r8,[rdi + APPBUFFERS.pointerLoadInf]
+lea r9,[rdi + APPBUFFERS.sizeLoadInf] 
+mov [r8],rbp
+mov qword [r9],LOAD_INF_LIMIT
+call LoadInf  ; Load configuration file NCRB.INF
+test rax,rax
+jz .skipInf
+;---------- Parse loaded configuration file ncrb.inf --------------------------;
+mov rcx,[rdi + APPBUFFERS.pointerLoadInf]
+mov rdx,[rdi + APPBUFFERS.sizeLoadInf]
+mov r8,[r15 + APPDATA.lockedConfigInfo]
+lea r9,[rdi + APPBUFFERS.statusLoadInf_1] 
+test rdx,rdx
+jz .skipInf
+cmp rdx,LOAD_INF_LIMIT
+jae .errorInfBig
+add rbp,rdx
+test rbp,0Fh
+jz @f
+and rbp,0FFFFFFFFFFFFFFF0h
+add rbp,10h 
+@@:
+add rdx,rcx
+call ParseInf  ; Parse configuration file NCRB.INF, assign option fields values
+;---------- Analusing parsing errors ------------------------------------------;
+test rax,rax
+jnz .scanInf
+mov ax,STR_INF_FILE_BAD
+jmp .errorInfBad
+;---------- Analusing parsing results at options fields -----------------------;
+.scanInf:
+mov ecx,CONFIG_VALUES_COUNT
+lea rdx,[CONFIG_VALUES]
+@@:
+cmp dword [rdx],0
+jnz .showInf
+add rdx,4 
+loop @b
+jmp .skipInf
+;---------- Verify options fields values after parsing NCRB.INF ---------------; 
+; lea rcx,[CONFIG_VALUES]
+; ... UNDER CONSTRUCTION ...
+;---------- Show errors after loading or parsing NCRB.INF ---------------------;
+.errorInfBig:
+mov ax,STR_INF_FILE_BIG
+.errorInfBad:
+mov rsi,[APP_DATA.lockedStrings]
+call IndexString
+mov r9d,MB_ICONERROR         ; R9  = Parm#4 = Message box icon type
+lea r8,[PROGRAM_NAME]        ; R8  = Parm#3 = Pointer to caption
+mov rdx,rsi                  ; RDX = Parm#2 = Pointer to string
+xor ecx,ecx                  ; RCX = Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+jmp .skipInf
+;---------- Show options fields values overrides after parsing NCRB.INF -------;
+.showInf:
+push rdi
+lea rdi,[TEMP_BUFFER]
+push rdi
+mov ax,STR_INF_TITLE
+call PoolStringWrite
+mov ax,0A0Dh
+stosw                        ; Make next string, write CR, LF 
+stosw
+mov rdx,rdi
+mov rcx,[APP_DATA.lockedConfigInfo]
+call ShowInf
+mov r9d,MB_ICONINFORMATION   ; R9  = Parm#4 = Message box icon type
+lea r8,[PROGRAM_NAME]        ; R8  = Parm#3 = Pointer to caption
+pop rdx rdi                  ; RDX = Parm#2 = Pointer to string
+xor ecx,ecx                  ; RCX = Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+;---------- This point for skip configuration file operations -----------------;
+.skipInf:
+mov [rdi + APPBUFFERS.pointerSysInfo],rbp
+
 ;---------- Get system information, user mode routines ------------------------;
 call SystemInfo
 jc .errorPlatform
@@ -313,7 +395,6 @@ jc .errorPlatform
 ; Application can start with this non-fatal warning.
 lea rdi,[TEMP_BUFFER]
 push rdi
-mov rdx,rsi
 mov ax,STR_WARNING_API
 call PoolStringWrite 
 mov rsi,[r15 + APPDATA.lockedImportList]
@@ -368,7 +449,7 @@ je .dialogueFailed             ; Go if create dialogue return error
 ;---------- Application exit point with release resource ----------------------; 
 xor r13d,r13d                  ; R13 = Exit Code, 0 means no errors
 .exitResources:
-mov r14,[APP_MEMORY]
+mov r14,[APP_MEM_ALLOC]
 test r14,r14
 jz .exit
 lea r15,[APP_DATA]
@@ -1332,7 +1413,9 @@ mov rsp,rbp
 pop rbp rsi
 ret
 ;---------- Include subroutines from modules ----------------------------------;
-include 'ncrb64\dialogs\connect_code.inc'
+include 'ncrb64\gui_dialogs\connect_code.inc'
+include 'ncrb64\load_config\connect_code.inc'
+include 'ncrb64\load_kernel_mode_driver\connect_code.inc'
 include 'ncrb64\system_info\connect_code.inc'
 include 'ncrb64\threads_manager\connect_code.inc'
 include 'ncrb64\memory_bandwidth_temporal\connect_code.inc'
@@ -1347,7 +1430,9 @@ include 'ncrb64\math_bandwidth\connect_code.inc'
 ;------------------------------------------------------------------------------;
 section '.data' data readable writeable
 ;---------- Common data for application ---------------------------------------;
-APP_MEMORY     DQ  0                        ; Must be 0 for conditional release
+; This pointer used for allocation and release memory, 
+; it not changed from allocation to release
+APP_MEM_ALLOC  DQ  0                        ; Must be 0 for conditional release
 APP_CTRL       INITCOMMONCONTROLSEX  8, 0   ; Structure for initialization
 ;---------- Pointers to procedures of GUI bind scripts interpreter ------------;
 PROC_BINDERS   DQ  BindSetString
@@ -1384,11 +1469,13 @@ RAW_LIST       DW  IDS_STRINGS_POOL
                DW  IDS_PENS_POOL
                DW  IDS_BITMAP_INFO
                DW  IDS_REPORT_INFO
+               DW  IDS_CONFIG_INFO
                DW  0
-;---------- Libraries for dynamical import ------------------------------------;
+;---------- Libraries for dynamical import and application options file -------;
 NAME_KERNEL32  DB  'KERNEL32.DLL' , 0      ; Must be sequental list of WinAPI
 NAME_ADVAPI32  DB  'ADVAPI32.DLL' , 0 , 0  ; Two zeroes means end of list
 NAME_DATA      DB  'DATA.DLL'     , 0
+NAME_INF       DB  'NCRB.INF'     , 0
 ;---------- Text strings about application ------------------------------------;
 PROGRAM_NAME   DB  PROGRAM_NAME_TEXT   , 0
 ABOUT_NAME     DB  ABOUT_TEXT_1        , 0Dh,0Ah
@@ -1405,7 +1492,9 @@ MSG_ERRORS     DB  'Memory allocation error.'                 , 0
                DB  'Create font failed.'                      , 0
                DB  'Create dialogue window failed.'           , 0
 ;---------- Include constants and pre-defined variables from modules ----------;
-include 'ncrb64\dialogs\connect_data.inc'
+include 'ncrb64\gui_dialogs\connect_data.inc'
+include 'ncrb64\load_config\connect_data.inc'
+include 'ncrb64\load_kernel_mode_driver\connect_data.inc'
 include 'ncrb64\system_info\connect_data.inc'
 include 'ncrb64\threads_manager\connect_data.inc'
 include 'ncrb64\memory_bandwidth_temporal\connect_data.inc'
@@ -1659,6 +1748,19 @@ dtX87sincos     dq  ?      ; TSC clocks per x87 Sine+Cosine (FSINCOS) pattern
 ends
 align 8
 VECBR_OPB VECBROPB  ?
+;---------- Pointers to application buffers in the allocated block ------------;
+LOAD_INF_LIMIT = 32768
+struct APPBUFFERS
+pointerLoadInf   dq  ?     ; Pointer to buffer for NCRB.INF file load
+sizeLoadInf      dq  ?     ; Size of loaded file NCRB.INF
+handleLoadInf    dq  ?     ; Handle of loaded file NCRB.INF, but closed after read
+statusLoadInf_1  dq  ?     ; Pointer to status string 1 if NCRB.INF parse error 
+statusLoadInf_2  dq  ?     ; Pointer to status string 2 if NCRB.INF parse error
+statusLoadInf_3  dq  ?     ; Win API error code if NCRB.INF parse error 
+pointerSysInfo   dq  ?     ; Pointer to buffer for all system information collect
+sizeSysInfo      dq  ?     ; Size of this buffer, this field yet not used
+ends
+APP_BUFFERS APPBUFFERS  ?
 ;---------- Key data for GUI application with resources -----------------------;  
 struct APPDATA
 hResources              dq ?     ; Resource DLL handle
@@ -1677,6 +1779,7 @@ lockedBrushesList       dq ?     ; List of color brushes
 lockedPensList          dq ?     ; List of color pens
 lockedBitmapInfo        dq ?     ; Bitmap info header for draw window
 lockedReportInfo        dq ?     ; Strings IDs for report table headers
+lockedConfigInfo        dq ?     ; Strings for parsing configuration INF file
 hFont1                  dq ?     ; Handles of created fonts
 hFont2                  dq ?
 hIcon                   dq ?     ; Application icon handle
@@ -1898,6 +2001,9 @@ yMultiplier      dq  ?      ; Y pixels scale factor, floating point, double
 ; Flag for show static elements of drawings window at first pass,
 ; static elements - not requires update by measurement results: axises, dump ...
 showStatic       dd  ?
+; Flag for fixed Y scale by configuration INF file auto Y-scale override
+; 0=Default auto scale mode, 1=Fixed scale mode
+fixedYscale      dd  ?
 ends
 align 8
 DRAW_PARMS DRPM ?

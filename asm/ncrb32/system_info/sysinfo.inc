@@ -72,7 +72,7 @@ mov dword [edi],0       ; Clear WoW64 flag if WoW64 not detected
 call InfoOperatingSystem    ; System and memory information parameters
 jc .error
 call InfoNativeOs           ; Native operating system information
-mov ebp,[APP_MEMORY]
+mov ebp,[APP_BUFFERS.pointerSysInfo]
 call InfoTopology           ; Get platform topology by WinAPI
 jc .error
 call InfoExtendedTopology   ; Get platform extended topology by WinAPI

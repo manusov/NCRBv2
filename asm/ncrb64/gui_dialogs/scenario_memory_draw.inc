@@ -230,15 +230,27 @@ shr eax,10
 mov [rdi + DRPM.valueGridX],eax
 mov [rdi + DRPM.selectUnits],edx
 ;---------- Set first approximation constant for Y-grid step values -----------;
-mov eax,DEFAULT_Y_MBPS_PER_GRID
+xor ebp,ebp
+mov eax,DEFAULT_Y_MBPS_PER_GRID  ; This parameters for MBPS mode, bandwidth
 xor edx,edx
+lea rcx,[CONFIG_VALUES.optionMbpsL1]
 cmp [rbx + MEMIPB.updatedAsm],LATENCY_MODE
-jb @f
-mov eax,DEFAULT_Y_NS_PER_GRID
+jb @f                            ; Go skip reload if MBPS mode
+mov eax,DEFAULT_Y_NS_PER_GRID    ; This parameters for NS mode, latency
 inc edx
+lea rcx,[CONFIG_VALUES.optionNsL1]
+@@:
+mov esi,[rbx + MEMIPB.updatedTarget]
+cmp esi,TARGET_CUSTOM
+ja @f
+mov ecx,[rcx + rsi*4]    ; Read value, override by configuration INF file
+jecxz @f                 ; Go skip if no overrides
+xchg eax,ecx             ; EAX = Override value
+inc ebp                  ; EBP = 1, means no auto scale Y
 @@:
 mov [rdi + DRPM.valueGridY],eax
 mov [rdi + DRPM.selectMode],edx
+mov [rdi + DRPM.fixedYscale],ebp
 ;---------- Set Ymultiplier scale constant for conversion ---------------------; 
 ; measurement results to Y-coordinate
 ; Note same operation at win1.inc for re-scaling, 
