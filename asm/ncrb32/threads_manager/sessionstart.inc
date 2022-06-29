@@ -319,6 +319,7 @@ call BuildNumaNodesList             ; CF returned, build list of NUMA nodes
 jnc .numaValid                      ; Go if no errors, means EAX = NUMA nodes count
 .allocError:
 mov al,MSG_RUNTIME_ALLOC            ; otherwise AL = error status
+stc
 jmp .exit                           ; Go for error handling
 .numaValid:
 ;--- Update NUMA nodes count after rejection nodes with affinity mask = 0 -----;

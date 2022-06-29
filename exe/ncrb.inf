@@ -12,18 +12,18 @@
 ; ns2   = 3
 ; ns3   = 10
 ; ns4   = 12
-; nsd   = 20
+; nsd   = 15
 ; nsc   = 15
 
 
-; reserved options, under construction
+; Reserved options, under construction.
 ; os         = on    ; Enable operating system detail info.
 ; nativeos   = on    ; Enable native operating system detail info, if run NCRB32 under Win64.
-; tlbcpuid   = on    ; Enable CPU caches and TLB detail info.
 ; topology   = on    ; Enable platform topology detail info by WinAPI.
 ; topologyex = on    ; Enable platform topology detail info by WinAPI, extended function.
 ; numa       = on    ; Enable NUMA nodes list by WinAPI.
 ; groups     = on    ; Enable processor groups list by WinAPI.
+; smbios     = on    ; Enable SMBIOS structures list by WinAPI.
 ; acpi       = on    ; Enable ACPI tables list by WinAPI.
 ; affcpuid   = on    ; Enable affinized CPUID dump.
 ; kernelmode = on    ; Enable kernel mode driver service control program support.
