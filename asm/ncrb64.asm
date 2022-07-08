@@ -51,12 +51,12 @@ include 'win64a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.3.1.0'
+RESOURCE_VERSION        EQU '2.3.2.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.03.01 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.03.02 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -299,7 +299,6 @@ jnz @b
 lea rdi,[DRAW_TSC]
 mov ax,STR_MD_TSC_CLOCK_MHZ
 call PoolStringWrite
-
 ;---------- Load configuration file ncrb.inf ----------------------------------; 
 ; RSI = Pointer to resource strings, not change
 ; RDI = Pointer to application buffers structure 
@@ -333,12 +332,9 @@ add rdx,rcx
 call ParseInf  ; Parse configuration file NCRB.INF, assign option fields values
 ;---------- Analusing parsing errors ------------------------------------------;
 test rax,rax
-jnz .scanInf
-mov ax,STR_INF_FILE_BAD
-jmp .errorInfBad
+jz .errorInfBad
 ;---------- Analusing parsing results at options fields -----------------------;
-.scanInf:
-mov ecx,CONFIG_VALUES_COUNT
+mov ecx,CONFIG_VALUES_COUNT_SCALE
 lea rdx,[CONFIG_VALUES]
 @@:
 cmp dword [rdx],0
@@ -349,16 +345,35 @@ jmp .skipInf
 ;---------- Verify options fields values after parsing NCRB.INF ---------------; 
 ; lea rcx,[CONFIG_VALUES]
 ; ... UNDER CONSTRUCTION ...
-;---------- Show errors after loading or parsing NCRB.INF ---------------------;
-.errorInfBig:
+;---------- Show error if NCRB.INF file too big -------------------------------;
+.errorInfBig:                ; Here if INF file too big
 mov ax,STR_INF_FILE_BIG
-.errorInfBad:
+jmp .errorInfId
+;---------- Get errors details after loading or parsing NCRB.INF --------------;
+.errorInfBad:                ; Try get detail info about parsing INF file error 
+lea rsi,[APP_BUFFERS.statusLoadInf_1]
+mov rcx,[rsi + 00]
+mov rdx,[rsi + 08]
+mov r8d,[rsi + 16]
+mov rsi,rcx
+or rsi,rdx
+or rsi,r8
+jz .errorInfSimple 
+lea r9,[TEMP_BUFFER]
+mov rsi,r9
+call ErrorInf
+jmp .errorInfReady
+.errorInfSimple:             ; Here AX = String ID for error message 
+mov ax,STR_INF_FILE_BAD
+.errorInfId:
 mov rsi,[APP_DATA.lockedStrings]
 call IndexString
-mov r9d,MB_ICONERROR         ; R9  = Parm#4 = Message box icon type
-lea r8,[PROGRAM_NAME]        ; R8  = Parm#3 = Pointer to caption
-mov rdx,rsi                  ; RDX = Parm#2 = Pointer to string
-xor ecx,ecx                  ; RCX = Parm#1 = Parent window handle or 0
+;---------- Show error message box --------------------------------------------;
+.errorInfReady:            ; RSI = Pointer to buffer with error string
+mov r9d,MB_ICONERROR       ; R9  = Parm#4 = Message box icon type
+lea r8,[PROGRAM_NAME]      ; R8  = Parm#3 = Pointer to caption
+mov rdx,rsi                ; RDX = Parm#2 = Pointer to string
+xor ecx,ecx                ; RCX = Parm#1 = Parent window handle or 0
 call [MessageBoxA]
 jmp .skipInf
 ;---------- Show options fields values overrides after parsing NCRB.INF -------;
@@ -382,15 +397,48 @@ call [MessageBoxA]
 ;---------- This point for skip configuration file operations -----------------;
 .skipInf:
 mov [rdi + APPBUFFERS.pointerSysInfo],rbp
-
 ;---------- Get system information, user mode routines ------------------------;
 call SystemInfo
 jc .errorPlatform
-;---------- Load kernel mode driver kmd64.sys ---------------------------------;
-; TODO.
-; call LoadKernelModeDriver
-; call TryKernelModeDriver
-; call UnloadKernelModeDriver
+;---------- Detect option for load kernel mode driver kmd64.sys ---------------;
+cmp [CONFIG_VALUES.optionLoadKmd],0
+je .skipLoadKmd 
+;---------- Try load kernel mode driver kmd64.sys -----------------------------;
+lea rsi,[APP_BUFFERS.statusLoadKmd_1]
+lea rdi,[TEMP_BUFFER]
+mov rcx,rsi
+call LoadKernelModeDriver
+test eax,eax
+jnz .loadDone
+mov rcx,[rsi + 00]
+mov rdx,[rsi + 08]
+mov r8d,[rsi + 16]
+mov r9,rdi
+call ErrorInf
+mov r9d,MB_ICONERROR    ; R9  = Parm#4 = Message box icon type
+lea r8,[PROGRAM_NAME]   ; R8  = Parm#3 = Pointer to caption
+mov rdx,rdi             ; RDX = Parm#2 = Pointer to string
+xor ecx,ecx             ; RCX = Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+.loadDone:
+;---------- Unload kernel mode driver kmd64.sys -------------------------------;
+mov rcx,rsi
+call UnloadKernelModeDriver
+test eax,eax
+jnz .unloadDone
+mov rcx,[rsi + 00]
+mov rdx,[rsi + 08]
+mov r8d,[rsi + 16]
+mov r9,rdi
+call ErrorInf
+mov r9d,MB_ICONERROR    ; R9  = Parm#4 = Message box icon type
+lea r8,[PROGRAM_NAME]   ; R8  = Parm#3 = Pointer to caption
+mov rdx,rdi             ; RDX = Parm#2 = Pointer to string
+xor ecx,ecx             ; RCX = Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+.unloadDone:
+;---------- Point for skip try KMD operations ---------------------------------;
+.skipLoadKmd:
 ;---------- Check dynamical import results, show missing WinAPI warning -------;
 ; Application can start with this non-fatal warning.
 lea rdi,[TEMP_BUFFER]
@@ -1751,6 +1799,7 @@ VECBR_OPB VECBROPB  ?
 ;---------- Pointers to application buffers in the allocated block ------------;
 LOAD_INF_LIMIT = 32768
 struct APPBUFFERS
+; support INF
 pointerLoadInf   dq  ?     ; Pointer to buffer for NCRB.INF file load
 sizeLoadInf      dq  ?     ; Size of loaded file NCRB.INF
 handleLoadInf    dq  ?     ; Handle of loaded file NCRB.INF, but closed after read
@@ -1759,6 +1808,10 @@ statusLoadInf_2  dq  ?     ; Pointer to status string 2 if NCRB.INF parse error
 statusLoadInf_3  dq  ?     ; Win API error code if NCRB.INF parse error 
 pointerSysInfo   dq  ?     ; Pointer to buffer for all system information collect
 sizeSysInfo      dq  ?     ; Size of this buffer, this field yet not used
+; support KMD
+statusLoadKmd_1  dq  ?     ; Pointer to status string 1 if KMD load/start error 
+statusLoadKmd_2  dq  ?     ; Pointer to status string 2 if KMD load/start error 
+statusLoadKmd_3  dq  ?     ; Win API error code KMD load/start error 
 ends
 APP_BUFFERS APPBUFFERS  ?
 ;---------- Key data for GUI application with resources -----------------------;  

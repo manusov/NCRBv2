@@ -53,7 +53,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.3.1.0'
+RESOURCE_VERSION      EQU  '2.3.2.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -1027,15 +1027,25 @@ DB  'KMD32.SYS'  , 0
 DB  'KMD64.SYS'  , 0
 DB  'ICR0'       , 0
 DB  '\\.\ICR0'   , 0
+DB  'Error loading kernel mode driver :'   , 0
+DB  'Error unloading kernel mode driver :' , 0
+DB  'Error access kernel mode driver :'    , 0  
+DB  'Get path failed.'                     , 0
+DB  'Open service control program failed.' , 0
+DB  'Create service failed.'               , 0
+DB  'Get status failed.'                   , 0
+DB  'Start service failed.'                , 0
+DB  'Create device failed.'                , 0
 ;---------- Strings for CPU vendors detection ---------------------------------;
 DB  'GenuineIntel' , 0
 DB  'AuthenticAMD' , 0
-;---------- Strings for Configuration INF file support ------------------------;
-DB  'Configuration overriden by INF file.' , 0
-DB  'Unknown option.'    , 0 
-DB  'Bad option string.' , 0
+;---------- Strings for Configuration INF file support and OS errors ----------;
+DB  'Configuration overriden by INF file.'          , 0
+DB  'Unknown option at INF file :'                  , 0 
+DB  'Bad option string at INF file :'               , 0
 DB  'Load configuration failed: INF file too big.'  , 0
-DB  'Parsing configuration INF file failed.'        , 0 
+DB  'Parsing configuration INF file failed.'        , 0
+DB  'OS error'                                      , 0 
 endres
 ;---------- Raw resource for binders pool -------------------------------------;
 resdata bindersPool
@@ -2299,45 +2309,50 @@ endres
 resdata configInfo
 ; List of configuration options
 OpDesc:
-OPTION_DECIMAL_32  nameMbps1 , CONFIGVALUES.optionMbpsL1     , wordMbps1
-OPTION_DECIMAL_32  nameMbps2 , CONFIGVALUES.optionMbpsL2     , wordMbps2
-OPTION_DECIMAL_32  nameMbps3 , CONFIGVALUES.optionMbpsL3     , wordMbps3
-OPTION_DECIMAL_32  nameMbps4 , CONFIGVALUES.optionMbpsL4     , wordMbps4
-OPTION_DECIMAL_32  nameMbpsD , CONFIGVALUES.optionMbpsDram   , wordMbpsD
-OPTION_DECIMAL_32  nameMbpsC , CONFIGVALUES.optionMbpsCustom , wordMbpsC
-OPTION_DECIMAL_32  nameNs1   , CONFIGVALUES.optionNsL1       , wordNs1
-OPTION_DECIMAL_32  nameNs2   , CONFIGVALUES.optionNsL2       , wordNs2
-OPTION_DECIMAL_32  nameNs3   , CONFIGVALUES.optionNsL3       , wordNs3
-OPTION_DECIMAL_32  nameNs4   , CONFIGVALUES.optionNsL4       , wordNs4
-OPTION_DECIMAL_32  nameNsD   , CONFIGVALUES.optionNsDram     , wordNsD
-OPTION_DECIMAL_32  nameNsC   , CONFIGVALUES.optionNsCustom   , wordNsC
+OPTION_DECIMAL_32  nameMbps1   , CONFIGVALUES.optionMbpsL1     , wordMbps1
+OPTION_DECIMAL_32  nameMbps2   , CONFIGVALUES.optionMbpsL2     , wordMbps2
+OPTION_DECIMAL_32  nameMbps3   , CONFIGVALUES.optionMbpsL3     , wordMbps3
+OPTION_DECIMAL_32  nameMbps4   , CONFIGVALUES.optionMbpsL4     , wordMbps4
+OPTION_DECIMAL_32  nameMbpsD   , CONFIGVALUES.optionMbpsDram   , wordMbpsD
+OPTION_DECIMAL_32  nameMbpsC   , CONFIGVALUES.optionMbpsCustom , wordMbpsC
+OPTION_DECIMAL_32  nameNs1     , CONFIGVALUES.optionNsL1       , wordNs1
+OPTION_DECIMAL_32  nameNs2     , CONFIGVALUES.optionNsL2       , wordNs2
+OPTION_DECIMAL_32  nameNs3     , CONFIGVALUES.optionNsL3       , wordNs3
+OPTION_DECIMAL_32  nameNs4     , CONFIGVALUES.optionNsL4       , wordNs4
+OPTION_DECIMAL_32  nameNsD     , CONFIGVALUES.optionNsDram     , wordNsD
+OPTION_DECIMAL_32  nameNsC     , CONFIGVALUES.optionNsCustom   , wordNsC
+OPTION_KEYS        nameLoadKmd , CONFIGVALUES.optionLoadKmd    , wordLoadKmd , keyLoadKmd
 OPTION_END
-; Text strings for options keywords
-wordMbps1  DB  'mbps1' , 0
-wordMbps2  DB  'mbps2' , 0
-wordMbps3  DB  'mbps3' , 0
-wordMbps4  DB  'mbps4' , 0
-wordMbpsD  DB  'mbpsd' , 0
-wordMbpsC  DB  'mbpsc' , 0
-wordNs1    DB  'ns1'   , 0
-wordNs2    DB  'ns2'   , 0
-wordNs3    DB  'ns3'   , 0
-wordNs4    DB  'ns4'   , 0
-wordNsD    DB  'nsd'   , 0
-wordNsC    DB  'nsc'   , 0
+; Text strings for options names keywords
+wordMbps1    DB  'mbps1'   , 0
+wordMbps2    DB  'mbps2'   , 0
+wordMbps3    DB  'mbps3'   , 0
+wordMbps4    DB  'mbps4'   , 0
+wordMbpsD    DB  'mbpsd'   , 0
+wordMbpsC    DB  'mbpsc'   , 0
+wordNs1      DB  'ns1'     , 0
+wordNs2      DB  'ns2'     , 0
+wordNs3      DB  'ns3'     , 0
+wordNs4      DB  'ns4'     , 0
+wordNsD      DB  'nsd'     , 0
+wordNsC      DB  'nsc'     , 0
+wordLoadKmd  DB  'loadkmd' , 0
 ; Text strings for options long names, show by message at application start
-nameMbps1  DB  'L1 cache mbps grid'    , 0
-nameMbps2  DB  'L2 cache mbps grid'    , 0
-nameMbps3  DB  'L3 cache mbps grid'    , 0
-nameMbps4  DB  'L4 cache mbps grid'    , 0
-nameMbpsD  DB  'DRAM mbps grid'        , 0
-nameMbpsC  DB  'Custom mbps grid'      , 0
-nameNs1    DB  'L1 cache latency grid' , 0
-nameNs2    DB  'L2 cache latency grid' , 0  
-nameNs3    DB  'L3 cache latency grid' , 0
-nameNs4    DB  'L4 cache latency grid' , 0
-nameNsD    DB  'DRAM latency grid'     , 0
-nameNsC    DB  'Custom latency grid'   , 0
+nameMbps1    DB  'L1 cache mbps grid'             , 0
+nameMbps2    DB  'L2 cache mbps grid'             , 0
+nameMbps3    DB  'L3 cache mbps grid'             , 0
+nameMbps4    DB  'L4 cache mbps grid'             , 0
+nameMbpsD    DB  'DRAM mbps grid'                 , 0
+nameMbpsC    DB  'Custom mbps grid'               , 0
+nameNs1      DB  'L1 cache latency grid'          , 0
+nameNs2      DB  'L2 cache latency grid'          , 0  
+nameNs3      DB  'L3 cache latency grid'          , 0
+nameNs4      DB  'L4 cache latency grid'          , 0
+nameNsD      DB  'DRAM latency grid'              , 0
+nameNsC      DB  'Custom latency grid'            , 0
+nameLoadKmd  DB  'Enable load kernel mode driver' , 0
+; Text strings for options values keywords
+keyLoadKmd   DB  'off', 0, 'on', 0, 0
 endres
 ;---------- Directory of icon resources ---------------------------------------; 
 resource icons, \

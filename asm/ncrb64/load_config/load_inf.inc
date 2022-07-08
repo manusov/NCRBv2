@@ -12,6 +12,7 @@
 ;              this variable is size limit for this buffer                     ;   
 ;                                                                              ;
 ; OUTPUT: RAX = OS API last operation status code                              ;
+;               0 = Error , non zero means no errors                           ;
 ;         Variable file handle at [input RDX] = updated by file open           ;
 ;         Variable file size at [input R9] = Read size, 0 if error             ;
 ;------------------------------------------------------------------------------;

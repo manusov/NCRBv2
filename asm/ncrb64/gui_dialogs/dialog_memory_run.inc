@@ -17,10 +17,6 @@ push rbp rbx rsi rdi r15
 mov rbp,rsp
 and rsp,0FFFFFFFFFFFFFFF0h     ; Stack alignment
 sub rsp,32                     ; Make parameters shadow for next calls
-mov PARM_HWNDDLG,rcx           ; Save input parameters to shadow 
-mov PARM_MSG,rdx
-mov PARM_WPARAM,r8
-mov PARM_LPARAM,r9
 mov rbx,rcx                    ; RBX = Window handle
 lea r15,[APP_DATA]             ; R15 = Pointer to application data
 ;---------- Detect message type -----------------------------------------------;
@@ -54,13 +50,13 @@ call Binder
 mov r9,[r15 + APPDATA.createdIcons + MEMORY_ICON_NUMBER * 8] 
 mov r8d,ICON_SMALL 
 mov edx,WM_SETICON 
-mov rcx,PARM_HWNDDLG
+mov rcx,rbx          ; RCX = PARM_HWNDDLG
 call [SendMessage]
 mov rsi,[r15 + APPDATA.lockedStrings]
 mov ax,STR_CHILD_MEM_REPORT
 call IndexString
 mov rdx,rsi
-mov rcx,PARM_HWNDDLG
+mov rcx,rbx          ; RCX = PARM_HWNDDLG
 call [SetWindowText]
 ;---------- Set run test window coordinates if previously saved ---------------;
 mov r9d,[SAVE_RUN_POS.top]
@@ -87,7 +83,7 @@ jmp .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .wmcommand:
-cmp PARM_WPARAM,IDB_MR_OK
+cmp r8w,IDB_MR_OK     ; CMP PARM_WPARAM,IDB_MR_OK
 jne .processed
 
 ;------------------------------------------------------------------------------;
@@ -102,7 +98,7 @@ mov rcx,rbx
 call [GetWindowRect]
 ;---------- Close run window --------------------------------------------------;
 mov edx,1                ; RDX = Parm#2 = Result for return
-mov rcx,PARM_HWNDDLG     ; RCX = Parm#1 = Window handle
+mov rcx,rbx              ; RCX = Parm#1 = Window handle = PARM_HWNDDLG
 call [EndDialog]
 ;---------- Exit points -------------------------------------------------------;
 .processed:

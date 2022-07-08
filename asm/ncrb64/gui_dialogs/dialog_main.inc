@@ -17,9 +17,6 @@ mov rbp,rsp
 and rsp,0FFFFFFFFFFFFFFF0h           ; Stack alignment
 sub rsp,32                           ; Make parameters shadow for next calls
 mov PARM_HWNDDLG,rcx                 ; Save input parameters to shadow 
-mov PARM_MSG,rdx
-mov PARM_WPARAM,r8
-mov PARM_LPARAM,r9
 lea r15,[APP_DATA]                   ; R15 = Pointer to application data struc. 
 lea rbx,[r15 + APPDATA.tabCtrlItem]  ; RBX = Pointer to tab item structure
 lea rsi,[r15 + APPDATA.hTabDlg]      ; RSI = Pointer to sheets handles array
@@ -195,8 +192,8 @@ jmp .processed
 ;------------------------------------------------------------------------------;
 .wmcommand:
 ;---------- Detect click "About" item in the main menu ------------------------;
-mov eax,LOW_WPARAM
-cmp ax,IDM_ABOUT
+xchg eax,r8d
+cmp ax,IDM_ABOUT            ; CMP AX,LOW_WPARAM
 jne .noabout
 ;---------- "About" message box and wait user input ---------------------------;
 xor eax,eax                 ; RAX=0 for compact push 0, first push = alignment
@@ -211,7 +208,7 @@ add rsp,32 + 16
 jmp .processed
 ;---------- Detect click "Save report" item in the main menu ------------------; 
 .noabout:
-cmp ax,IDM_SAVE_REPORT       ; "Save report" item at root menu 
+cmp ax,IDM_SAVE_REPORT      ; "Save report" item at root menu 
 jne .noSaveReport
 call ScenarioSaveReport
 jmp .processed
@@ -228,9 +225,9 @@ jmp .processed
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 .tabproc:
-cmp LOW_WPARAM,IDC_TAB
+cmp  r8d,IDC_TAB                  ; CMP LOW_WPARAM,IDC_TAB
 jne .skip
-mov rax,PARM_LPARAM
+mov rax,r9                        ; RAX = PARM_LPARAM
 cmp [rax + NMHDR.code],TCN_SELCHANGE
 jne .skip                         ; Skip if other event, no sheet change
 mov eax,[r15 + APPDATA.selectedTab]

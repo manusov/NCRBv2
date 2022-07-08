@@ -51,12 +51,12 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.3.1.0'
+RESOURCE_VERSION        EQU '2.3.2.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.03.01 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.03.02 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -294,7 +294,6 @@ jnz @b
 mov edi,DRAW_TSC
 mov ax,STR_MD_TSC_CLOCK_MHZ
 call PoolStringWrite
-
 ;---------- Load configuration file ncrb.inf ----------------------------------; 
 ; EBX = Pointer to application data, not change 
 ; EDI = Pointer to application buffers structure
@@ -331,12 +330,9 @@ add edx,ecx
 call ParseInf  ; Parse configuration file NCRB.INF, assign option fields values
 ;---------- Analusing parsing errors ------------------------------------------;
 test eax,eax
-jnz .scanInf
-mov ax,STR_INF_FILE_BAD
-jmp .errorInfBad
+jz .errorInfBad
 ;---------- Analusing parsing results at options fields -----------------------;
-.scanInf:
-mov ecx,CONFIG_VALUES_COUNT
+mov ecx,CONFIG_VALUES_COUNT_SCALE
 mov edx,CONFIG_VALUES
 @@:
 cmp dword [edx],0
@@ -347,12 +343,32 @@ jmp .skipInf
 ;---------- Verify options fields values after parsing NCRB.INF ---------------; 
 ; lea rcx,[CONFIG_VALUES]
 ; ... UNDER CONSTRUCTION ...
-;---------- Show errors after loading or parsing NCRB.INF ---------------------;
+;---------- Show error if NCRB.INF file too big -------------------------------;
 .errorInfBig:
 mov ax,STR_INF_FILE_BIG
-.errorInfBad:
+jmp .errorInfId
+;---------- Get errors details after loading or parsing NCRB.INF --------------;
+.errorInfBad: 
+mov esi,APP_BUFFERS.statusLoadInf_1
+mov ecx,[esi + 00]
+mov edx,[esi + 04]
+mov edi,[esi + 08]
+mov esi,ecx
+or esi,edx
+or esi,edi
+jz .errorInfSimple
+xchg eax,edi 
+mov edi,TEMP_BUFFER
+mov esi,edi
+call ErrorInf
+jmp .errorInfReady
+.errorInfSimple:             ; Here AX = String ID for error message 
+mov ax,STR_INF_FILE_BAD
+.errorInfId:
 mov esi,[APP_DATA.lockedStrings]
 call IndexString
+;---------- Show error message box --------------------------------------------;
+.errorInfReady:         ; RSI = Pointer to buffer with error string
 push MB_ICONERROR       ; Parm#4 = Message box icon type
 push PROGRAM_NAME       ; Parm#3 = Pointer to caption
 push esi                ; Parm#2 = Pointer to string
@@ -379,15 +395,47 @@ call [MessageBoxA]
 .skipInf:
 pop edi
 mov [edi + APPBUFFERS.pointerSysInfo],ebp
-
 ;---------- Get system information, user mode routines ------------------------;
 call SystemInfo
 jc .errorPlatform
-;---------- Load kernel mode driver kmd32.sys (Win32) or kmd64.sys (Win64) ----;
-; TODO.
-; call LoadKernelModeDriver
-; call TryKernelModeDriver
-; call UnloadKernelModeDriver
+;--- Detect option for Load kernel mode driver --------------------------------;
+; Driver file is kmd32.sys (Win32) or kmd64.sys (Win64, WoW64 mode).
+cmp [CONFIG_VALUES.optionLoadKmd],0
+je .skipLoadKmd 
+;---------- Try load kernel mode driver kmd32.sys or kmd64.sys ----------------;
+mov esi,APP_BUFFERS.statusLoadKmd_1
+mov edi,TEMP_BUFFER
+mov ecx,esi
+call LoadKernelModeDriver
+test eax,eax
+jnz .loadDone
+mov ecx,[esi + 00]
+mov edx,[esi + 04]
+mov eax,[esi + 08]
+call ErrorInf
+push MB_ICONERROR       ; Parm#4 = Message box icon type
+push PROGRAM_NAME       ; Parm#3 = Pointer to caption
+push edi                ; Parm#2 = Pointer to string
+push 0                  ; Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+.loadDone:
+;---------- Unload kernel mode driver kmd32.sys or kmd64.sys ------------------;
+mov ecx,esi
+call UnloadKernelModeDriver
+test eax,eax
+jnz .unloadDone
+mov ecx,[esi + 00]
+mov edx,[esi + 04]
+mov eax,[esi + 08]
+call ErrorInf
+push MB_ICONERROR       ; Parm#4 = Message box icon type
+push PROGRAM_NAME       ; Parm#3 = Pointer to caption
+push edi                ; Parm#2 = Pointer to string
+push 0                  ; Parm#1 = Parent window handle or 0
+call [MessageBoxA]
+.unloadDone:
+;---------- Point for skip try KMD operations ---------------------------------;
+.skipLoadKmd:
 ;---------- Check dynamical import results, show missing WinAPI warning -------;
 ; Application can start with this non-fatal warning.
 mov edi,TEMP_BUFFER
@@ -1762,6 +1810,7 @@ VECBR_OPB VECBROPB ?
 ;---------- Pointers to application buffers in the allocated block ------------;
 LOAD_INF_LIMIT = 32768
 struct APPBUFFERS
+; support INF
 pointerLoadInf   dd  ?     ; Pointer to buffer for NCRB.INF file load
 sizeLoadInf      dd  ?     ; Size of loaded file NCRB.INF
 handleLoadInf    dd  ?     ; Handle of loaded file NCRB.INF, but closed after read
@@ -1770,6 +1819,10 @@ statusLoadInf_2  dd  ?     ; Pointer to status string 2 if NCRB.INF parse error
 statusLoadInf_3  dd  ?     ; Win API error code if NCRB.INF parse error
 pointerSysInfo   dd  ?     ; Pointer to buffer for all system information collect
 sizeSysInfo      dd  ?     ; Size of this buffer, this field yet not used
+; support KMD
+statusLoadKmd_1  dd  ?     ; Pointer to status string 1 if KMD load/start error 
+statusLoadKmd_2  dd  ?     ; Pointer to status string 2 if KMD load/start error 
+statusLoadKmd_3  dd  ?     ; Win API error code KMD load/start error 
 ends
 APP_BUFFERS APPBUFFERS  ?
 ;---------- Key data for GUI application with resources -----------------------;  

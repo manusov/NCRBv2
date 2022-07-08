@@ -41,13 +41,13 @@ call Binder
 push [edi + APPDATA.createdIcons + VBRF_ICON_NUMBER * 4]
 push ICON_SMALL
 push WM_SETICON 
-push PARM_HWNDDLG
+push ebx              ; push PARM_HWNDDLG
 call [SendMessage]
 mov esi,[edi + APPDATA.lockedStrings]
 mov ax,STR_CHILD_VECTOR_BRIEF
 call IndexString
 push esi
-push PARM_HWNDDLG
+push ebx              ; push PARM_HWNDDLG
 call [SetWindowText]
 jmp .processed
 

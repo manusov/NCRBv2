@@ -49,10 +49,6 @@ push rbp rbx rsi rdi r15
 mov rbp,rsp
 and rsp,0FFFFFFFFFFFFFFF0h
 sub rsp,32
-mov PARM_HWNDDLG,rcx           ; Save input parameters to shadow 
-mov PARM_MSG,rdx
-mov PARM_WPARAM,r8
-mov PARM_LPARAM,r9
 lea r15,[APP_DATA]             ; R15 = Pointer to application data structure
 movzx esi,al                   ; ESI = Binder ID for this child window
 mov rbx,rcx                    ; RBX = This window handle

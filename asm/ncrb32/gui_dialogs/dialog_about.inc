@@ -58,12 +58,12 @@ mov esi,[APP_DATA.lockedStrings]
 mov ax,STR_AB_PROGRAM_INFO
 call IndexString
 push esi
-push PARM_HWNDDLG
+push ebx                       ; compact push instead PUSH PARM_HWNDDLG
 call [SetWindowText]           ; Window caption string
 push [APP_DATA.hIcon]          ; Parm#4 = lParam = Icon handle
 push ICON_SMALL                ; Parm#3 = wParam = Set small icon message
 push WM_SETICON                ; Parm#2 = Msg 
-push PARM_HWNDDLG              ; Parm#1 = hWnd
+push ebx                       ; Parm#1 = hWnd , push PARM_HWNDDLG
 call [SendMessage]
 push IDC_HAND                  ; Parm#2 = Cursor name, here constant
 push 0                         ; Parm#1 = hInstance, here not used
@@ -100,7 +100,7 @@ push ecx                       ; Parm#1 = Object handle
 call [DeleteObject]
 @@:
 push 0                         ; Parm#2 = nResult, value for return
-push PARM_HWNDDLG              ; Parm#1 = Window handle
+push ebx                       ; Parm#1 = Window handle , push PARM_HWNDDLG
 call [EndDialog]
 jmp .statusZero
 

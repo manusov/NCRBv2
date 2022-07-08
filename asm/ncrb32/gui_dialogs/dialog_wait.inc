@@ -47,7 +47,7 @@ mov esi,[APP_DATA.lockedStrings]
 mov ax,STR_PW_RUNNING
 call IndexString
 push esi                   ; Parm#2 = Pointer to text string
-push PARM_HWNDDLG          ; Parm#1 = Window handle
+push ebx                   ; Parm#1 = Window handle , push PARM_HWNDDLG
 call [SetWindowText]       ; Set main window text title
 ;---------- Create font -------------------------------------------------------;
 xor eax,eax                ; EAX = 0 for compact push 0
@@ -82,7 +82,7 @@ jecxz @f
 push ecx                       ; Parm#1 = Object handle
 call [DeleteObject]
 @@:
-push PARM_HWNDDLG              ; Parm#1 = Window handle
+push ebx                       ; Parm#1 = Window handle , push PARM_HWNDDLG 
 call [DestroyWindow]
 jmp .statusZero
 

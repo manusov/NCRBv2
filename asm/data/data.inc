@@ -964,15 +964,25 @@ STR_NAME_KMD32         = STR_REPORT_DEF_EXT + 1
 STR_NAME_KMD64         = STR_NAME_KMD32 + 1
 STR_DRV_NAME           = STR_NAME_KMD32 + 2
 STR_DRV_DEVICE         = STR_NAME_KMD32 + 3
+STR_DRV_ERROR_LOAD     = STR_NAME_KMD32 + 4
+STR_DRV_ERROR_UNLOAD   = STR_NAME_KMD32 + 5
+STR_DRV_ERROR_ACCESS   = STR_NAME_KMD32 + 6 
+STR_DRE_GET_PATH       = STR_NAME_KMD32 + 7
+STR_DRE_OPEN_SERVICE   = STR_NAME_KMD32 + 8
+STR_DRE_CREATE_SERVICE = STR_NAME_KMD32 + 9
+STR_DRE_GET_STATUS     = STR_NAME_KMD32 + 10
+STR_DRE_START_SERVICE  = STR_NAME_KMD32 + 11
+STR_DRE_CREATE_DEVICE  = STR_NAME_KMD32 + 12
 ;---------- Strings for CPU vendors detection ---------------------------------;
-STR_SIGN_INTEL         = STR_DRV_DEVICE + 1 
+STR_SIGN_INTEL         = STR_DRE_CREATE_DEVICE + 1 
 STR_SIGN_AMD           = STR_SIGN_INTEL + 1
-;---------- Strings for Configuration INF file support ------------------------;
+;---------- Strings for Configuration INF file support and OS errors ----------;
 STR_INF_TITLE          = STR_SIGN_AMD + 1 
 STR_INF_UNKNOWN_OPTION = STR_INF_TITLE + 1 
 STR_INF_BAD_OPTION     = STR_INF_TITLE + 2 
 STR_INF_FILE_BIG       = STR_INF_TITLE + 3
-STR_INF_FILE_BAD       = STR_INF_TITLE + 4  
+STR_INF_FILE_BAD       = STR_INF_TITLE + 4
+STR_OS_ERROR           = STR_INF_TITLE + 5   
 ;---------- Binders numbers for GUI scripts -----------------------------------;
 ; This binders for build GUI objects (widgets) by data from buffer (bindlist).
 BINDER_BUILD_SYSINFO       = 0   
@@ -1450,7 +1460,8 @@ DD  x3 - OpDesc    ; Pointer to option single word short name string, for detect
 }
 
 ;--- Structure with configuration variables, located at executable file -------;
-CONFIG_VALUES_COUNT = 12
+CONFIG_VALUES_COUNT_SCALE = 12
+CONFIG_VALUES_COUNT_ALL = 13
 struct CONFIGVALUES
 optionMbpsL1       dd  ?  ; Use this offset for 6 bandwidth values, f(object)
 optionMbpsL2       dd  ?
@@ -1464,6 +1475,7 @@ optionNsL3         dd  ?
 optionNsL4         dd  ?
 optionNsDram       dd  ?
 optionNsCustom     dd  ?
+optionLoadKmd      dd  ?  ; Enable try load kernel mode driver
 ends
 
 ;---------- Common definitions for parse configuration INF file routines ------;

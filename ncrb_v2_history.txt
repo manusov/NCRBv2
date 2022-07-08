@@ -1,3 +1,9 @@
+08.07.2022. v2.03.02. Changes for x64 and ia32 versions.
+1) Optimized dialogues callback routines.
+2) Improved error reporting details after parsing INF file.
+3) Added undocumented kernel mode driver load option.
+
+
 29.06.2022. v2.03.01. Changes for ia32 version.
 Fixed bug with differrentiate erros for runtime errors reporting.
 Corrected messages about memory allocation errors and timings measurement errors.

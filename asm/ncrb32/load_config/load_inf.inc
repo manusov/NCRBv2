@@ -10,6 +10,7 @@
 ;              this variable is size limit for this buffer                     ;   
 ;                                                                              ;
 ; OUTPUT: EAX = OS API last operation status code                              ;
+;               0 = Error , non zero means no errors                           ;
 ;         Variable file handle at [input EDX] = updated by file open           ;
 ;         Variable file size at [input EDI] = Read size, 0 if error            ;
 ;------------------------------------------------------------------------------;

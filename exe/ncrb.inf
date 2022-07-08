@@ -1,22 +1,42 @@
 ; NCRB (NUMA CPU and RAM benchmarks) configuration file.
 
-; Y-scale division value for megabytes per second (mbps) and ns (nanoseconds).
+; Y-scale division values for megabytes per second (mbps) and ns (nanoseconds).
 ; For L1/L2/L3/L4/DRAM/Custom, for mbps and latency.
+; -----------------------------------------------------------------------------
 ; mbps1 = 500000
 ; mbps2 = 500000
 ; mbps3 = 100000
 ; mbps4 = 100000
 ; mbpsd = 60000
 ; mbpsc = 60000
-; ns1   = 2
+; ns1   = 20
 ; ns2   = 3
 ; ns3   = 10
 ; ns4   = 12
 ; nsd   = 15
-; nsc   = 15
+; nsc   = 30
+
+
+; Kernel mode driver options: load enable and dumps in the "kernel mode" list.
+; Reserved options, under construction.
+; -----------------------------------------------------------------------------
+
+; loadkmd    = on
+
+; Reserved
+; kernelmode = on    ; Enable kernel mode driver service control program support.
+; loadkmd    = on    ; Enable pre-load driver, if off can load manually at KMD screen.
+; pmc        = off   ; Performance monitoring counters dump for all CPUs.
+; msr        = off   ; CPU MSR registers dump  for all CPUs.
+; pci        = off   ; PCI configuration space dump.
+; mcfg       = off   ; Memory-mapped PCI configuration space dump.
+; spd        = off   ; Serial presence detect dump.
+; clk        = off   ; Clock generator registers dump.
+; ... 
 
 
 ; Reserved options, under construction.
+; -----------------------------------------------------------------------------
 ; os         = on    ; Enable operating system detail info.
 ; nativeos   = on    ; Enable native operating system detail info, if run NCRB32 under Win64.
 ; topology   = on    ; Enable platform topology detail info by WinAPI.
@@ -26,5 +46,5 @@
 ; smbios     = on    ; Enable SMBIOS structures list by WinAPI.
 ; acpi       = on    ; Enable ACPI tables list by WinAPI.
 ; affcpuid   = on    ; Enable affinized CPUID dump.
-; kernelmode = on    ; Enable kernel mode driver service control program support.
-; loadkmd    = off   ; Enable pre-load kernel mode driver, or can load manually at KMD screen.
+
+

@@ -46,13 +46,13 @@ call Binder
 push [edi + APPDATA.createdIcons + MEMORY_ICON_NUMBER * 4]
 push ICON_SMALL
 push WM_SETICON 
-push PARM_HWNDDLG
+push ebx             ; push PARM_HWNDDLG
 call [SendMessage]
 mov esi,[edi + APPDATA.lockedStrings]
 mov ax,STR_CHILD_MEM_REPORT
 call IndexString
 push esi
-push PARM_HWNDDLG
+push ebx             ; push PARM_HWNDDLG
 call [SetWindowText]
 ;---------- Set run test window coordinates if previously saved ---------------;
 mov edx,[SAVE_RUN_POS.top]
