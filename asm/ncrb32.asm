@@ -51,12 +51,12 @@ include 'win32a.inc'               ; FASM definitions
 include 'data\data.inc'            ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.3.2.0'
+RESOURCE_VERSION        EQU '2.4.3.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.03.02 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.03 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100      ; This application icon
@@ -1620,6 +1620,13 @@ NUMA_NO_CONTROL     =  1
 NUMA_CURRENT_ONLY   =  2
 NUMA_OPTIMAL        =  3
 NUMA_NON_OPTIMAL    =  4    
+; Hybrid CPU topology
+HYBRID_LIMIT         = 4
+HYBRID_NOT_SUPPORTED = 0
+HYBRID_NOT_CONTROL   = 1
+HYBRID_P_PLUS_E      = 2
+HYBRID_P_ONLY        = 3
+HYBRID_E_ONLY        = 4
 ; LP = Large Pages
 LP_LIMIT            =  2
 LP_NOT_SUPPORTED    =  0
@@ -1717,6 +1724,7 @@ optionParallel    dd  ?    ; Parallel { GRAY_NOT_SUP, DISABLED, ENABLED }
 optionHT          dd  ?    ; HT { GRAY_NOT_SUP, DISABLED, ENABLED }
 optionPG          dd  ?    ; PG { GRAY_NOT_SUP, DISABLED, ENABLED } 
 optionNUMA        dd  ?    ; NUMA { GRAY_NOT_SUP, UNAWARE, SINGLE_DOMAIN, FORCE LOCAL, FORCE REMOTE }
+optionHybrid      dd  ?    ; Hybrid CPU ( GRAY_NOT_SUP, UNAWARE, P_PLUS_E, P_ONLY, E_ONLY ) 
 optionLP          dd  ?    ; LP { GRAY_NOT_SUP, DISABLED, ENABLED }  
 optionMeasure     dd  ?    ; Measurement repeats { 0=fast, 1=slow, 2=fast adaptive, 3=slow adaptive }
 optionApprox      dd  ?    ; Approximation for X { 0=none, 1=X16, 2=X32 }
@@ -1738,6 +1746,7 @@ updatedThreads    dd  ?    ; Number of threads, set after detect features
 updatedHT         dd  ?    ; 0=Not sup. by platform, 1=sup. but not used, 2=used
 updatedPG         dd  ?    ; 0=Not sup. by platform, 1=sup. but not used, 2=used 
 updatedNUMA       dd  ?    ; 0=None, 1=No control, 2-Single domain, 3=Optimal, 4=Non optim. 
+updatedHybrid     dd  ?    ; 0=None, 1=No control, 2=All cores (P+E), 3=P only, 4=E only
 updatedLP         dd  ?    ; 0=Not sup. by platform, 1=sup. but not used, 2=used
 updatedMeasure    dd  ?    ; 0=fast, 1=slow, 2=fast adaptive, 3=slow adaptive
 updatedApprox     dd  ?    ; Approximation for X { 0=none, 1=X16, 2=X32 }  
@@ -1910,8 +1919,25 @@ ends
 struct SYSPARMS
 applicationMode   dd  ?    ; 0 = ia32 under Win32, 1 = x64, 2 = ia32 under Win64
 sseSupported      dd  ?    ; Separate flag for save/restore SSE registers at child thread, 0=No, 1=Yes
-summaryCache      SUMMARYCACHE
+hybridMode        dd  ?    ; 0 = not a hybrid platform, 1 = hybrid platform
+; Next cache and topology description fields Location must be sequental, because
+; calculations used: offset = sizeof.SUMMARYCACHE + sizeof.SUMMARYTOPOLOGY
+; when addressing same types fields for Summary / PCores / ECores structures.
+summaryCache      SUMMARYCACHE      ; start of sequental block, 6 structures
 summaryTopology   SUMMARYTOPOLOGY
+perfCoreCache     SUMMARYCACHE
+perfCoreTopology  SUMMARYTOPOLOGY
+effCoreCache      SUMMARYCACHE
+effCoreTopology   SUMMARYTOPOLOGY   ; end of sequental block, 6 structures
+; Affinity masks for hybrid P and E cores as single bit vector.  Note platforms with
+; simultaneously exists processor group and hybrid topology not supported yet.
+perfCoreAffinity  dd  ?
+effCoreAffinity   dd  ?
+; This flags must be sequental for base-index access
+htAll             db  ?    ; start of sequental block, 4 bytes
+htPcores          db  ?
+htEcores          db  ?
+htReserved        db  ?    ; end of sequental block, 4 bytes
 ends
 SYS_PARMS SYSPARMS ?
 ;---------- Processor detection results by CPUID and RDTSC --------------------;
@@ -2180,7 +2206,7 @@ DYNA_PTR DYNAPTR ?
 FILE_PATH_BUFFER  = TEMP_BUFFER
 FILE_PATH_MAXIMUM = 4096
 FILE_WORK_BUFFER  = TEMP_BUFFER + FILE_PATH_MAXIMUM
-FILE_WORK_MAXIMUM = 131072
+FILE_WORK_MAXIMUM = 262144
 REPORT_TEXT_COUNT = 12
 ERROR_FILE_EXISTS = 050h
 align 8

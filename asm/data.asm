@@ -53,7 +53,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.3.2.0'
+RESOURCE_VERSION      EQU  '2.4.3.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -155,15 +155,15 @@ dialogitem  'STATIC'      , '', IDC_SYSINFO_SRAT_2  , 100, 128,  44,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_SYSINFO_SRAT_3  , 146, 128,  85,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_SRAT_4  , 233, 128, 169,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_L1C     ,   1, 146,  45,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
-dialogitem  'STATIC'      , '', IDC_SYSINFO_L1C_V   ,  48, 146, 105,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_L1C_V   ,  48, 146, 110,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_L1D     ,   1, 160,  45,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
-dialogitem  'STATIC'      , '', IDC_SYSINFO_L1D_V   ,  48, 160, 105,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_L1D_V   ,  48, 160, 110,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_L2U     ,   1, 174,  45,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
-dialogitem  'STATIC'      , '', IDC_SYSINFO_L2U_V   ,  48, 174, 105,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_L2U_V   ,  48, 174, 110,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_L3U     ,   1, 188,  45,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
-dialogitem  'STATIC'      , '', IDC_SYSINFO_L3U_V   ,  48, 188, 105,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_L3U_V   ,  48, 188, 110,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_L4U     ,   1, 202,  45,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
-dialogitem  'STATIC'      , '', IDC_SYSINFO_L4U_V   ,  48, 202, 105,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_L4U_V   ,  48, 202, 110,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_THREADS , 170, 146,  38,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_THR_V   , 210, 146,  29,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_CORES   , 250, 146,  38,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
@@ -178,6 +178,10 @@ dialogitem  'STATIC'      , '', IDC_SYSINFO_PCUR    , 170, 174, 118,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_SYSINFO_PCUR_V  , 290, 174,  29,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_NUMA    , 170, 188, 118,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_NUMA_V  , 290, 188,  29,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_PCORES  , 330, 174,  38,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE  
+dialogitem  'STATIC'      , '', IDC_SYSINFO_PCOR_V  , 370, 174,  32,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_ECORES  , 330, 188,  38,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
+dialogitem  'STATIC'      , '', IDC_SYSINFO_ECOR_V  , 370, 188,  32,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_NUMA_M  , 170, 202, 232,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_MEM     ,   1, 217,  79,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
 dialogitem  'STATIC'      , '', IDC_SYSINFO_MEM_V   ,  82, 217,  54,  10, WS_VISIBLE + SS_SUNKEN + SS_CENTER + SS_CENTERIMAGE
@@ -193,11 +197,12 @@ enddialog
 dialog      tabMemory     , '',                         2,  30, 403, 253, WS_CHILD + WS_VISIBLE, 0, 0, 'Verdana', 10
 dialogitem  'STATIC'      , '', IDC_MEMORY          ,   2,   3, 380,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_1  ,   1,  17, 402,  90, WS_VISIBLE + SS_ETCHEDFRAME
-dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_2  ,   1, 109, 402,  55, WS_VISIBLE + SS_ETCHEDFRAME
-dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_3  ,   1, 166,  75,  82, WS_VISIBLE + SS_ETCHEDFRAME
-dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_4  ,  78, 166,  75,  82, WS_VISIBLE + SS_ETCHEDFRAME
-dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_5  , 155, 166,  87,  82, WS_VISIBLE + SS_ETCHEDFRAME
-dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_6  , 244, 166, 159,  65, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_2  ,   1, 109, 314,  55, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_3  , 317, 109,  86,  55, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_4  ,   1, 166,  79,  82, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_5  ,  82, 166,  79,  82, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_6  , 163, 166,  79,  82, WS_VISIBLE + SS_ETCHEDFRAME
+dialogitem  'STATIC'      , '', IDC_MEMORY_FRAME_7  , 244, 166, 159,  65, WS_VISIBLE + SS_ETCHEDFRAME
 dialogitem  'BUTTON'      , '', IDB_MEMORY_ASM_A0   ,   5,  19, 130,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_ASM_A1   ,   5,  28, 130,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_ASM_A2   ,   5,  37, 130,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
@@ -241,13 +246,12 @@ dialogitem  'EDIT'        , '', IDE_MEMORY_G_SIZE   , 147, 137,  77,  10, WS_VIS
 dialogitem  'EDIT'        , '', IDE_MEMORY_M_START  , 147, 149,  77,  10, WS_VISIBLE + WS_CHILD + WS_BORDER + WS_TABSTOP + ES_AUTOHSCROLL + WS_DISABLED
 dialogitem  'EDIT'        , '', IDE_MEMORY_M_STOP   , 231, 149,  77,  10, WS_VISIBLE + WS_CHILD + WS_BORDER + WS_TABSTOP + ES_AUTOHSCROLL + WS_DISABLED
 dialogitem  'STATIC'      , '', IDC_MEMORY_M_HYPHEN , 226, 150,   5,  10, WS_VISIBLE
-dialogitem  'COMBOBOX'    , '', IDC_MEMORY_COMBO_F  , 231, 113,  85,  10, WS_VISIBLE + CBS_DROPDOWNLIST + CBS_HASSTRINGS + WS_VSCROLL + WS_DISABLED 
-dialogitem  'COMBOBOX'    , '', IDC_MEMORY_COMBO_F  , 231, 128,  85,  10, WS_VISIBLE + CBS_DROPDOWNLIST + CBS_HASSTRINGS + WS_VSCROLL + WS_DISABLED
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MTRR_WB  , 327, 114,  68,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP 
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MTRR_WT  , 327, 123,  68,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MTRR_WC  , 327, 132,  68,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MTRR_WP  , 327, 141,  68,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MTRR_UC  , 327, 150,  68,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'COMBOBOX'    , '', IDC_MEMORY_COMBO_F  , 231, 113,  77,  10, WS_VISIBLE + CBS_DROPDOWNLIST + CBS_HASSTRINGS + WS_VSCROLL + WS_DISABLED 
+dialogitem  'COMBOBOX'    , '', IDC_MEMORY_COMBO_F  , 231, 128,  77,  10, WS_VISIBLE + CBS_DROPDOWNLIST + CBS_HASSTRINGS + WS_VSCROLL + WS_DISABLED
+dialogitem  'BUTTON'      , '', IDB_HYBRID_UNAWARE  , 321, 114,  76,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP 
+dialogitem  'BUTTON'      , '', IDB_HYBRID_P_PLUS_E , 321, 123,  76,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_HYBRID_PERF     , 321, 132,  76,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_HYBRID_EFF      , 321, 141,  76,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_PARALLEL ,   5, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_HT       ,   5, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_PG       ,   5, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
@@ -255,19 +259,19 @@ dialogitem  'BUTTON'      , '', IDB_MEMORY_NUMA_U   ,   5, 205,  70,   9, WS_VIS
 dialogitem  'BUTTON'      , '', IDB_MEMORY_NUMA_S   ,   5, 214,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_NUMA_O   ,   5, 223,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
 dialogitem  'BUTTON'      , '', IDB_MEMORY_NUMA_N   ,   5, 232,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_NORMAL   ,  82, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_63    ,  82, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_4095  ,  82, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_CSTM  ,  82, 196,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_NORMAL   ,  86, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_63    ,  86, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_4095  ,  86, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_SK_CSTM  ,  86, 196,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_LP       ,  86, 228,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
 dialogitem  'EDIT'        , '', IDE_MEMORY_SK_SIZE  , 100, 208,  43,  10, WS_VISIBLE + WS_CHILD + WS_BORDER + WS_TABSTOP + ES_AUTOHSCROLL + WS_DISABLED
-dialogitem  'BUTTON'      , '', IDB_MEMORY_LP       ,  82, 223,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTOCHECKBOX + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_NO_PF    , 159, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_DEF_PF   , 159, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_MED_PF   , 159, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_LNG_PF   , 159, 196,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_BLK_PF   , 159, 205,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'BUTTON'      , '', IDB_MEMORY_CST_PF   , 159, 214,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
-dialogitem  'EDIT'        , '', IDE_MEMORY_PF_SIZE  , 177, 226,  43,  10, WS_VISIBLE + WS_CHILD + WS_BORDER + WS_TABSTOP + ES_AUTOHSCROLL + WS_DISABLED
+dialogitem  'BUTTON'      , '', IDB_MEMORY_NO_PF    , 167, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_DEF_PF   , 167, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_MED_PF   , 167, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_LNG_PF   , 167, 196,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_BLK_PF   , 167, 205,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'BUTTON'      , '', IDB_MEMORY_CST_PF   , 167, 214,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP
+dialogitem  'EDIT'        , '', IDE_MEMORY_PF_SIZE  , 181, 226,  43,  10, WS_VISIBLE + WS_CHILD + WS_BORDER + WS_TABSTOP + ES_AUTOHSCROLL + WS_DISABLED
 dialogitem  'BUTTON'      , '', IDB_MEMORY_BRF      , 248, 169,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP + WS_GROUP  
 dialogitem  'BUTTON'      , '', IDB_MEMORY_CRF      , 248, 178,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP 
 dialogitem  'BUTTON'      , '', IDB_MEMORY_BRF_A    , 248, 187,  70,   9, WS_VISIBLE + WS_CHILD + BS_AUTORADIOBUTTON + WS_TABSTOP 
@@ -370,22 +374,23 @@ dialogitem  'STATIC'      , '', IDC_MR_HYPER_THR    ,   7,  59,  75,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_MR_LARGE_PAGES  ,   7,  68,  75,  10, WS_VISIBLE 
 dialogitem  'STATIC'      , '', IDC_MR_NUMA         ,   7,  77,  75,  10, WS_VISIBLE 
 dialogitem  'STATIC'      , '', IDC_MR_P_GROUPS     ,   7,  86,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_TARGET_OBJ   ,   7,  95,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_PREF_DIST    ,   7, 104,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_SIZE_TOTAL   ,   7, 113,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_SIZE_PER_THR ,   7, 122,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEASURE_PROF ,   7, 131,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEASURE_REP  ,   7, 140,  75,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEMORY_ALLOC ,   7, 153, 380,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_BLOCK_1      ,   7, 166,  95,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_BLOCK_2      ,   7, 175,  95,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_ALL  ,   7, 184,  95,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_THR  ,   7, 193,  95,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEAS_RESULTS ,   7, 206, 380,  10, WS_VISIBLE  
-dialogitem  'STATIC'      , '', IDC_MR_DT_MS        ,   7, 219, 190,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_DTSC_SEC_MHZ ,   7, 228, 190,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_DTSC_INS_CLK ,   7, 237, 190,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_LAST         ,   7, 253,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_HYBRID       ,   7,  95,  75,  10, WS_VISIBLE   
+dialogitem  'STATIC'      , '', IDC_MR_TARGET_OBJ   ,   7, 104,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_PREF_DIST    ,   7, 113,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_SIZE_TOTAL   ,   7, 122,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_SIZE_PER_THR ,   7, 131,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEASURE_PROF ,   7, 140,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEASURE_REP  ,   7, 149,  75,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEMORY_ALLOC ,   7, 162, 380,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_BLOCK_1      ,   7, 175,  95,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_BLOCK_2      ,   7, 184,  95,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_ALL  ,   7, 193,  95,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_THR  ,   7, 202,  95,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEAS_RESULTS ,   7, 215, 380,  10, WS_VISIBLE  
+dialogitem  'STATIC'      , '', IDC_MR_DT_MS        ,   7, 228, 190,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_DTSC_SEC_MHZ ,   7, 237, 190,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_DTSC_INS_CLK ,   7, 246, 190,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_LAST         ,   7, 262,  75,  10, WS_VISIBLE 
 dialogitem  'STATIC'      , '', IDC_MR_APPLIC_V     ,  94,  23, 230,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MR_METHOD_V     ,  94,  32, 230,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MR_WIDTH_V      ,  94,  41, 230,  10, WS_VISIBLE
@@ -394,20 +399,21 @@ dialogitem  'STATIC'      , '', IDC_MR_HYPER_THR_V  ,  94,  59, 230,  10, WS_VIS
 dialogitem  'STATIC'      , '', IDC_MR_LARGE_PAG_V  ,  94,  68, 230,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MR_NUMA_V       ,  94,  77, 230,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MR_P_GROUPS_V   ,  94,  86, 230,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MR_TARGET_OBJ_V ,  94,  95, 230,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MR_PREF_DIST_V  ,  94, 104, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_SIZE_TOTAL_V ,  94, 113, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_SIZE_PER_T_V ,  94, 122, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEASURE_P_V  ,  94, 131, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEASURE_R_V  ,  94, 140, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_BLOCK_1_V    ,  94, 166, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_BLOCK_2_V    ,  94, 175, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_A_V  ,  94, 184, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_T_V  ,  94, 193, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_DT_MS_V      ,  94, 219, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_DTSC_SEC_M_V ,  94, 228, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_DTSC_INS_C_V ,  94, 237, 230,  10, WS_VISIBLE 
-dialogitem  'STATIC'      , '', IDC_MR_LAST_V       ,  94, 253, 230,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MR_HYBRID_V     ,  94,  95, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_TARGET_OBJ_V ,  94, 104, 230,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MR_PREF_DIST_V  ,  94, 113, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_SIZE_TOTAL_V ,  94, 122, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_SIZE_PER_T_V ,  94, 131, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEASURE_P_V  ,  94, 140, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEASURE_R_V  ,  94, 149, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_BLOCK_1_V    ,  94, 175, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_BLOCK_2_V    ,  94, 184, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_A_V  ,  94, 193, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_MEM_ALC_T_V  ,  94, 202, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_DT_MS_V      ,  94, 228, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_DTSC_SEC_M_V ,  94, 237, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_DTSC_INS_C_V ,  94, 246, 230,  10, WS_VISIBLE 
+dialogitem  'STATIC'      , '', IDC_MR_LAST_V       ,  94, 262, 230,  10, WS_VISIBLE
 dialogitem  'BUTTON'      , '', IDB_MR_OK           , 283, 267,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog
 ;---------- Child window = memory and cache benchmark run, draw chart ---------;
@@ -415,10 +421,10 @@ dialog      childMemoryDraw,   '',                     28,  10, 387, 278, WS_CAP
 dialogitem  'STATIC'      , '', IDC_MD_ASM          ,   5, 257, 250,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_PREFETCH     , 230, 257,  50,  10, WS_VISIBLE
 dialogitem  'STATIC'      , '', IDC_MD_OBJECT       ,   5, 265,  50,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MD_THREADS      ,  56, 265,  50,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MD_REPEATS      , 111, 265,  60,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MD_PAGES        , 180, 265,  50,  10, WS_VISIBLE
-dialogitem  'STATIC'      , '', IDC_MD_NUMA         , 230, 265,  50,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MD_THREADS      ,  56, 265,  75,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MD_REPEATS      , 129, 265,  60,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MD_PAGES        , 195, 265,  50,  10, WS_VISIBLE
+dialogitem  'STATIC'      , '', IDC_MD_NUMA         , 245, 265,  50,  10, WS_VISIBLE
 dialogitem  'BUTTON'      , '', IDB_MD_REFRESH      , 305, 260,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 dialogitem  'BUTTON'      , '', IDB_MD_CANCEL       , 344, 260,  38,  13, WS_VISIBLE + BS_DEFPUSHBUTTON + BS_FLAT
 enddialog
@@ -627,6 +633,8 @@ DB  'OS processors total'            , 0
 DB  'Groups'                         , 0
 DB  'OS processors in current group' , 0
 DB  'OS NUMA nodes'                  , 0
+DB  'P-Cores'                        , 0
+DB  'E-Cores'                        , 0
 ;---------- Memory information by WinAPI --------------------------------------;
 DB  'OS physical memory'   , 0
 DB  'Available'            , 0
@@ -711,12 +719,11 @@ DB  'Memory mapped file size'  , 0
 DB  'GPU memory block size'    , 0
 DB  'Physical map start-stop'  , 0
 DB  'Custom block'             , 0   ; This for Draw screen  
-;---------- Memory status names -----------------------------------------------;
-DB  'Write back'               , 0
-DB  'Write through'            , 0
-DB  'Write combining'          , 0
-DB  'Write protected'          , 0
-DB  'Uncacheable'              , 0
+;---------- Hybrid cores names ------------------------------------------------;
+DB  'Hybrid unaware'           , 0
+DB  'All (P+E) cores'          , 0
+DB  'Performance cores'        , 0
+DB  'Efficient cores'          , 0
 ;---------- Memory access and platform topology options names -----------------;
 DB  'Parallel threads'         , 0
 DB  'Hyper-threading'          , 0
@@ -788,6 +795,7 @@ DB  ' Parameter                     | Value                      | Hex'   , 0
 DB  ' Parameter                     | Value'                              , 0
 DB  ' Topology unit  | Logical CPU affinity | Comments'                   , 0
 DB  ' Cache          | Size                 | Count'                      , 0
+DB  ' Cache          | Size                 | Count       | Hybrid'       , 0
 DB  ' NUMA domain  | Affinity (hex)           | Available memory at node' , 0
 DB  ' Group  | Processors count'                                          , 0
 DB  ' Offset(h) | Type | Length | Details'                                , 0 
@@ -836,6 +844,7 @@ DB  'ways='        , 0
 DB  'line='        , 0
 DB  'size='        , 0
 DB  'x '           , 0
+DB  '+ '           , 0
 ;---------- Strings for extended topology information text --------------------;
 DB  'Processor group' , 0
 DB  'efficiency='     , 0
@@ -859,6 +868,7 @@ DB  'hyper-threading'         , 0
 DB  'large pages'             , 0
 DB  'NUMA optimization'       , 0
 DB  'processor groups'        , 0
+DB  'hybrid cores'            , 0
 DB  'target object'           , 0
 DB  'prefetch distance'       , 0
 DB  'data size total'         , 0
@@ -893,6 +903,11 @@ DB  'force non-optimal (remote domains)'    , 0
 DB  'not supported'                         , 0   ; PG option strings
 DB  'no control (current group only)'       , 0
 DB  'force optimal (all groups)'            , 0  
+DB  'not supported'                         , 0   ; Hybrid topology option strings
+DB  'no control (under OS control)'         , 0
+DB  'all (P+E) cores'                       , 0
+DB  'P-Cores only'                          , 0
+DB  'E-Cores only'                          , 0
 DB  'not used by this test'                 , 0   ; Prefetch distance option strings
 DB  'default'                               , 0          
 DB  'medium'                                , 0
@@ -910,6 +925,11 @@ DB  'PD long'             , 0
 DB  'PD ?'                , 0
 DB  'Refresh'             , 0
 DB  'Threads='            , 0
+DB  ' '                   , 0  ; This for hybrid cores not available
+DB  ' (OS)'               , 0  ; This for hybrid cores not available
+DB  ' (P+E)'              , 0
+DB  ' (P)'                , 0
+DB  ' (E)'                , 0
 DB  ' '                   , 0  ; This for large pages not available
 DB  '4K pages'            , 0
 DB  'Large pages'         , 0
@@ -1109,6 +1129,8 @@ SET_STRING  STR_PROC_TOTAL       , IDC_SYSINFO_PTOT
 SET_STRING  STR_GRPS             , IDC_SYSINFO_GRP
 SET_STRING  STR_PROC_CUR         , IDC_SYSINFO_PCUR
 SET_STRING  STR_NUMA_NODES       , IDC_SYSINFO_NUMA
+SET_STRING  STR_P_CORES          , IDC_SYSINFO_PCORES 
+SET_STRING  STR_E_CORES          , IDC_SYSINFO_ECORES   
 SET_STRING  STR_OS_PHYSICAL      , IDC_SYSINFO_MEM
 SET_STRING  STR_OS_AVAILABLE     , IDC_SYSINFO_MEM_A
 SET_STRING  STR_OS_MIN_LARGE     , IDC_SYSINFO_LRPG
@@ -1204,6 +1226,13 @@ SET_INFO    BINDLIST.bindCache.l4u , IDC_SYSINFO_L4U_V
 SET_INFO    BINDLIST.bindTopology.threads , IDC_SYSINFO_THR_V
 SET_INFO    BINDLIST.bindTopology.cores   , IDC_SYSINFO_CORES_V
 SET_INFO    BINDLIST.bindTopology.sockets , IDC_SYSINFO_SOCK_V
+;---------- Cores information for hybrid CPU ----------------------------------;
+SET_BOOL    BINDLIST.bindTopology.hybridBitmap + 0 , 0 , IDC_SYSINFO_PCORES 
+SET_BOOL    BINDLIST.bindTopology.hybridBitmap + 0 , 0 , IDC_SYSINFO_PCOR_V
+SET_BOOL    BINDLIST.bindTopology.hybridBitmap + 0 , 1 , IDC_SYSINFO_ECORES 
+SET_BOOL    BINDLIST.bindTopology.hybridBitmap + 0 , 1 , IDC_SYSINFO_ECOR_V
+SET_INFO    BINDLIST.bindTopology.pCores               , IDC_SYSINFO_PCOR_V
+SET_INFO    BINDLIST.bindTopology.eCores               , IDC_SYSINFO_ECOR_V
 ;--- System info, processors, processor groups, NUMA, memory, large pahes -----;
 SET_INFO    BINDLIST.bindSys.procTotal   , IDC_SYSINFO_PTOT_V
 SET_INFO    BINDLIST.bindSys.groups      , IDC_SYSINFO_GRP_V
@@ -1249,11 +1278,10 @@ SET_STRING  STR_MEMORY_FILE      , IDB_MEMORY_FILE
 SET_STRING  STR_MEMORY_GPU       , IDB_MEMORY_GPU
 SET_STRING  STR_MEMORY_PHYSICAL  , IDB_MEMORY_PHYSICAL
 SET_STRING  STR_HYPHEN           , IDC_MEMORY_M_HYPHEN
-SET_STRING  STR_MEMORY_MTRR_WB   , IDB_MEMORY_MTRR_WB
-SET_STRING  STR_MEMORY_MTRR_WT   , IDB_MEMORY_MTRR_WT 
-SET_STRING  STR_MEMORY_MTRR_WC   , IDB_MEMORY_MTRR_WC 
-SET_STRING  STR_MEMORY_MTRR_WP   , IDB_MEMORY_MTRR_WP 
-SET_STRING  STR_MEMORY_MTRR_UC   , IDB_MEMORY_MTRR_UC 
+SET_STRING  STR_HYBRID_UNAWARE   , IDB_HYBRID_UNAWARE
+SET_STRING  STR_HYBRID_P_PLUS_E  , IDB_HYBRID_P_PLUS_E 
+SET_STRING  STR_HYBRID_PERF      , IDB_HYBRID_PERF 
+SET_STRING  STR_HYBRID_EFF       , IDB_HYBRID_EFF 
 SET_STRING  STR_PARALLEL_THREADS , IDB_MEMORY_PARALLEL 
 SET_STRING  STR_HYPER_THREADING  , IDB_MEMORY_HT 
 SET_STRING  STR_PROCESSOR_GROUPS , IDB_MEMORY_PG
@@ -1339,7 +1367,7 @@ SET_FONT    ID_FONT_2            , IDE_TOP_EX_TEXT_1
 SET_FONT    ID_FONT_2            , IDE_TOP_EX_UP_2
 SET_FONT    ID_FONT_2            , IDE_TOP_EX_TEXT_2
 SET_STRING  STR_TOPOLOGY         , IDE_TOP_EX_UP_1
-SET_STRING  STR_TOPOLOGY_SUMMARY , IDE_TOP_EX_UP_2
+SET_STRING  STR_TOPOLOGY_SUMM_EX , IDE_TOP_EX_UP_2
 SET_PTR     BINDLIST.viewEt      , IDE_TOP_EX_TEXT_1
 SET_PTR     BINDLIST.viewEtSum   , IDE_TOP_EX_TEXT_2
 SET_STRING  STR_REPORT           , IDB_TOPOL_EX_REPORT
@@ -1403,7 +1431,8 @@ SET_STRING  STR_MR_THREADS         , IDC_MR_THREADS
 SET_STRING  STR_MR_HYPER_THR       , IDC_MR_HYPER_THR 
 SET_STRING  STR_MR_LARGE_PAGES     , IDC_MR_LARGE_PAGES 
 SET_STRING  STR_MR_NUMA            , IDC_MR_NUMA 
-SET_STRING  STR_MR_P_GROUPS        , IDC_MR_P_GROUPS 
+SET_STRING  STR_MR_P_GROUPS        , IDC_MR_P_GROUPS
+SET_STRING  STR_MR_HYBRID          , IDC_MR_HYBRID 
 SET_STRING  STR_MR_TARGET_OBJ      , IDC_MR_TARGET_OBJ 
 SET_STRING  STR_MR_PREF_DIST       , IDC_MR_PREF_DIST 
 SET_STRING  STR_MR_SIZE_TOTAL      , IDC_MR_SIZE_TOTAL 
@@ -1427,6 +1456,7 @@ SET_INFO    BINDLIST.mrHyperT      , IDC_MR_HYPER_THR_V
 SET_INFO    BINDLIST.mrLargeP      , IDC_MR_LARGE_PAG_V
 SET_INFO    BINDLIST.mrNuma        , IDC_MR_NUMA_V
 SET_INFO    BINDLIST.mrGroups      , IDC_MR_P_GROUPS_V
+SET_INFO    BINDLIST.mrHybrid      , IDC_MR_HYBRID_V
 SET_INFO    BINDLIST.mrTarget      , IDC_MR_TARGET_OBJ_V
 SET_INFO    BINDLIST.mrDistance    , IDC_MR_PREF_DIST_V
 SET_INFO    BINDLIST.mrSizeTotal   , IDC_MR_SIZE_TOTAL_V
@@ -1625,11 +1655,10 @@ SET_SWITCH  BINDLIST.setMemObject + 1 , 2 , IDB_MEMORY_CUSTOM
 SET_SWITCH  BINDLIST.setMemObject + 1 , 4 , IDB_MEMORY_FILE
 SET_SWITCH  BINDLIST.setMemObject + 1 , 6 , IDB_MEMORY_GPU
 SET_SWITCH  BINDLIST.setMemObject + 2 , 0 , IDB_MEMORY_PHYSICAL
-SET_SWITCH  BINDLIST.setMemMtrr   + 0 , 0 , IDB_MEMORY_MTRR_WB
-SET_SWITCH  BINDLIST.setMemMtrr   + 0 , 2 , IDB_MEMORY_MTRR_WT
-SET_SWITCH  BINDLIST.setMemMtrr   + 0 , 4 , IDB_MEMORY_MTRR_WC
-SET_SWITCH  BINDLIST.setMemMtrr   + 0 , 6 , IDB_MEMORY_MTRR_WP
-SET_SWITCH  BINDLIST.setMemMtrr   + 1 , 0 , IDB_MEMORY_MTRR_UC
+SET_SWITCH  BINDLIST.setMemHybrid + 0 , 0 , IDB_HYBRID_UNAWARE
+SET_SWITCH  BINDLIST.setMemHybrid + 0 , 2 , IDB_HYBRID_P_PLUS_E
+SET_SWITCH  BINDLIST.setMemHybrid + 0 , 4 , IDB_HYBRID_PERF
+SET_SWITCH  BINDLIST.setMemHybrid + 0 , 6 , IDB_HYBRID_EFF
 SET_SWITCH  BINDLIST.setMemSmp    + 0 , 0 , IDB_MEMORY_PARALLEL  
 SET_SWITCH  BINDLIST.setMemSmp    + 0 , 2 , IDB_MEMORY_HT
 SET_SWITCH  BINDLIST.setMemSmp    + 0 , 4 , IDB_MEMORY_PG
@@ -1704,11 +1733,10 @@ GET_SWITCH  IDB_MEMORY_CUSTOM   , BINDLIST.getMemObject + 0 , 5
 GET_SWITCH  IDB_MEMORY_FILE     , BINDLIST.getMemObject + 0 , 6
 GET_SWITCH  IDB_MEMORY_GPU      , BINDLIST.getMemObject + 0 , 7
 GET_SWITCH  IDB_MEMORY_PHYSICAL , BINDLIST.getMemObject + 1 , 0
-GET_SWITCH  IDB_MEMORY_MTRR_WB  , BINDLIST.getMemMtrr   + 0 , 0 
-GET_SWITCH  IDB_MEMORY_MTRR_WT  , BINDLIST.getMemMtrr   + 0 , 1
-GET_SWITCH  IDB_MEMORY_MTRR_WC  , BINDLIST.getMemMtrr   + 0 , 2
-GET_SWITCH  IDB_MEMORY_MTRR_WP  , BINDLIST.getMemMtrr   + 0 , 3
-GET_SWITCH  IDB_MEMORY_MTRR_UC  , BINDLIST.getMemMtrr   + 0 , 4
+GET_SWITCH  IDB_HYBRID_UNAWARE  , BINDLIST.getMemHybrid + 0 , 0 
+GET_SWITCH  IDB_HYBRID_P_PLUS_E , BINDLIST.getMemHybrid + 0 , 1
+GET_SWITCH  IDB_HYBRID_PERF     , BINDLIST.getMemHybrid + 0 , 2
+GET_SWITCH  IDB_HYBRID_EFF      , BINDLIST.getMemHybrid + 0 , 3
 GET_SWITCH  IDB_MEMORY_PARALLEL , BINDLIST.getMemSmp    + 0 , 0  
 GET_SWITCH  IDB_MEMORY_HT       , BINDLIST.getMemSmp    + 0 , 1
 GET_SWITCH  IDB_MEMORY_PG       , BINDLIST.getMemSmp    + 0 , 2
@@ -2297,7 +2325,7 @@ DW  STR_FULL_NATIVE_OS   , STR_PARM_VALUE_HEX
 DW  STR_FULL_TOPOLOGY    , STR_TOPOLOGY
 DW  STR_FULL_TOPOLOGY    , STR_TOPOLOGY_SUMMARY
 DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY
-DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY_SUMMARY
+DW  STR_FULL_TOPOLOGY_EX , STR_TOPOLOGY_SUMM_EX
 DW  STR_FULL_NUMA        , STR_NUMA
 DW  STR_FULL_P_GROUPS    , STR_GROUPS
 DW  STR_FULL_SMBIOS      , STR_SMBIOS

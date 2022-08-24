@@ -48,6 +48,11 @@ length db 0
 handle dw 0
 ends
 
+;---------- Equations for structures addressing -------------------------------;
+
+OFFSET_P_CORES  equ  sizeof.SUMMARYCACHE + sizeof.SUMMARYTOPOLOGY  
+OFFSET_E_CORES  equ  ( OFFSET_P_CORES ) * 2    
+
 ;---------- Subroutines -------------------------------------------------------;
 
 include 'sysinfo.inc'

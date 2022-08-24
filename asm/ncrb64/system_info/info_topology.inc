@@ -53,13 +53,14 @@ jmp .exit
 ; OUTPUT:  RBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-TextTopology:
-;
+
 TEMP_THREADS   EQU  dword [rsp + 00 + 08]
 TEMP_CORES     EQU  dword [rsp + 04 + 08]
 TEMP_SOCKETS   EQU  dword [rsp + 08 + 08]
 TEMP_RESERVED  EQU  dword [rsp + 12 + 08]   
-;
+
+TextTopology:
+;---------- Build text block for topology screen, first block = objects list --;
 mov [DYNA_PTR.textTopology1.objectStart],rbp
 mov rsi,[DYNA_PTR.listTopology.objectStart]
 mov rcx,[DYNA_PTR.listTopology.objectStop]
@@ -344,7 +345,6 @@ mov eax,dword [rsi + rax]
 jmp ParameterEntry
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
-; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
 ;                                                                              ;
 ; INPUT:   RSI = Pointer to topology information buffer                        ;
 ;          RDI = Destination text buffer                                       ;
@@ -356,25 +356,70 @@ jmp ParameterEntry
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperCacheSummary:
-push rcx rsi rax
-test rcx,rcx
-jz .nodata
+push rcx rsi
+jecxz .nodata             ; Go skip if list empty
 movzx ebx,ah
 xchg edx,eax
-xor r8d,r8d
-xor r9d,r9d
-.scanCaches:
+xor r8d,r8d         ; R8D  = Cache size
+xor r9d,r9d         ; R9D  = Cache units count
+xor r10d,r10d       ; R10D = First variant of cache size for detect hybrid CPU
+;--- Scan topology list for cache object, this is first pass for hybrid CPU ---;
+push rcx rsi
+.scanCaches:              ; This cycle for count number cache units
 cmp dword [rsi + 08],2
-jne .done
+jne .done                 ; Go skip if descriptor type mismatch
 cmp byte [rsi + 16],dl
-jne .done
+jne .done                 ; Go skip if cache level mismatch
 cmp dword [rsi + 24],ebx
-jne .done
-mov r8d,[rsi + 20]
-inc r9d
+jne .done                 ; Go skip if cache type mismatch
+test r10d,r10d
+jz .store                 ; Go assign this cache size if yet not assigned
+cmp [rsi + 20],r10d
+jne .done                 ; Skip this cache size if differrent size (hybrid)
+.store:
+mov r8d,[rsi + 20]        ; R8D = cache size
+inc r9d                   ; R9D, cache units count + 1
+mov r10d,r8d
 .done:
 add rsi,32
-loop .scanCaches
+loop .scanCaches              ; This cycle for count number cache units
+call HelperCacheSummarySave
+pop rsi rcx
+;--- Scan topology list for cache object, this is second pass for hybrid CPU --;
+xor r8d,r8d         ; R8D  = Cache size
+xor r9d,r9d         ; R9D  = Cache units count
+.scanCachesHybrid:        ; This cycle for count number cache units
+cmp dword [rsi + 08],2
+jne .doneHybrid           ; Go skip if descriptor type mismatch
+cmp byte [rsi + 16],dl
+jne .doneHybrid           ; Go skip if cache level mismatch
+cmp dword [rsi + 24],ebx
+jne .doneHybrid           ; Go skip if cache type mismatch
+cmp [rsi + 20],r10d
+je .doneHybrid            ; Skip this cache size if previous same size (hybrid)
+mov r8d,[rsi + 20]        ; R8D = cache size
+inc r9d                   ; R9D, cache units count + 1
+.doneHybrid:
+add rsi,32
+loop .scanCachesHybrid        ; This cycle for count number cache units
+call HelperCacheSummarySave
+.nodata:
+pop rsi rcx
+ret
+
+;--- Helper for add cache to text report and update size and count variables --; 
+;                                                                              ; 
+; INPUT:   RDI  = Destination text buffer                                      ;
+;          DL   = Cache level                                                  ;
+;          BL   = Cache type code                                              ;
+;          R8   = Cache size value, if 0, operation skipped                    ;
+;          R9D  = Cache count value                                            ;
+;                                                                              ;
+; OUTPUT:  None                                                                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperCacheSummarySave:
+push rbx rdx r10
 test r8d,r8d
 jz .nodata
 mov bh,dl
@@ -407,14 +452,15 @@ mov eax,r9d                  ; R9D = Cache count for write size x count
 mov bl,0
 call DecimalPrint32
 pop rdi
-pop rax
-push rax
-call HelperSummaryCache
+mov al,[rsp + 08]
+mov ah,[rsp + 16] 
+call HelperCacheSummaryBinary
 .nodata:
-pop rax rsi rcx
+pop r10 rdx rbx
 ret
 
 ;--- Helper for write cache size and count variables by topology WinAPI -------;
+; 3 entry points: non-hybrid CPU, hybrid CPU P-Cores, hybrid CPU E-Cores       ;
 ;                                                                              ; 
 ; INPUT:   AX = Cache level and type code                                      ;
 ;          R8  = Cache size value                                              ;
@@ -423,8 +469,15 @@ ret
 ; OUTPUT:  None                                                                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-HelperSummaryCache:
+HelperCachePerfCoreBinary:             ; Entry point for hybrid P-Cores info
+lea rbx,[SYS_PARMS.perfCoreCache]
+jmp HelperCacheBinaryEntry
+HelperCacheEffCoreBinary:              ; Entry point for hybrid E-Cores info
+lea rbx,[SYS_PARMS.effCoreCache]
+jmp HelperCacheBinaryEntry
+HelperCacheSummaryBinary:              ; Entry point for non-hybrid
 lea rbx,[SYS_PARMS.summaryCache]
+HelperCacheBinaryEntry:
 lea rsi,[rbx + SUMMARYCACHE.sizeL1C]
 cmp ax,0101h
 je .detected 

@@ -146,6 +146,61 @@ pop ebx
 mov eax,1
 cmp [esi + MEMUPB.optionParallel],PARALLEL_USED
 jne .checkHT
+;---------- Support threads count for hybrid topology -------------------------;
+mov eax,[esi + MEMUPB.optionHybrid]
+cmp eax,HYBRID_P_PLUS_E
+je .hybridPplusE
+cmp eax,HYBRID_P_ONLY
+je .hybridP
+cmp eax,HYBRID_E_ONLY
+jne .threadsNonHybrid
+;--- Hybrid, E-Cores only --- 
+mov eax,[ebx + SYSPARMS.effCoreTopology.threads]
+cmp [esi + MEMUPB.optionHT],HT_NOT_USED
+jne .hybridSetup
+cmp [ebx + SYSPARMS.htEcores],1
+jne .hybridSetup
+cmp eax,1
+je .hybridSetup 
+shr eax,1
+jmp .hybridSetup 
+;--- Hybrid, P-Cores only ---
+.hybridP:
+mov eax,[ebx + SYSPARMS.perfCoreTopology.threads]
+cmp [esi + MEMUPB.optionHT],HT_NOT_USED
+jne .hybridSetup
+cmp [ebx + SYSPARMS.htPcores],1
+jne .hybridSetup
+cmp eax,1
+je .hybridSetup 
+shr eax,1
+jmp .hybridSetup 
+;--- Hybrid, P+E Cores ---
+.hybridPplusE:
+mov eax,[ebx + SYSPARMS.perfCoreTopology.threads]
+cmp [esi + MEMUPB.optionHT],HT_NOT_USED
+jne @f
+cmp [ebx + SYSPARMS.htPcores],1
+jne @f 
+cmp eax,1
+je @f 
+shr eax,1
+@@:
+mov edx,[ebx + SYSPARMS.effCoreTopology.threads]
+cmp [esi + MEMUPB.optionHT],HT_NOT_USED
+jne @f
+cmp [ebx + SYSPARMS.htEcores],1
+jne @f 
+cmp edx,1
+je @f 
+shr edx,1
+@@:
+add eax,edx
+.hybridSetup:
+test eax,eax
+jnz .setThreads
+;---------- Support threads count for non-hybrid topology ---------------------;
+.threadsNonHybrid:
 mov ecx,[DYNA_PTR.listNuma]
 mov ecx,[ecx + 8]
 mov edx,1
@@ -175,6 +230,9 @@ mov [edi + MEMIPB.updatedThreads],eax  ; Setup number of threads
 ; plus, see above dependences on HT for threads count
 mov eax,[esi + MEMUPB.optionHT]
 mov [edi + MEMIPB.updatedHT],eax       ; Copy Hyper-Threading option (UPB to IPB)
+;---------- Option Hybrid -----------------------------------------------------;
+mov eax,[esi + MEMUPB.optionHybrid]
+mov [edi + MEMIPB.updatedHybrid],eax       ; Copy Hybrid option (UPB to IPB)
 ;---------- Setup Processor Group mode ----------------------------------------; 
 ; plus, see above dependences on PG for threads count
 mov eax,[esi + MEMUPB.optionPG]
@@ -214,6 +272,42 @@ mov dword [edi + MEMIPB.measureRepeats + 4],0
 ; at this subroutine sessionstart.inc set default approximation only 
 ;---------- Setup measurement scenario as block sizes sequence ----------------;
 ; for "Run simple" mode required one block size only 
+;---------- Support block size detection for L1, L2 cache at hybrid topology --;
+mov eax,[edi + MEMIPB.updatedTarget]
+mov ecx,SUMMARYCACHE.sizeL1D
+cmp al,TARGET_L1
+je .cacheHybrid 
+mov ecx,SUMMARYCACHE.sizeL2U
+cmp al,TARGET_L2
+jne .cacheNonHybrid 
+.cacheHybrid:
+mov eax,[esi + MEMUPB.optionHybrid]
+cmp eax,HYBRID_P_PLUS_E
+je .hybridCachePplusE
+cmp eax,HYBRID_P_ONLY
+je .hybridCacheP
+cmp eax,HYBRID_E_ONLY
+jne .cacheNonHybrid
+;--- Hybrid, E-Cores only ---
+mov eax,[ebx + SYSPARMS.effCoreCache + ecx]
+jmp .hybridCacheSetup
+;--- Hybrid, P-Cores only ---
+.hybridCacheP:
+mov eax,[ebx + SYSPARMS.perfCoreCache + ecx]
+jmp .hybridCacheSetup
+;--- Hybrid, P+E Cores ---
+.hybridCachePplusE:
+mov eax,[ebx + SYSPARMS.perfCoreCache + ecx]
+mov edx,[ebx + SYSPARMS.effCoreCache + ecx]
+cmp eax,edx
+jae .hybridCacheSetup
+xchg eax,edx 
+.hybridCacheSetup:
+xchg ecx,eax
+test ecx,ecx
+jnz .sizeCalc 
+;---------- Support block size detection for non-hybrid topology --------------; 
+.cacheNonHybrid:
 ;---------- Detect L1 cache ---------------------------------------------------;
 mov eax,[edi + MEMIPB.updatedTarget]
 xor edx,edx    ; Previous level for L1 is 0 , not exist

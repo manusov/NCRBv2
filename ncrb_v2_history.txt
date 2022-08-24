@@ -1,3 +1,7 @@
+24.08.2022. v2.04.03. Changes for x64 and ia32 versions.
+Experimental support for Intel hybrid CPUs.
+
+
 08.07.2022. v2.03.02. Changes for x64 and ia32 versions.
 1) Optimized dialogues callback routines.
 2) Improved error reporting details after parsing INF file.

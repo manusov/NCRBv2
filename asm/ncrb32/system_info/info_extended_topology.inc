@@ -7,6 +7,8 @@
 ;          EBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
+; Separate calls for 5 entries types (0-4) required for ordering
+; text strings in the report.
 InfoExtendedTopology:
 call HelperAlignment
 mov ebx,[DYNA_IMPORT._GetLogicalProcessorInformationEx]
@@ -47,12 +49,17 @@ ret
 ; OUTPUT:  EBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-TextExtendedTopology:
-;
+
+; This temporary variables required for parameters, previously detected by
+; standard topology (InfoTopology, TextTopology subroutines), because standard
+; topology parameters must be not changed  if extended topology
+; (InfoExtendedTopology, TextExtendedTopology subroutines) not supported. 
 TEMP_THREADS   EQU  dword [esp + 00 + 04]
 TEMP_CORES     EQU  dword [esp + 04 + 04]
 TEMP_SOCKETS   EQU  dword [esp + 08 + 04]
-;
+
+TextExtendedTopology:
+;--- Build text block for ext. topology screen, first block = objects list ----;
 mov [DYNA_PTR.textTopologyEx1.objectStart],ebp
 mov ebx,[DYNA_PTR.listTopologyEx.objectStart]
 mov ecx,[DYNA_PTR.listTopologyEx.objectStop]
@@ -84,18 +91,35 @@ cmp al,1
 je .relationNumaEx
 cmp al,0
 je .relationCoreEx
+;---------- Extended topology entry type: UNKNOWN -----------------------------;
 .relationUnknownEx:
 mov ax,STR_TP_UNKNOWN_ID
 call HelperRelationName 
 jmp .doneRelationEx
+;---------- Extended topology entry type: CORE --------------------------------;
 .relationCoreEx:
-inc TEMP_CORES
+inc TEMP_CORES                         ; Support hybrid unaware
 inc TEMP_THREADS
-cmp byte [esi + 8],1
+cmp byte [esi + 08],1
 jne @f
 inc TEMP_THREADS
 @@:
-mov ax,STR_TP_CPU_CORE
+mov eax,SYS_PARMS.perfCoreTopology     ; Support hybrid cores
+mov edi,SYS_PARMS.perfCoreAffinity
+cmp byte [esi + 09],1
+je @f
+mov eax,SYS_PARMS.effCoreTopology
+mov edi,SYS_PARMS.effCoreAffinity
+@@:
+inc [eax + SUMMARYTOPOLOGY.cores]
+inc [eax + SUMMARYTOPOLOGY.threads]
+cmp byte [esi + 08],1
+jne @f
+inc [eax + SUMMARYTOPOLOGY.threads]
+@@:
+mov eax,[esi + 32]
+or [edi],eax                           ; Store affinity mask
+mov ax,STR_TP_CPU_CORE                 ; Write text about core
 call HelperRelationName 
 mov al,32
 call HelperAffinityGroup
@@ -104,6 +128,7 @@ call HelperParameter8
 mov eax,( STR_ET_EFFICIENCY SHL 16 ) + 3209h
 call HelperParameter8
 jmp .doneRelationEx
+;---------- Extended topology entry type: NUMA NODE ---------------------------;
 .relationNumaEx: 
 mov ax,STR_TP_NUMA_NODE
 call HelperRelationName 
@@ -112,6 +137,7 @@ call HelperAffinityGroup
 mov eax,( STR_TP_NODE SHL 16 ) + 2908h
 call HelperParameter32
 jmp .doneRelationEx
+;---------- Extended topology entry type: CACHE -------------------------------;
 .relationCacheEx:
 mov ax,STR_TP_L
 call HelperRelationName
@@ -154,6 +180,7 @@ pop eax
 call DecimalPrint32
 pop esi ecx
 jmp .doneRelationEx 
+;---------- Extended topology entry type: PACKAGE (CPU SOCKET) ----------------;
 .relationPackageEx:
 inc TEMP_SOCKETS
 mov ax,STR_TP_CPU_PACKAGE
@@ -165,11 +192,13 @@ call HelperParameter8
 mov eax,( STR_ET_EFFICIENCY SHL 16 ) + 3209h
 call HelperParameter8
 jmp .doneRelationEx
+;---------- Extended topology entry type: PROCESSOR GROUP ---------------------;
 .relationGroupEx: 
 mov ax,STR_ET_GROUP
 call HelperRelationName 
 mov al,32
 call HelperAffinityMask
+;---------- Extended topology entry detection done ----------------------------;
 .doneRelationEx:
 pop edi
 add esi,[esi + 04]
@@ -197,6 +226,20 @@ stosb
 mov ebp,edi
 mov [DYNA_PTR.textTopologyEx1.objectStop],ebp
 .noTopologyEx:
+;---------- Detect hybrid platform --------------------------------------------;
+cmp [SYS_PARMS.perfCoreTopology.cores],0
+je .rejectHybrid
+cmp [SYS_PARMS.effCoreTopology.cores],0
+je .rejectHybrid
+mov [SYS_PARMS.hybridMode],1
+jmp .doneHybrid
+.rejectHybrid:
+xor eax,eax
+mov [SYS_PARMS.perfCoreTopology.cores],eax
+mov [SYS_PARMS.perfCoreTopology.threads],eax
+mov [SYS_PARMS.effCoreTopology.cores],eax
+mov [SYS_PARMS.effCoreTopology.threads],eax
+.doneHybrid:
 ;--- Build text block for extended topology screen, second block = summary ----;
 mov [DYNA_PTR.textTopologyEx2.objectStart],ebp
 push esi
@@ -363,7 +406,6 @@ pop esi
 ret
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
-; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
 ;                                                                              ;
 ; INPUT:   ESI = Pointer to topology information buffer                        ;
 ;          EDI = Destination text buffer                                       ;
@@ -377,29 +419,133 @@ ret
 HelperCacheSummaryEx:
 push ecx esi 0 0 ebp
 mov ebp,esp
-push eax
 test ecx,ecx
 jz .nodata
 movzx ebx,ah
 xchg edx,eax
-.scanCaches:
+;---------- Detect hybrid mode ------------------------------------------------;
+cmp [SYS_PARMS.hybridMode],1
+je .hybridMode
+;--- Scan topology list for cache object, variant for non-hybrid CPU ----------;
+.scanCaches:              ; This cycle for count number of cache units
 cmp dword [esi + 00],2
-jne .done
+jne .done                 ; Go skip if descriptor type mismatch
 cmp byte [esi + 08],dl
-jne .done
+jne .done                 ; Go skip if cache level mismatch
 cmp dword [esi + 16],ebx
-jne .done
-mov eax,[esi + 12]
+jne .done                 ; Go skip if cache type mismatch
+mov eax,[esi + 12]        ; EAX = cache size
 mov [ebp + 04],eax
-inc dword [ebp + 08]
+inc dword [ebp + 08]      ; Cache units count + 1
 .done:
 mov eax,[esi + 04]
 add esi,eax
 cmp esi,ecx
-jb .scanCaches
+jb .scanCaches            ; This cycle for count number cache units
+mov dh,0                  ; Hybrid status = 0, none
+call HelperCacheSummarySaveEx
+jmp .nodata
+;--- Scan topology list for cache object, variant for hybrid CPU --------------;
+.hybridMode:
+push ecx esi
+.scanPEcores:             ; This cycle for count number of cache units
+cmp dword [esi + 00],2
+jne .donePEcores          ; Go skip if descriptor type mismatch
+cmp byte [esi + 08],dl
+jne .donePEcores          ; Go skip if cache level mismatch
+cmp dword [esi + 16],ebx
+jne .donePEcores          ; Go skip if cache type mismatch
+mov eax,[esi + 40]
+test eax,[SYS_PARMS.perfCoreAffinity]
+jz .donePEcores           ; Go skip if no P-Core affinity, here required both 
+test eax,[SYS_PARMS.effCoreAffinity]
+jz .donePEcores           ; Go skip if no E-Core affinity, here required both  
+mov eax,[esi + 12]        ; EAX = cache size
+mov [ebp + 04],eax
+inc dword [ebp + 08]      ; Cache units count + 1
+.donePEcores:
+mov eax,[esi + 04]
+add esi,eax
+cmp esi,ecx
+jb .scanPEcores           ; This cycle for count number cache units
+mov dh,0                  ; Hybrid status = 0, None
+call HelperCacheSummarySaveEx
+pop esi ecx
+mov dword [ebp + 04],0
+mov dword [ebp + 08],0
+push ecx esi
+.scanPcores:              ; This cycle for count number of cache units
+cmp dword [esi + 00],2
+jne .donePcores           ; Go skip if descriptor type mismatch
+cmp byte [esi + 08],dl
+jne .donePcores           ; Go skip if cache level mismatch
+cmp dword [esi + 16],ebx
+jne .donePcores           ; Go skip if cache type mismatch
+mov eax,[esi + 40]
+test eax,[SYS_PARMS.perfCoreAffinity]
+jz .donePcores            ; Go skip if not a P-Core cache unit 
+test eax,[SYS_PARMS.effCoreAffinity]
+jnz .donePcores           ; Go skip if non-hybrid (for P+E both) cache unit 
+mov eax,[esi + 12]        ; EAX = cache size
+mov [ebp + 04],eax
+inc dword [ebp + 08]      ; Cache units count + 1
+.donePcores:
+mov eax,[esi + 04]
+add esi,eax
+cmp esi,ecx
+jb .scanPcores            ; This cycle for count number cache units
+mov dh,1                  ; Hybrid status = 1, P-Cores
+call HelperCacheSummarySaveEx
+pop esi ecx
+mov dword [ebp + 04],0
+mov dword [ebp + 08],0
+.scanEcores:              ; This cycle for count number of cache units
+cmp dword [esi + 00],2
+jne .doneEcores           ; Go skip if descriptor type mismatch
+cmp byte [esi + 08],dl
+jne .doneEcores           ; Go skip if cache level mismatch
+cmp dword [esi + 16],ebx
+jne .doneEcores           ; Go skip if cache type mismatch
+mov eax,[esi + 40]
+test eax,[SYS_PARMS.effCoreAffinity]
+jz .doneEcores            ; Go skip if not a P-Core cache unit 
+test eax,[SYS_PARMS.perfCoreAffinity]
+jnz .doneEcores           ; Go skip if non-hybrid (for P+E both) cache unit 
+mov eax,[esi + 12]        ; EAX = cache size
+mov [ebp + 04],eax
+inc dword [ebp + 08]      ; Cache units count + 1
+.doneEcores:
+mov eax,[esi + 04]
+add esi,eax
+cmp esi,ecx
+jb .scanEcores            ; This cycle for count number cache units
+mov dh,2                  ; Hybrid status = 2, E-Cores
+call HelperCacheSummarySaveEx
+.nodata:
+pop ebp eax eax esi ecx
+ret
+
+;--- Helper for add cache to text report and update size and count variables --; 
+;                                                                              ; 
+; INPUT:   EDI = Destination text buffer                                       ;
+;          DL  = Cache level by WinAPI                                         ;
+;          BL  = Cache type code by WinAPI                                     ;
+;          DH  = Hybrid status: 0 = none, 1 = P-Cores, 2 = E-Cores             ;
+;          EBP = Pointer to input parameters                                   ;
+;          DWORD [EBP + 04] = Cache size value, if 0, operation skipped        ;
+;          DWORD [EBP + 08] = Cache count value                                ;
+;                                                                              ;
+; OUTPUT:  None                                                                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperCacheSummarySaveEx:
+push ebx edx
 cmp dword [ebp + 08],0
 je .nodata
-mov bh,dl
+movzx edx,dx
+movzx ebx,bl     ; EBX[07-00] = BL = Cache type
+shl edx,8
+or ebx,edx       ; EBX[23-16] = Hybrid status, EBX[15-08] = BH = Cache level
 mov edx,edi
 cld
 mov ecx,80
@@ -431,12 +577,32 @@ call PoolStringWrite
 mov eax,[ebp + 08]     ; dword [ebp + 08] = Cache count for write size x count
 mov bl,0
 call DecimalPrint32
+lea edi,[edx + 55]
+shr ebx,16             ; BL = Hybrid status, shift from EBX[23-16]
+mov ax,STR_P_CORES
+cmp bl,1
+je @f
+mov ax,STR_E_CORES
+cmp bl,2
+je @f
+mov ax,STR_HYPHEN
+@@:
+call PoolStringWrite
 pop edi
 ;---------- additions for screen 0 --------------------------------------------;
-pop eax
-push eax
-call HelperSummaryCache
+mov al,[esp + 00]
+mov ah,[esp + 04] 
+dec bl
+jz .perfCache
+dec bl
+jz .effCache
+call HelperCacheSummaryBinary
+jmp .nodata
+.perfCache:
+call HelperCachePerfCoreBinary
+jmp .nodata
+.effCache:
+call HelperCacheEffCoreBinary
 .nodata:
-pop eax ebp eax eax esi ecx
+pop edx ebx
 ret
-

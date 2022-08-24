@@ -75,6 +75,15 @@ mov [rdi + MEMUPB.optionNUMA],eax
 movzx eax,[rsi + BINDLIST.getMemObject]
 bsf eax,eax
 mov [rdi + MEMUPB.optionTarget],eax 
+;---------- Option Hybrid -----------------------------------------------------;
+xor eax,eax
+test [rsi + BINDLIST.setMemHybrid],00000001b
+jz @f
+movzx eax,[rsi + BINDLIST.getMemHybrid]
+bsf eax,eax
+inc eax
+@@:
+mov [rdi + MEMUPB.optionHybrid],eax 
 ;---------- Option Large Pages ------------------------------------------------;
 mov cl,[rsi + BINDLIST.setMemLpages]  ; Optimize this, don't use CL, direct test
 mov ch,[rsi + BINDLIST.getMemLpages]
@@ -191,6 +200,13 @@ stosb
 lea rdi,[r14 + BINDLIST.mrGroups]
 mov eax,[r12 + MEMIPB.updatedPG]
 add ax,STR_MR_PG_00
+call PoolStringWrite
+mov al,0
+stosb
+;---------- Build Hybrid topology string --------------------------------------;
+lea rdi,[r14 + BINDLIST.mrHybrid]
+mov eax,[r12 + MEMIPB.updatedHybrid]
+add ax,STR_MR_HYBRID_00
 call PoolStringWrite
 mov al,0
 stosb

@@ -90,6 +90,9 @@ mov eax,[ebx + MEMIPB.updatedThreads]
 mov bl,0
 call DecimalPrint32
 pop ebx
+mov eax,[ebx + MEMIPB.updatedHybrid]
+add ax,STR_MD_NO_HYBRID
+call PoolStringWrite
 mov al,0
 stosb
 ;---------- Down comments strings, number of measurement repeats --------------;

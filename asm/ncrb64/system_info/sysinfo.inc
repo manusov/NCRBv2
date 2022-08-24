@@ -310,6 +310,15 @@ inc eax
 call DecimalPrint32
 mov al,0
 stosb
+;---------- Support screen 0 show P- and E-cores for hybrid CPU topology ------;
+lea rdi,[rdx + BINDLIST.bindTopology.pCores]
+mov eax,[r8 + OFFSET_P_CORES + SUMMARYTOPOLOGY.cores]
+mov cl,00000001b
+call HelperSysinfoHybridTopology
+lea rdi,[rdx + BINDLIST.bindTopology.eCores]
+mov eax,[r8 + OFFSET_E_CORES + SUMMARYTOPOLOGY.cores]
+mov cl,00000010b
+call HelperSysinfoHybridTopology
 ;---------- NUMA domains affinity masks at screen 0 ---------------------------;
 mov rsi,[DYNA_PTR.listNuma.objectStart]
 mov rcx,[DYNA_PTR.listNuma.objectStop]
@@ -510,20 +519,58 @@ mov eax,DEFAULT_CACHE_BLOCK
 @@:
 mov dword [rdi + BINDLIST.setMemObject],ebx
 mov [rdi + BINDLIST.setBlkCustom],rax
+;---------- Benchmark option: Hybrid cores ------------------------------------;
+lea rsi,[SYS_PARMS]
+mov bx,00000010b
+cmp [rsi + SYSPARMS.hybridMode],0
+je @f
+mov bl,01110101b   ; Unaware, P+E, performance, effective
+@@:
+mov word [rdi + BINDLIST.setMemHybrid],bx
+;---------- Hyper-Threading (SMT) detection with hybrid cores support ---------;
+xor ebx,ebx   ; EBX = bitmap for GUI widgets
+xor edx,edx   ; EDX = bitmap for detection procedure
+mov eax,[rsi + SYSPARMS.summaryTopology.cores]
+test eax,eax
+jz @f
+cmp eax,[rsi + SYSPARMS.summaryTopology.threads]
+je @f
+mov dl,1      ; Hyper-threading by legacy criteria = bit EDX.0
+@@:
+mov eax,[rsi + SYSPARMS.perfCoreTopology.cores]
+test eax,eax
+jz @f
+cmp eax,[rsi + SYSPARMS.perfCoreTopology.threads]
+je @f
+mov dh,1      ; Hyper-threading by hybrid P-cores criteria = bit EDX.8
+@@:
+mov eax,[rsi + SYSPARMS.effCoreTopology.cores]
+test eax,eax
+jz @f
+cmp eax,[rsi + SYSPARMS.effCoreTopology.threads]
+je @f
+bts edx,16    ; Hyper-threading by hybrid E-cores criteria = bit EDX.16
+@@:
+mov dword [rsi + SYSPARMS.htAll],edx 
+test edx,00010101h
+jz @f
+or bl,00000100b   ; Hyper threading (SMT), for non-hybrid and hybrid,
+@@:               ; for GUI widget, bit EBX.2
 ;---------- Benchmark options: SMP/SMT ----------------------------------------;
 lea rsi,[SYS_PARMS.summaryTopology]
-xor ebx,ebx
+; xor ebx,ebx
 mov eax,[rsi + SUMMARYTOPOLOGY.threads]
 cmp eax,2
 jb @f
 inc ebx           ; Parallel threads (SMP)
 @@:
-shr eax,1
-jz @f
-cmp eax,[rsi + SUMMARYTOPOLOGY.cores]
-jne @f
-or bl,00000100b   ; Hyper threading (SMT)
-@@:
+; shr eax,1
+; jz @f
+; cmp eax,[rsi + SUMMARYTOPOLOGY.cores]
+; jne @f
+; or bl,00000100b   ; Hyper threading (SMT), legacy for non-hybrid
+; @@:
+;---------- Benchmark option: Processor groups --------------------------------; 
 lea rsi,[OS_DATA]
 cmp [rsi + OSDATA.activeProcessorGroupCount],2
 jb @f
@@ -592,6 +639,12 @@ jmp .done
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 HelperSysinfoTopologyCache:
+xor eax,eax
+cmp [rsi + OFFSET_P_CORES + 0],rax
+jne .hybrid
+cmp [rsi + OFFSET_E_CORES + 0],rax
+jne .hybrid
+.noHybrid:
 mov rax,[rsi + 0]
 mov edx,[rsi + 8]
 test rax,rax
@@ -599,17 +652,7 @@ jz .nodata
 test edx,edx
 jz .nodata
 or [BIND_LIST.bindCache.cacheBitmap],cl
-mov bl,0FFh
-call SizePrint64
-cmp edx,1
-je .done
-mov al,' '
-stosb
-mov ax,STR_TP_X
-call PoolStringWrite
-xchg eax,edx
-mov bl,0
-call DecimalPrint32
+call HelperTopologyCacheParms
 .done:
 mov al,0
 stosb
@@ -618,6 +661,49 @@ ret
 mov ax,STR_N_A
 call PoolStringWrite
 jmp .done
+;---------- Support asymmetric cache for hybrid CPU ---------------------------;
+.hybrid:
+or [BIND_LIST.bindCache.cacheBitmap],cl
+mov rax,[rsi + OFFSET_P_CORES + 0]
+mov edx,[rsi + OFFSET_P_CORES + 8]
+call HelperTopologyCacheParms
+mov al,' '
+stosb
+push rsi
+mov ax,STR_TP_PLUS
+call PoolStringWrite
+pop rsi
+mov rax,[rsi + OFFSET_E_CORES + 0]
+mov edx,[rsi + OFFSET_E_CORES + 8]
+call HelperTopologyCacheParms
+jmp .done
+
+;---------- Helper for write cache parameters ---------------------------------;
+;           Optimized for call twice if hybrid CPU asymmetric cache topology.  ;
+;                                                                              ;
+; INPUT:   RAX = Cache size, bytes, 64-bit value                               ;
+;          EDX = Cache units count                                             ; 
+;          RDI = Destination pointer for write text string                     ;
+;                                                                              ;
+; OUTPUT:  None                                                                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperTopologyCacheParms:
+push rsi
+mov bl,0FFh
+call SizePrint64
+cmp edx,1
+je .doneCount
+mov al,' '
+stosb
+mov ax,STR_TP_X
+call PoolStringWrite
+xchg eax,edx
+mov bl,0
+call DecimalPrint32
+.doneCount:
+pop rsi
+ret
 
 ;---------- Helper for write cache summary by platform topology WinAPI --------;
 ;           For trace cache.                                                   ;
@@ -648,6 +734,32 @@ mov al,' '
 stosb
 mov ax,STR_KUOPS
 call PoolStringWrite
+.done:
+mov al,0
+stosb
+ret
+.nodata:
+mov ax,STR_N_A
+call PoolStringWrite
+jmp .done
+
+;---------- Helper for write P and E cores for hybrid CPU ---------------------;
+;           detected by platform topology WinAPI                               ;
+;                                                                              ; 
+; INPUT:   EAX = Objects count (P-cores or E-cores),                           ;
+;                subroutine write string "n/a" if EAX = 0                      ;
+;          RDI = Destination pointer for write text string                     ;
+;          CL  = Bitmap for set GUI objects (P and E cores) active             ;      
+;                                                                              ;
+; OUTPUT:  None                                                                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperSysinfoHybridTopology:
+test eax,eax
+jz .nodata
+or [BIND_LIST.bindTopology.hybridBitmap],cl
+mov bl,0
+call DecimalPrint32
 .done:
 mov al,0
 stosb

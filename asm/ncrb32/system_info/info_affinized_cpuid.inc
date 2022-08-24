@@ -7,6 +7,10 @@
 ;          EBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
+
+;---------- Configuration detection restrictions ------------------------------;
+LOGICAL_PROCESSORS_LIMIT = 32  ; Yet limited for maximum 32 logical processors
+
 InfoAffinizedCpuid:
 mov edi,ebp
 cmp [DYNA_IMPORT._SetThreadAffinityMask],0
@@ -17,9 +21,9 @@ jz .skipAffCpuid
 xchg ebx,eax             ; EBX = Current thread handle
 mov ecx,[OS_DATA.systemInfo.dwNumberOfProcessors]
 jecxz .skipAffCpuid
-cmp ecx,16              ; Yet limited for maximum 16 logical processors
+cmp ecx,LOGICAL_PROCESSORS_LIMIT
 jbe @f
-mov ecx,16      
+mov ecx,LOGICAL_PROCESSORS_LIMIT      
 @@:                      ; ECX = Logical processors count
 xor edx,edx              ; EDX = Storage for original affinity mask
 mov eax,1                ; EAX = Variable affinity mask for dump
@@ -40,11 +44,7 @@ shl eax,5
 lea edi,[edi + eax + 32]
 pop edx ecx eax
 rol eax,1
-push eax
-bsf eax,eax
-cmp eax,ecx
-pop eax
-jb .affinizedDump 
+loop .affinizedDump 
 test edx,edx
 jz @f
 push edx                 ; Parm#2 = Affinity mask

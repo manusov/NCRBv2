@@ -7,6 +7,10 @@
 ;          RBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
+
+;---------- Configuration detection restrictions ------------------------------;
+LOGICAL_PROCESSORS_LIMIT = 64  ; Yet limited for maximum 64 logical processors
+
 InfoAffinizedCpuid:
 mov r13,rsp
 and rsp,0FFFFFFFFFFFFFFF0h
@@ -21,9 +25,9 @@ mov r15,rax              ; R15 = Current thread handle
 mov r14d,[OS_DATA.systemInfo.dwNumberOfProcessors] 
 test r14d,r14d
 jz .skipAffCpuid
-cmp r14d,16              ; Yet limited for maximum 16 logical processors
+cmp r14d,LOGICAL_PROCESSORS_LIMIT
 jbe @f
-mov r14d,16      
+mov r14d,LOGICAL_PROCESSORS_LIMIT      
 @@:                      ; R14D = Logical processors count
 xor r12d,r12d            ; R12 = Storage for original affinity mask
 mov ebx,1                ; RBX = Variable affinity mask for dump
@@ -40,9 +44,8 @@ mov eax,[rdi]
 shl eax,5
 lea rdi,[rdi + rax + 32]
 rol rbx,1
-bsf rax,rbx
-cmp rax,r14
-jb .affinizedDump 
+dec r14d
+jnz .affinizedDump 
 test r12,r12
 jz @f
 mov rdx,r12              ; RDX = Parm#2 = Affinity mask
@@ -58,9 +61,9 @@ ret
 
 ;--- Build Affinized CPUID dump information for text report and GUI widgets ---;
 ;                                                                              ;
-; INPUT:   UNDER CONSTRUCTION                                                  ;
+; INPUT:   RBP = Dynamically allocated memory pointer                          ;
 ;                                                                              ;
-; OUTPUT:  UNDER CONSTRUCTION                                                  ;
+; OUTPUT:  RBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 TextAffinizedCpuid:

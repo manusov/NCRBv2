@@ -163,6 +163,7 @@ IDC_SYSINFO_CORES       = 370
 IDC_SYSINFO_CORES_V     = 371
 IDC_SYSINFO_SOCKETS     = 372
 IDC_SYSINFO_SOCK_V      = 373
+
 IDC_SYSINFO_PTOT        = 374
 IDC_SYSINFO_PTOT_V      = 375
 IDC_SYSINFO_GRP         = 376
@@ -171,16 +172,23 @@ IDC_SYSINFO_PCUR        = 378
 IDC_SYSINFO_PCUR_V      = 379
 IDC_SYSINFO_NUMA        = 380
 IDC_SYSINFO_NUMA_V      = 381
-IDC_SYSINFO_NUMA_M      = 382
-IDC_SYSINFO_MEM         = 383
-IDC_SYSINFO_MEM_V       = 384 
-IDC_SYSINFO_MEM_A       = 385 
-IDC_SYSINFO_MEM_AV      = 386 
-IDC_SYSINFO_LRPG        = 387 
-IDC_SYSINFO_LRPG_V      = 388 
-IDC_SYSINFO_LRPG_E      = 389
-IDB_SYSINFO_VBRF        = 390 
-IDB_SYSINFO_CANCEL      = 391
+
+IDC_SYSINFO_PCORES      = 382
+IDC_SYSINFO_PCOR_V      = 383
+IDC_SYSINFO_ECORES      = 384
+IDC_SYSINFO_ECOR_V      = 385
+
+
+IDC_SYSINFO_NUMA_M      = 386
+IDC_SYSINFO_MEM         = 387
+IDC_SYSINFO_MEM_V       = 388 
+IDC_SYSINFO_MEM_A       = 389 
+IDC_SYSINFO_MEM_AV      = 390 
+IDC_SYSINFO_LRPG        = 391 
+IDC_SYSINFO_LRPG_V      = 392 
+IDC_SYSINFO_LRPG_E      = 393
+IDB_SYSINFO_VBRF        = 394 
+IDB_SYSINFO_CANCEL      = 395
 ;---------- Identifiers for tab #2 = Memory and cache benchmarks sheet --------;
 IDC_MEMORY              = 500
 IDC_MEMORY_FRAME_1      = 501
@@ -189,56 +197,56 @@ IDC_MEMORY_FRAME_3      = 503
 IDC_MEMORY_FRAME_4      = 504
 IDC_MEMORY_FRAME_5      = 505
 IDC_MEMORY_FRAME_6      = 506
-IDB_MEMORY_ASM_A0       = 507
-IDB_MEMORY_ASM_A1       = 508
-IDB_MEMORY_ASM_A2       = 509
-IDB_MEMORY_ASM_A3       = 510
-IDB_MEMORY_ASM_A4       = 511
-IDB_MEMORY_ASM_A5       = 512
-IDB_MEMORY_ASM_A6       = 513
-IDB_MEMORY_ASM_A7       = 514
-IDB_MEMORY_ASM_A8       = 515
-IDB_MEMORY_ASM_B0       = 516 
-IDB_MEMORY_ASM_B1       = 517
-IDB_MEMORY_ASM_B2       = 518
-IDB_MEMORY_ASM_B3       = 519
-IDB_MEMORY_ASM_B4       = 520
-IDB_MEMORY_ASM_B5       = 521
-IDB_MEMORY_ASM_B6       = 522
-IDB_MEMORY_ASM_B7       = 523
-IDB_MEMORY_ASM_B8       = 524
-IDB_MEMORY_ASM_C0       = 525 
-IDB_MEMORY_ASM_C1       = 526
-IDB_MEMORY_ASM_C2       = 527
-IDB_MEMORY_ASM_C3       = 528
-IDB_MEMORY_ASM_C4       = 529
-IDB_MEMORY_ASM_C5       = 530
-IDB_MEMORY_ASM_C6       = 531
-IDB_MEMORY_ASM_C7       = 532
-IDB_MEMORY_NONTEMP      = 533
-IDB_MEMORY_FORCE32      = 534
-IDB_MEMORY_L1           = 535
-IDB_MEMORY_L2           = 536
-IDB_MEMORY_L3           = 537
-IDB_MEMORY_L4           = 538
-IDB_MEMORY_DRAM         = 539
-IDB_MEMORY_CUSTOM       = 540
-IDB_MEMORY_FILE         = 541
-IDB_MEMORY_GPU          = 542
-IDB_MEMORY_PHYSICAL     = 543
-IDE_MEMORY_B_SIZE       = 544
-IDE_MEMORY_F_SIZE       = 545
-IDE_MEMORY_G_SIZE       = 546
-IDE_MEMORY_M_START      = 547
-IDE_MEMORY_M_STOP       = 548
-IDC_MEMORY_M_HYPHEN     = 549
-IDC_MEMORY_COMBO_F      = 550
+IDC_MEMORY_FRAME_7      = 507
+IDB_MEMORY_ASM_A0       = 508
+IDB_MEMORY_ASM_A1       = 509
+IDB_MEMORY_ASM_A2       = 510
+IDB_MEMORY_ASM_A3       = 511
+IDB_MEMORY_ASM_A4       = 512
+IDB_MEMORY_ASM_A5       = 513
+IDB_MEMORY_ASM_A6       = 514
+IDB_MEMORY_ASM_A7       = 515
+IDB_MEMORY_ASM_A8       = 516
+IDB_MEMORY_ASM_B0       = 517 
+IDB_MEMORY_ASM_B1       = 518
+IDB_MEMORY_ASM_B2       = 519
+IDB_MEMORY_ASM_B3       = 520
+IDB_MEMORY_ASM_B4       = 521
+IDB_MEMORY_ASM_B5       = 522
+IDB_MEMORY_ASM_B6       = 523
+IDB_MEMORY_ASM_B7       = 524
+IDB_MEMORY_ASM_B8       = 525
+IDB_MEMORY_ASM_C0       = 526 
+IDB_MEMORY_ASM_C1       = 527
+IDB_MEMORY_ASM_C2       = 528
+IDB_MEMORY_ASM_C3       = 529
+IDB_MEMORY_ASM_C4       = 530
+IDB_MEMORY_ASM_C5       = 531
+IDB_MEMORY_ASM_C6       = 532
+IDB_MEMORY_ASM_C7       = 533
+IDB_MEMORY_NONTEMP      = 534
+IDB_MEMORY_FORCE32      = 535
+IDB_MEMORY_L1           = 536
+IDB_MEMORY_L2           = 537
+IDB_MEMORY_L3           = 538
+IDB_MEMORY_L4           = 539
+IDB_MEMORY_DRAM         = 540
+IDB_MEMORY_CUSTOM       = 541
+IDB_MEMORY_FILE         = 542
+IDB_MEMORY_GPU          = 543
+IDB_MEMORY_PHYSICAL     = 544
+IDE_MEMORY_B_SIZE       = 545
+IDE_MEMORY_F_SIZE       = 546
+IDE_MEMORY_G_SIZE       = 547
+IDE_MEMORY_M_START      = 548
+IDE_MEMORY_M_STOP       = 549
+IDC_MEMORY_M_HYPHEN     = 550
 IDC_MEMORY_COMBO_F      = 551
-IDB_MEMORY_MTRR_WB      = 552 
-IDB_MEMORY_MTRR_WT      = 553
-IDB_MEMORY_MTRR_WC      = 554
-IDB_MEMORY_MTRR_WP      = 555
-IDB_MEMORY_MTRR_UC      = 556
+IDC_MEMORY_COMBO_F      = 552
+IDB_HYBRID_UNAWARE      = 553 
+IDB_HYBRID_P_PLUS_E     = 554
+IDB_HYBRID_PERF         = 555
+IDB_HYBRID_EFF          = 556
 IDB_MEMORY_PARALLEL     = 557
 IDB_MEMORY_HT           = 558
 IDB_MEMORY_PG           = 559
@@ -340,46 +348,48 @@ IDC_MR_THREADS          = 2904
 IDC_MR_HYPER_THR        = 2905 
 IDC_MR_LARGE_PAGES      = 2906 
 IDC_MR_NUMA             = 2907 
-IDC_MR_P_GROUPS         = 2908 
-IDC_MR_TARGET_OBJ       = 2909 
-IDC_MR_PREF_DIST        = 2910 
-IDC_MR_SIZE_TOTAL       = 2911 
-IDC_MR_SIZE_PER_THR     = 2912 
-IDC_MR_MEASURE_PROF     = 2913 
-IDC_MR_MEASURE_REP      = 2914 
-IDC_MR_MEMORY_ALLOC     = 2915 
-IDC_MR_BLOCK_1          = 2916 
-IDC_MR_BLOCK_2          = 2917 
-IDC_MR_MEM_ALC_ALL      = 2918 
-IDC_MR_MEM_ALC_THR      = 2919 
-IDC_MR_MEAS_RESULTS     = 2920 
-IDC_MR_DT_MS            = 2921 
-IDC_MR_DTSC_SEC_MHZ     = 2922 
-IDC_MR_DTSC_INS_CLK     = 2923 
-IDC_MR_LAST             = 2924
-IDC_MR_APPLIC_V         = 2925  
-IDC_MR_METHOD_V         = 2926 
-IDC_MR_WIDTH_V          = 2927 
-IDC_MR_THREADS_V        = 2928 
-IDC_MR_HYPER_THR_V      = 2929 
-IDC_MR_LARGE_PAG_V      = 2930 
-IDC_MR_NUMA_V           = 2931 
-IDC_MR_P_GROUPS_V       = 2932 
-IDC_MR_TARGET_OBJ_V     = 2933 
-IDC_MR_PREF_DIST_V      = 2934
-IDC_MR_SIZE_TOTAL_V     = 2935 
-IDC_MR_SIZE_PER_T_V     = 2936 
-IDC_MR_MEASURE_P_V      = 2937 
-IDC_MR_MEASURE_R_V      = 2938 
-IDC_MR_BLOCK_1_V        = 2939 
-IDC_MR_BLOCK_2_V        = 2940 
-IDC_MR_MEM_ALC_A_V      = 2941 
-IDC_MR_MEM_ALC_T_V      = 2942 
-IDC_MR_DT_MS_V          = 2943 
-IDC_MR_DTSC_SEC_M_V     = 2944 
-IDC_MR_DTSC_INS_C_V     = 2945 
-IDC_MR_LAST_V           = 2946
-IDB_MR_OK               = 2947
+IDC_MR_P_GROUPS         = 2908
+IDC_MR_HYBRID           = 2909 
+IDC_MR_TARGET_OBJ       = 2910 
+IDC_MR_PREF_DIST        = 2911 
+IDC_MR_SIZE_TOTAL       = 2912 
+IDC_MR_SIZE_PER_THR     = 2913 
+IDC_MR_MEASURE_PROF     = 2914 
+IDC_MR_MEASURE_REP      = 2915 
+IDC_MR_MEMORY_ALLOC     = 2916 
+IDC_MR_BLOCK_1          = 2917 
+IDC_MR_BLOCK_2          = 2918 
+IDC_MR_MEM_ALC_ALL      = 2919 
+IDC_MR_MEM_ALC_THR      = 2920 
+IDC_MR_MEAS_RESULTS     = 2921 
+IDC_MR_DT_MS            = 2922 
+IDC_MR_DTSC_SEC_MHZ     = 2923 
+IDC_MR_DTSC_INS_CLK     = 2924 
+IDC_MR_LAST             = 2925
+IDC_MR_APPLIC_V         = 2926  
+IDC_MR_METHOD_V         = 2927 
+IDC_MR_WIDTH_V          = 2928 
+IDC_MR_THREADS_V        = 2929 
+IDC_MR_HYPER_THR_V      = 2930 
+IDC_MR_LARGE_PAG_V      = 2931 
+IDC_MR_NUMA_V           = 2932 
+IDC_MR_P_GROUPS_V       = 2933
+IDC_MR_HYBRID_V         = 2934 
+IDC_MR_TARGET_OBJ_V     = 2935 
+IDC_MR_PREF_DIST_V      = 2936
+IDC_MR_SIZE_TOTAL_V     = 2937 
+IDC_MR_SIZE_PER_T_V     = 2938 
+IDC_MR_MEASURE_P_V      = 2939 
+IDC_MR_MEASURE_R_V      = 2940 
+IDC_MR_BLOCK_1_V        = 2941 
+IDC_MR_BLOCK_2_V        = 2942 
+IDC_MR_MEM_ALC_A_V      = 2943 
+IDC_MR_MEM_ALC_T_V      = 2944 
+IDC_MR_DT_MS_V          = 2945 
+IDC_MR_DTSC_SEC_M_V     = 2946 
+IDC_MR_DTSC_INS_C_V     = 2947 
+IDC_MR_LAST_V           = 2948
+IDB_MR_OK               = 2949
 ;--- Identifiers for child screen = Memory and cache performance draw ---------;
 IDC_MD_ASM              = 3100
 IDC_MD_PREFETCH         = 3101
@@ -557,8 +567,10 @@ STR_PROC_TOTAL         = STR_THREADS + 3
 STR_GRPS               = STR_THREADS + 4
 STR_PROC_CUR           = STR_THREADS + 5
 STR_NUMA_NODES         = STR_THREADS + 6
+STR_P_CORES            = STR_THREADS + 7
+STR_E_CORES            = STR_THREADS + 8
 ;---------- Memory information by WinAPI --------------------------------------;
-STR_OS_PHYSICAL        = STR_NUMA_NODES + 1
+STR_OS_PHYSICAL        = STR_E_CORES + 1
 STR_OS_AVAILABLE       = STR_OS_PHYSICAL + 1
 STR_OS_MIN_LARGE       = STR_OS_PHYSICAL + 2
 ;---------- Assembler instructions names for memory and cache benchmarks ------;
@@ -641,14 +653,13 @@ STR_MEMORY_FILE        = STR_MEMORY_L1 + 6
 STR_MEMORY_GPU         = STR_MEMORY_L1 + 7
 STR_MEMORY_PHYSICAL    = STR_MEMORY_L1 + 8
 STR_MEMORY_CUSTOM_DRAW = STR_MEMORY_L1 + 9   ; This for Draw screen 
-;---------- Memory status names -----------------------------------------------;
-STR_MEMORY_MTRR_WB     = STR_MEMORY_CUSTOM_DRAW + 1
-STR_MEMORY_MTRR_WT     = STR_MEMORY_MTRR_WB + 1 
-STR_MEMORY_MTRR_WC     = STR_MEMORY_MTRR_WB + 2 
-STR_MEMORY_MTRR_WP     = STR_MEMORY_MTRR_WB + 3 
-STR_MEMORY_MTRR_UC     = STR_MEMORY_MTRR_WB + 4 
+;---------- Hybrid cores names ------------------------------------------------;
+STR_HYBRID_UNAWARE     = STR_MEMORY_CUSTOM_DRAW + 1
+STR_HYBRID_P_PLUS_E    = STR_HYBRID_UNAWARE + 1 
+STR_HYBRID_PERF        = STR_HYBRID_UNAWARE + 2 
+STR_HYBRID_EFF         = STR_HYBRID_UNAWARE + 3 
 ;---------- Memory access and platform topology options names -----------------;
-STR_PARALLEL_THREADS   = STR_MEMORY_MTRR_UC + 1 
+STR_PARALLEL_THREADS   = STR_HYBRID_EFF + 1 
 STR_HYPER_THREADING    = STR_PARALLEL_THREADS + 1 
 STR_PROCESSOR_GROUPS   = STR_PARALLEL_THREADS + 2
 STR_NUMA_UNAWARE       = STR_PARALLEL_THREADS + 3
@@ -718,12 +729,13 @@ STR_PARM_VALUE_HEX     = STR_NOT_SUPPORTED_OS + 1
 STR_PARM_VALUE         = STR_PARM_VALUE_HEX + 1
 STR_TOPOLOGY           = STR_PARM_VALUE_HEX + 2
 STR_TOPOLOGY_SUMMARY   = STR_PARM_VALUE_HEX + 3
-STR_NUMA               = STR_PARM_VALUE_HEX + 4 
-STR_GROUPS             = STR_PARM_VALUE_HEX + 5 
-STR_SMBIOS             = STR_PARM_VALUE_HEX + 6             
-STR_ACPI_LIST          = STR_PARM_VALUE_HEX + 7
-STR_ACPI_SUMMARY       = STR_PARM_VALUE_HEX + 8
-STR_AFF_CPUID          = STR_PARM_VALUE_HEX + 9 
+STR_TOPOLOGY_SUMM_EX   = STR_PARM_VALUE_HEX + 4
+STR_NUMA               = STR_PARM_VALUE_HEX + 5 
+STR_GROUPS             = STR_PARM_VALUE_HEX + 6 
+STR_SMBIOS             = STR_PARM_VALUE_HEX + 7             
+STR_ACPI_LIST          = STR_PARM_VALUE_HEX + 8
+STR_ACPI_SUMMARY       = STR_PARM_VALUE_HEX + 9
+STR_AFF_CPUID          = STR_PARM_VALUE_HEX + 10 
 ;---------- Strings for operating system information text ---------------------;
 STR_OS_MEMORY_LOAD     = STR_AFF_CPUID + 1
 STR_OS_TOTAL_PHYSICAL  = STR_OS_MEMORY_LOAD + 1
@@ -766,8 +778,9 @@ STR_TP_CACHE_WAYS      = STR_TP_CPU_CORE + 13
 STR_TP_CACHE_LINE      = STR_TP_CPU_CORE + 14
 STR_TP_CACHE_SIZE      = STR_TP_CPU_CORE + 15
 STR_TP_X               = STR_TP_CPU_CORE + 16
+STR_TP_PLUS            = STR_TP_CPU_CORE + 17
 ;---------- Strings for extended topology information text --------------------;
-STR_ET_GROUP           = STR_TP_X + 1 
+STR_ET_GROUP           = STR_TP_PLUS + 1 
 STR_ET_EFFICIENCY      = STR_ET_GROUP + 1
 STR_ET_SMT             = STR_ET_GROUP + 2
 ;---------- Strings for SMBIOS information text -------------------------------;
@@ -789,49 +802,55 @@ STR_MR_HYPER_THR       = STR_MR_FIRST + 5
 STR_MR_LARGE_PAGES     = STR_MR_FIRST + 6
 STR_MR_NUMA            = STR_MR_FIRST + 7
 STR_MR_P_GROUPS        = STR_MR_FIRST + 8
-STR_MR_TARGET_OBJ      = STR_MR_FIRST + 9
-STR_MR_PREF_DIST       = STR_MR_FIRST + 10
-STR_MR_SIZE_TOTAL      = STR_MR_FIRST + 11
-STR_MR_SIZE_PER_THR    = STR_MR_FIRST + 12
-STR_MR_MEASURE_PROF    = STR_MR_FIRST + 13
-STR_MR_MEASURE_REP     = STR_MR_FIRST + 14
-STR_MR_MEMORY_ALLOC    = STR_MR_FIRST + 15
-STR_MR_BLOCK_1         = STR_MR_FIRST + 16
-STR_MR_BLOCK_2         = STR_MR_FIRST + 17
-STR_MR_MEM_ALC_ALL     = STR_MR_FIRST + 18
-STR_MR_MEM_ALC_THR     = STR_MR_FIRST + 19
-STR_MR_MEAS_RESULTS    = STR_MR_FIRST + 20
-STR_MR_DT_MS           = STR_MR_FIRST + 21
-STR_MR_DTSC_SEC_MHZ    = STR_MR_FIRST + 22
-STR_MR_DTSC_INS_CLK    = STR_MR_FIRST + 23
-STR_MR_SPEED_MBPS      = STR_MR_FIRST + 24
-STR_MR_LATENCY_NS      = STR_MR_FIRST + 25
-STR_MR_APP_TYPE_32     = STR_MR_FIRST + 26   ; Application and OS type
-STR_MR_APP_TYPE_64     = STR_MR_FIRST + 27
-STR_MR_APP_TYPE_WOW    = STR_MR_FIRST + 28 
-STR_MR_HT_00           = STR_MR_FIRST + 29   ; Hyper-threading option strings, for simple result window
-STR_MR_HT_01           = STR_MR_FIRST + 30
-STR_MR_HT_02           = STR_MR_FIRST + 31
-STR_MR_LP_00           = STR_MR_FIRST + 32   ; Large pages, for simple result window
-STR_MR_LP_01           = STR_MR_FIRST + 33
-STR_MR_LP_02           = STR_MR_FIRST + 34
-STR_MR_NUMA_00         = STR_MR_FIRST + 35   ; NUMA option strings
-STR_MR_NUMA_01         = STR_MR_FIRST + 36
-STR_MR_NUMA_02         = STR_MR_FIRST + 37
-STR_MR_NUMA_03         = STR_MR_FIRST + 38
-STR_MR_NUMA_04         = STR_MR_FIRST + 39
-STR_MR_PG_00           = STR_MR_FIRST + 40   ; PG option strings
-STR_MR_PG_01           = STR_MR_FIRST + 41
-STR_MR_PG_02           = STR_MR_FIRST + 42  
-STR_MR_PFDST_00        = STR_MR_FIRST + 43   ; Prefetch distance option strings          
-STR_MR_PFDST_01        = STR_MR_FIRST + 44
-STR_MR_PFDST_02        = STR_MR_FIRST + 45
-STR_MR_PFDST_03        = STR_MR_FIRST + 46
-STR_MR_MEASURE_00      = STR_MR_FIRST + 47   ; Measurement options strings
-STR_MR_MEASURE_01      = STR_MR_FIRST + 48
-STR_MR_MEASURE_02      = STR_MR_FIRST + 49
-STR_MR_MEASURE_03      = STR_MR_FIRST + 50
-STR_MR_PLUS_TIME       = STR_MR_FIRST + 51 
+STR_MR_HYBRID          = STR_MR_FIRST + 9 
+STR_MR_TARGET_OBJ      = STR_MR_FIRST + 10
+STR_MR_PREF_DIST       = STR_MR_FIRST + 11
+STR_MR_SIZE_TOTAL      = STR_MR_FIRST + 12
+STR_MR_SIZE_PER_THR    = STR_MR_FIRST + 13
+STR_MR_MEASURE_PROF    = STR_MR_FIRST + 14
+STR_MR_MEASURE_REP     = STR_MR_FIRST + 15
+STR_MR_MEMORY_ALLOC    = STR_MR_FIRST + 16
+STR_MR_BLOCK_1         = STR_MR_FIRST + 17
+STR_MR_BLOCK_2         = STR_MR_FIRST + 18
+STR_MR_MEM_ALC_ALL     = STR_MR_FIRST + 19
+STR_MR_MEM_ALC_THR     = STR_MR_FIRST + 20
+STR_MR_MEAS_RESULTS    = STR_MR_FIRST + 21
+STR_MR_DT_MS           = STR_MR_FIRST + 22
+STR_MR_DTSC_SEC_MHZ    = STR_MR_FIRST + 23
+STR_MR_DTSC_INS_CLK    = STR_MR_FIRST + 24
+STR_MR_SPEED_MBPS      = STR_MR_FIRST + 25
+STR_MR_LATENCY_NS      = STR_MR_FIRST + 26
+STR_MR_APP_TYPE_32     = STR_MR_FIRST + 27   ; Application and OS type
+STR_MR_APP_TYPE_64     = STR_MR_FIRST + 28
+STR_MR_APP_TYPE_WOW    = STR_MR_FIRST + 29 
+STR_MR_HT_00           = STR_MR_FIRST + 30   ; Hyper-threading option strings, for simple result window
+STR_MR_HT_01           = STR_MR_FIRST + 31
+STR_MR_HT_02           = STR_MR_FIRST + 32
+STR_MR_LP_00           = STR_MR_FIRST + 33   ; Large pages, for simple result window
+STR_MR_LP_01           = STR_MR_FIRST + 34
+STR_MR_LP_02           = STR_MR_FIRST + 35
+STR_MR_NUMA_00         = STR_MR_FIRST + 36   ; NUMA option strings
+STR_MR_NUMA_01         = STR_MR_FIRST + 37
+STR_MR_NUMA_02         = STR_MR_FIRST + 38
+STR_MR_NUMA_03         = STR_MR_FIRST + 39
+STR_MR_NUMA_04         = STR_MR_FIRST + 40
+STR_MR_PG_00           = STR_MR_FIRST + 41   ; PG option strings
+STR_MR_PG_01           = STR_MR_FIRST + 42
+STR_MR_PG_02           = STR_MR_FIRST + 43  
+STR_MR_HYBRID_00       = STR_MR_FIRST + 44   ; Hybrid topology option strings
+STR_MR_HYBRID_01       = STR_MR_FIRST + 45
+STR_MR_HYBRID_02       = STR_MR_FIRST + 46
+STR_MR_HYBRID_03       = STR_MR_FIRST + 47
+STR_MR_HYBRID_04       = STR_MR_FIRST + 48
+STR_MR_PFDST_00        = STR_MR_FIRST + 49   ; Prefetch distance option strings          
+STR_MR_PFDST_01        = STR_MR_FIRST + 50
+STR_MR_PFDST_02        = STR_MR_FIRST + 51
+STR_MR_PFDST_03        = STR_MR_FIRST + 52
+STR_MR_MEASURE_00      = STR_MR_FIRST + 53   ; Measurement options strings
+STR_MR_MEASURE_01      = STR_MR_FIRST + 54
+STR_MR_MEASURE_02      = STR_MR_FIRST + 55
+STR_MR_MEASURE_03      = STR_MR_FIRST + 56
+STR_MR_PLUS_TIME       = STR_MR_FIRST + 57 
 ;---------- Strings for child screen = Memory and cache performance draw ------;
 STR_MD_PD_NOT_USED    = STR_MR_PLUS_TIME + 1
 STR_MD_PD_DEFAULT     = STR_MD_PD_NOT_USED + 1 
@@ -840,22 +859,27 @@ STR_MD_PD_LONG        = STR_MD_PD_NOT_USED + 3
 STR_MD_PD_UNKNOWN     = STR_MD_PD_NOT_USED + 4 
 STR_MD_REFRESH        = STR_MD_PD_NOT_USED + 5 
 STR_MD_THREADS        = STR_MD_PD_NOT_USED + 6 
-STR_MD_LP_NOT_USED    = STR_MD_PD_NOT_USED + 7 
-STR_MD_4K_PAGES       = STR_MD_PD_NOT_USED + 8
-STR_MD_LARGE_PAGES    = STR_MD_PD_NOT_USED + 9
-STR_MD_NUMA_OFF       = STR_MD_PD_NOT_USED + 10
-STR_MD_NUMA_UNAWARE   = STR_MD_PD_NOT_USED + 11
-STR_MD_NUMA_SINGLE    = STR_MD_PD_NOT_USED + 12
-STR_MD_NUMA_LOCAL     = STR_MD_PD_NOT_USED + 13
-STR_MD_NUMA_REMOTE    = STR_MD_PD_NOT_USED + 14
-STR_MD_CPI            = STR_MD_PD_NOT_USED + 15
-STR_MD_NSPI           = STR_MD_PD_NOT_USED + 16
-STR_MD_MBPS           = STR_MD_PD_NOT_USED + 17
-STR_MD_MINIMUM        = STR_MD_PD_NOT_USED + 18
-STR_MD_MAXIMUM        = STR_MD_PD_NOT_USED + 19
-STR_MD_AVERAGE        = STR_MD_PD_NOT_USED + 20
-STR_MD_MEDIAN         = STR_MD_PD_NOT_USED + 21
-STR_MD_TSC_CLOCK_MHZ  = STR_MD_PD_NOT_USED + 22
+STR_MD_NO_HYBRID      = STR_MD_PD_NOT_USED + 7
+STR_MD_HYBRID_BY_OS   = STR_MD_PD_NOT_USED + 8
+STR_MD_HYBRID_P_E     = STR_MD_PD_NOT_USED + 9
+STR_MD_HYBRID_P       = STR_MD_PD_NOT_USED + 10
+STR_MD_HYBRID_E       = STR_MD_PD_NOT_USED + 11
+STR_MD_LP_NOT_USED    = STR_MD_PD_NOT_USED + 12 
+STR_MD_4K_PAGES       = STR_MD_PD_NOT_USED + 13
+STR_MD_LARGE_PAGES    = STR_MD_PD_NOT_USED + 14
+STR_MD_NUMA_OFF       = STR_MD_PD_NOT_USED + 15
+STR_MD_NUMA_UNAWARE   = STR_MD_PD_NOT_USED + 16
+STR_MD_NUMA_SINGLE    = STR_MD_PD_NOT_USED + 17
+STR_MD_NUMA_LOCAL     = STR_MD_PD_NOT_USED + 18
+STR_MD_NUMA_REMOTE    = STR_MD_PD_NOT_USED + 19
+STR_MD_CPI            = STR_MD_PD_NOT_USED + 20
+STR_MD_NSPI           = STR_MD_PD_NOT_USED + 21
+STR_MD_MBPS           = STR_MD_PD_NOT_USED + 22
+STR_MD_MINIMUM        = STR_MD_PD_NOT_USED + 23
+STR_MD_MAXIMUM        = STR_MD_PD_NOT_USED + 24
+STR_MD_AVERAGE        = STR_MD_PD_NOT_USED + 25
+STR_MD_MEDIAN         = STR_MD_PD_NOT_USED + 26
+STR_MD_TSC_CLOCK_MHZ  = STR_MD_PD_NOT_USED + 27
 ;---------- Strings for child screen = Vector brief performance report --------;
 STR_VB_CPU_FEATURES    = STR_MD_TSC_CLOCK_MHZ + 1  
 STR_VB_AVX_256         = STR_VB_CPU_FEATURES + 1
@@ -1055,9 +1079,12 @@ l4u           db  40 + 1  dup ?
 ends
 ;---------- Topology strings at system information screen ---------------------;
 struct BINDTOPOLOGY
+hybridBitmap  db  ?
 threads       db  10 + 1  dup ?
 cores         db  10 + 1  dup ?
 sockets       db  10 + 1  dup ?
+pCores        db  10 + 1  dup ?
+eCores        db  10 + 1  dup ?
 ends
 ;---------- OS/Memory/NUMA/Paging strings at system information screen --------;
 struct BINDSYS
@@ -1089,7 +1116,7 @@ bindSys       BINDSYS       ?
 getMemMethod   dd  ?
 getMemObject   dw  ?
 getMemOption   db  ?
-getMemMtrr     db  ?
+getMemHybrid   db  ?
 getMemSmp      db  ?
 getMemNuma     db  ?
 getMemAccess   db  ?
@@ -1112,7 +1139,7 @@ getBlkDist     dd  ?
 setMemMethod   dd  ? , ?
 setMemObject   dw  ? , ?
 setMemOption   db  ? , ?
-setMemMtrr     db  ? , ?
+setMemHybrid   db  ? , ?
 setMemSmp      db  ? , ?
 setMemNuma     db  ? , ?
 setMemAccess   db  ? , ?
@@ -1182,6 +1209,7 @@ mrHyperT       db  40 + 1  dup ?
 mrLargeP       db  40 + 1  dup ?
 mrNuma         db  40 + 1  dup ?
 mrGroups       db  40 + 1  dup ?
+mrHybrid       db  40 + 1  dup ?  
 mrTarget       db  40 + 1  dup ?
 mrDistance     db  40 + 1  dup ?
 mrSizeTotal    db  40 + 1  dup ?

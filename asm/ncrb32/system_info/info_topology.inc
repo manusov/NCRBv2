@@ -52,12 +52,13 @@ ret
 ; OUTPUT:  EBP = Dynamically allocated memory pointer updated                  ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-TextTopology:
-;
+
 TEMP_THREADS   EQU  dword [esp + 00 + 04]
 TEMP_CORES     EQU  dword [esp + 04 + 04]
 TEMP_SOCKETS   EQU  dword [esp + 08 + 04]
-;
+
+TextTopology:
+;---------- Build text block for topology screen, first block = objects list --;
 mov [DYNA_PTR.textTopology1.objectStart],ebp
 mov ebx,[DYNA_PTR.listTopology.objectStart]
 mov eax,[DYNA_PTR.listTopology.objectStop]
@@ -352,7 +353,6 @@ mov eax,dword [esi + eax]
 jmp ParameterEntry
 
 ;--- Write cache size and count string for text gener. by topology parsing ----;
-; Has 3 entry points depend on parameter width: 8, 16, 32 bits                 ;
 ;                                                                              ;
 ; INPUT:   ESI = Pointer to topology information buffer                        ;
 ;          EDI = Destination text buffer                                       ;
@@ -363,27 +363,76 @@ jmp ParameterEntry
 ; OUTPUT:  None                                                                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
+; DWORD [EBP + 04] = Cache size
+; DWORD [EBP + 08] = Cache units count
+; DWORD [EBP + 12] = First variant of cache size for detect hybrid CPU
 HelperCacheSummary:
-push ecx esi 0 0 ebp
+push ecx esi 0 0 0 ebp
 mov ebp,esp
-push eax
-test ecx,ecx
-jz .nodata
+jecxz .nodata             ; Go skip if list empty
 movzx ebx,ah
 xchg edx,eax
-.scanCaches:
+;--- Scan topology list for cache object, this is first pass for hybrid CPU ---;
+push ecx esi
+.scanCaches:              ; This cycle for count number cache units
 cmp dword [esi + 04],2
-jne .done
+jne .done                 ; Go skip if descriptor type mismatch
 cmp byte [esi + 08],dl
-jne .done
+jne .done                 ; Go skip if cache level mismatch
 cmp dword [esi + 16],ebx
-jne .done
+jne .done                 ; Go skip if cache type mismatch
+cmp dword [ebp + 12],0
+je .store                 ; Go assign this cache size if yet not assigned
 mov eax,[esi + 12]
+cmp [ebp + 12],eax
+jne .done                 ; Skip this cache size if differrent size (hybrid)
+.store:
+mov eax,[esi + 12]        ; EAX = cache size
 mov [ebp + 04],eax
-inc dword [ebp + 08]
+inc dword [ebp + 08]      ; Cache units count + 1
+mov [ebp + 12],eax
 .done:
 add esi,24
-loop .scanCaches
+loop .scanCaches              ; This cycle for count number cache units
+call HelperCacheSummarySave
+pop esi ecx
+;--- Scan topology list for cache object, this is second pass for hybrid CPU --;
+mov dword [ebp + 04],0
+mov dword [ebp + 08],0
+.scanCachesHybrid:        ; This cycle for count number cache units
+cmp dword [esi + 04],2
+jne .doneHybrid           ; Go skip if descriptor type mismatch
+cmp byte [esi + 08],dl
+jne .doneHybrid           ; Go skip if cache level mismatch
+cmp dword [esi + 16],ebx
+jne .doneHybrid           ; Go skip if cache type mismatch
+mov eax,[esi + 12]        ; EAX = cache size
+cmp [ebp + 12],eax
+je .doneHybrid            ; Skip this cache size if previous same size (hybrid)
+mov [ebp + 04],eax
+inc dword [ebp + 08]      ; Cache units count + 1
+.doneHybrid:
+add esi,24
+loop .scanCachesHybrid      ; This cycle for count number cache units
+call HelperCacheSummarySave
+.nodata:
+pop ebp eax eax eax esi ecx
+ret
+
+;--- Helper for add cache to text report and update size and count variables --; 
+;                                                                              ; 
+; INPUT:   EDI = Destination text buffer                                       ;
+;          DL  = Cache level                                                   ;
+;          BL  = Cache type code                                               ;
+;          EBP = Pointer to input parameters                                   ;
+;          DWORD [EBP + 04] = Cache size value, if 0, operation skipped        ;
+;          DWORD [EBP + 08] = Cache count value                                ;
+;                                                                              ;
+; OUTPUT:  None                                                                ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperCacheSummarySave:
+push ebx edx
 cmp dword [ebp + 08],0
 je .nodata
 mov bh,dl
@@ -419,14 +468,15 @@ mov eax,[ebp + 08]     ; dword [ebp + 08] = Cache count for write size x count
 mov bl,0
 call DecimalPrint32
 pop edi
-pop eax
-push eax
-call HelperSummaryCache
+mov al,[esp + 00]
+mov ah,[esp + 04] 
+call HelperCacheSummaryBinary
 .nodata:
-pop eax ebp eax eax esi ecx
+pop edx ebx
 ret
 
 ;--- Helper for write cache size and count variables by topology WinAPI -------;
+; 3 entry points: non-hybrid CPU, hybrid CPU P-Cores, hybrid CPU E-Cores       ;
 ;                                                                              ; 
 ; INPUT:   AX = Cache level and type code                                      ;
 ;          dword [EBP + 4] = Cache size value                                  ;
@@ -435,8 +485,15 @@ ret
 ; OUTPUT:  None                                                                ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-HelperSummaryCache:
+HelperCachePerfCoreBinary:             ; Entry point for hybrid P-Cores info
+mov ebx,SYS_PARMS.perfCoreCache
+jmp HelperCacheBinaryEntry
+HelperCacheEffCoreBinary:              ; Entry point for hybrid E-Cores info
+mov ebx,SYS_PARMS.effCoreCache
+jmp HelperCacheBinaryEntry
+HelperCacheSummaryBinary:              ; Entry point for non-hybrid
 mov ebx,SYS_PARMS.summaryCache
+HelperCacheBinaryEntry:
 lea esi,[ebx + SUMMARYCACHE.sizeL1C]
 cmp ax,0101h
 je .detected 
