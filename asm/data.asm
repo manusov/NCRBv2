@@ -53,7 +53,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.4.3.0'
+RESOURCE_VERSION      EQU  '2.4.4.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -2271,14 +2271,15 @@ endres
 resdata fontList
 ; parameters sequence:
 ; cHeight, cWidth, cWeight, iCharset, iOutPrecision,
-; iClipPrecision, iQuality, iPitchAndFamily  
+; iClipPrecision, iQuality, iPitchAndFamily
+; Font name string, 0  
 DW  17 , 10 , FW_DONTCARE , DEFAULT_CHARSET
 DW  OUT_TT_ONLY_PRECIS  , CLIP_DEFAULT_PRECIS , CLEARTYPE_QUALITY , FIXED_PITCH
 DB  'Verdana' , 0
 DW  16 , 40 , FW_DONTCARE , DEFAULT_CHARSET
 DW  OUT_TT_ONLY_PRECIS  , CLIP_DEFAULT_PRECIS , CLEARTYPE_QUALITY , FIXED_PITCH
 DB  'System monospace' , 0
-DW  0
+DW  0                             ; This 0 is terminator for list of fonts
 endres
 ;---------- Raw resource for color brushes used in the drawings window --------;
 resdata brushesList

@@ -47,24 +47,24 @@
 ;                        FASM and NCRB definitions.                            ;        
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-include 'win64a.inc'               ; FASM definitions
-include 'data\data.inc'            ; NCRB project global definitions
+include 'win64a.inc'             ; FASM definitions
+include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.4.3.0'
+RESOURCE_VERSION        EQU '2.4.4.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.03 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.04.04 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
-ID_EXE_ICON             = 100      ; This application icon
-ID_EXE_ICONS            = 101      ; This application icon group
-MSG_MEMORY_ALLOC_ERROR  = 0        ; Error messages IDs, from this file
-MSG_INIT_FAILED         = 1        ; Note. Resource DLL cannot be used for 
-MSG_LOAD_FAILED         = 2        ; this messages:
-MSG_HANDLE_NULL         = 3        ; it must be valid before DLL loaded 
+ID_EXE_ICON             = 100    ; This application icon
+ID_EXE_ICONS            = 101    ; This application icon group
+MSG_MEMORY_ALLOC_ERROR  = 0      ; Error messages IDs, from this file
+MSG_INIT_FAILED         = 1      ; Note. Resource DLL cannot be used for 
+MSG_LOAD_FAILED         = 2      ; this messages strings:
+MSG_HANDLE_NULL         = 3      ; this strings must be valid before DLL loaded 
 MSG_ICON_FAILED         = 4 
 MSG_ICONS_POOL_FAILED   = 5
 MSG_RAW_RESOURCE_FAILED = 6  
@@ -133,23 +133,23 @@ test rax,rax
 jz .iconFailed                     ; Go if load error, icon handle = NULL
 mov [r15 + APPDATA.hIcon],rax      ; Store handle of application icon
 ;---------- Get handles and address pointers to tabs icons at resources DLL ---;
-mov ebx,ICON_FIRST                   ; EBX = Icons identifiers
 lea rdi,[r15 + APPDATA.lockedIcons]  ; RDI = Pointer to icons pointers list
 mov esi,ICON_COUNT                   ; ESI = Number of loaded icons
+mov ebx,ICON_FIRST                   ; EBX = Icons identifiers
 ;---------- Cycle for load icons from resource DLL ----------------------------;
 .loadIcons:
-mov r8d,RT_GROUP_ICON
-mov edx,ebx
-mov rcx,[r15 + APPDATA.hResources]
+mov r8d,RT_GROUP_ICON              ; R8  = Parm#3 = Resource type 
+mov edx,ebx                        ; RDX = Parm#2 = Resource name, ID used
+mov rcx,[r15 + APPDATA.hResources] ; RCX = Parm#1 = Module handle, resource DLL 
 call [FindResource]
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-xchg rdx,rax
-mov rcx,[r15 + APPDATA.hResources]
+xchg rdx,rax                       ; RDX = Parm#2 = Resource handle 
+mov rcx,[r15 + APPDATA.hResources] ; RCX = Parm#1 = Module handle, resource DLL 
 call [LoadResource] 
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-xchg rcx,rax
+xchg rcx,rax                       ; RCX = Parm#1 = Resource data handle
 call [LockResource] 
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if pointer = NULL, means error
@@ -162,19 +162,20 @@ jnz .loadIcons                     ; Cycle for initializing all icons
 lea rdi,[r15 + APPDATA.lockedBigIcons]
 mov esi,BIG_ICON_COUNT
 mov ebx,IDG_ABOUT_BOX
+;---------- Cycle for load icons from resource DLL ----------------------------;
 .loadBigIcons:                     ; Cycle for icons resources and images
-mov r8d,RT_GROUP_ICON
-mov edx,ebx
-mov rcx,[r15 + APPDATA.hResources]
+mov r8d,RT_GROUP_ICON              ; R8  = Parm#3 = Resource type
+mov edx,ebx                        ; RDX = Parm#2 = Resource name, ID used
+mov rcx,[r15 + APPDATA.hResources] ; RCX = Parm#1 = Module handle, resource DLL
 call [FindResource]
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-xchg rdx,rax
-mov rcx,[r15 + APPDATA.hResources]
+xchg rdx,rax                       ; RDX = Parm#2 = Resource handle
+mov rcx,[r15 + APPDATA.hResources] ; RCX = Parm#1 = Module handle, resource DLL
 call [LoadResource] 
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-xchg rcx,rax
+xchg rcx,rax                       ; RCX = Parm#1 = Resource data handle
 call [LockResource] 
 test rax,rax                       ; RAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if pointer = NULL, means error
@@ -191,9 +192,9 @@ mov r9d,30000h                    ; R9  = Parm#4 = Version of icon format
 mov r8d,TRUE                      ; R8  = Parm#3 = Icon/Cursor, TRUE means Icon
 mov edx,10A8h                     ; RDX = Parm#2 = dwResSize, bytes (from file) 
 xchg rcx,rax                      ; RCX = Parm#1 = Pointer to resource bits 
-sub rsp,32
+sub rsp,32                        ; Parameters shadow
 call [CreateIconFromResourceEx]   ; Create icon, return handle
-add rsp,32 + 32
+add rsp,32 + 32                   ; Remove parameters shadow and 4 QWORDs
 test rax,rax                            ; RAX = HICON, handle of icon
 jz .iconsPoolFailed                     ; Go if pointer = NULL, means error
 mov [rdi + BIG_ICON_COUNT * 8 - 8],rax  ; Store pointer to icon
@@ -234,33 +235,33 @@ mov rsi,[r15 + APPDATA.lockedFontList]
 lea rdi,[r15 + APPDATA.hFont1]
 .createFonts:
 xor eax,eax
-movzx ecx,word [rsi + 00]
-jrcxz .doneFonts
+movzx ecx,word [rsi + 00]   ; RCX = Parm#1 = cHeight
+jrcxz .doneFonts            ; Go exit cycle if end of list
 lea rdx,word [rsi + 16]
-push rdx
+push rdx                    ; Parm#14 = pszFaceName (font name)
 movzx edx,word [rsi + 14]
-push rdx
+push rdx                    ; Parm#13 = iPitchAndFamily
 movzx edx,word [rsi + 12]
-push rdx
+push rdx                    ; Parm#12 = iQuality
 movzx edx,word [rsi + 10]
-push rdx
+push rdx                    ; Parm#11 = iClipPrecision
 movzx edx,word [rsi + 08]
-push rdx
+push rdx                    ; Parm#10 = iOutPrecision
 movzx edx,word [rsi + 06]
-push rdx
-push rax
-push rax
-push rax
+push rdx                    ; Parm#9 = iCharset
+push rax                    ; Parm#8 = bStrikeOut = 0
+push rax                    ; Parm#7 = bUnderline = 0
+push rax                    ; Parm#6 = bItalic = 0
 movzx edx,word [rsi + 04]
-push rdx
-xor r9d,r9d
-xor r8d,r8d
-xor edx,edx
+push rdx                    ; Parm#5 = cWeight
+xor r9d,r9d                 ; R9  = Parm#4 = cOrientation = 0
+xor r8d,r8d                 ; R8  = Parm#3 = cEscapement = 0
+xor edx,edx                 ; RDX = Parm#2 = cWidth, 0 means closed match value
 sub rsp,32
 call [CreateFont]
 add rsp,32 + 80
 test rax,rax
-jz .createFontFailed
+jz .createFontFailed        ; Go error if font create failed
 stosq
 add rsi,16
 @@:
@@ -300,7 +301,7 @@ lea rdi,[DRAW_TSC]
 mov ax,STR_MD_TSC_CLOCK_MHZ
 call PoolStringWrite
 ;---------- Load configuration file ncrb.inf ----------------------------------; 
-; RSI = Pointer to resource strings, not change
+; R15 = Pointer to application data, not change
 ; RDI = Pointer to application buffers structure 
 lea rdi,[APP_BUFFERS]
 mov rbp,[APP_MEM_ALLOC]
@@ -310,9 +311,9 @@ lea r8,[rdi + APPBUFFERS.pointerLoadInf]
 lea r9,[rdi + APPBUFFERS.sizeLoadInf] 
 mov [r8],rbp
 mov qword [r9],LOAD_INF_LIMIT
-call LoadInf  ; Load configuration file NCRB.INF
+call LoadInf                ; Load configuration file NCRB.INF
 test rax,rax
-jz .skipInf
+jz .skipInf                 ; Go skip if configuration file not loaded
 ;---------- Parse loaded configuration file ncrb.inf --------------------------;
 mov rcx,[rdi + APPBUFFERS.pointerLoadInf]
 mov rdx,[rdi + APPBUFFERS.sizeLoadInf]
@@ -327,7 +328,7 @@ test rbp,0Fh
 jz @f
 and rbp,0FFFFFFFFFFFFFFF0h
 add rbp,10h 
-@@:
+@@:            ; At this point RBP aligned by 16
 add rdx,rcx
 call ParseInf  ; Parse configuration file NCRB.INF, assign option fields values
 ;---------- Analusing parsing errors ------------------------------------------;
@@ -510,7 +511,7 @@ lea rdi,[r15 + APPDATA.hFont1]
 lodsw
 test ax,ax
 jz .doneDeleteFonts
-mov rcx,[rdi]
+mov rcx,[rdi]             ; RCX = Parm#1 = Object handle
 add rdi,8
 jrcxz .skipDelete
 call [DeleteObject]
@@ -523,7 +524,7 @@ jnz @b
 jmp .deleteFonts
 .doneDeleteFonts:
 ;---------- Unload resource library -------------------------------------------; 
-mov rcx,[r15 + APPDATA.hResources]  ; RCX = Library DATA.DLL handle
+mov rcx,[r15 + APPDATA.hResources]  ; RCX = Parm#1 = Library DATA.DLL handle
 jrcxz .skipUnload                   ; Go skip unload if handle = null
 call [FreeLibrary]                  ; Unload DATA.DLL
 .skipUnload:
@@ -578,7 +579,7 @@ xor ecx,ecx            ; RCX = Parm#1 = Parent Window = NULL
 call [MessageBox]  
 mov r13d,1
 jmp .exitResources
-;---------- Show message box and go epplication termination -------------------;
+;---------- Show message box and go application termination -------------------;
 ; This procedure for incompatible platform detected but application integrity
 ; OK, use strings from resource DLL.
 .errorPlatform:       ; Input AX = Error string ID.
@@ -1554,16 +1555,17 @@ ERROR_BUFFER_LIMIT  = 07Ah
 VALUE_BUFFER_LIMIT  = 128 * 1024 
 ;---------- Equations for UPB, IPB, OPB data build and interpreting -----------;
 ; Assembler Methods (AM) option values count and Bandwidth/Latency criteria
-; TODO. Add new methods, update AM_BYTE_COUNT, LATENCY_MODE, plus see below.
+; Note. For add new methods, update AM_BYTE_COUNT, LATENCY_MODE, plus see below.
 AM_BYTE_COUNT       =  26     ; 26 bytes per methods primary list
-LATENCY_MODE        =  24     ; modes ID = 24, 25 for latency measurement. TODO. USE TRANSLATION FOR TEMPORAL/NONTEMPORAL, THIS VALUE = 24*2=48.
+; Note. Can use table NON_TEMPORAL_TRANSLATOR for make latency test temporal/nontemporal.
+LATENCY_MODE        =  24     ; modes ID = 24, 25 for latency measurement.
 LATENCY_MODE_COUNT  =  2      ; Force 32x2 addend (this yet for ia32 version only)
 READ_SSE128_MODE    =  9      ; for add information about prefetch distance
 READ_AVX256_MODE    =  12     ; for add information about prefetch distance
 READ_AVX512_MODE    =  15     ; for add information about prefetch distance
 ; Options limits and values
-; 22 codes of assembler option, argument for AM_Selector translation,
-; because 22 checkboxes for assembler method select in GUI
+; 26 codes of assembler option, argument for AM_Selector translation,
+; because 26 checkboxes for assembler method select in GUI
 ASM_ARGUMENT_LIMIT  =  AM_BYTE_COUNT - 1
 ; 45 names for assembler methods, result of AM_Selector translation
 ASM_RESULT_LIMIT    =  45 + 1
@@ -1917,11 +1919,13 @@ perfCoreCache     SUMMARYCACHE
 perfCoreTopology  SUMMARYTOPOLOGY
 effCoreCache      SUMMARYCACHE
 effCoreTopology   SUMMARYTOPOLOGY   ; end of sequental block, 6 structures
-; Affinity masks for hybrid P and E cores as single bit vector.  Note platforms with
-; simultaneously exists processor group and hybrid topology not supported yet.
+; Affinity masks for hybrid P and E cores as single bit vectors.
+; Note. Platforms with simultaneously exists processor groups
+; and hybrid topology not supported yet.
 perfCoreAffinity  dq  ?
 effCoreAffinity   dq  ?
-; This flags must be sequental for base-index access 
+; Differentiated Hyper Threading flags for all platform, P-Cores, E-Cores.
+; This flags must be sequental for base-index access
 htAll             db  ?    ; start of sequental block, 4 bytes
 htPcores          db  ?
 htEcores          db  ?

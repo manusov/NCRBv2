@@ -15,7 +15,7 @@ BuildNumaNodesList:
 cld
 push rbx rsi rdi rbp r12 r13 r14 0   ; Note push 0 is create local variable
 mov rbx,rcx                          ; RBX = Base address of build nodes list
-mov r14d,edx                         ; R14D = Number of processor groups
+mov r14d,edx                         ; R14D = Processor Groups option
 mov rbp,rsp
 and rsp,0FFFFFFFFFFFFFFF0h       ; Stack alignment because WinAPI calls
 sub rsp,32                       ; Make parameters shadow because WinAPI calls 

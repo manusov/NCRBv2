@@ -14,9 +14,9 @@
 ;------------------------------------------------------------------------------;
 BuildNumaNodesList:
 cld
-push ebx esi edi ebp ecx 0 ; Note  push ecx 0  is create local variables
-mov ebx,ecx                ; EBX = Base address of build nodes list
-                           ; dword [esp+4] = Number of processor groups
+push ebx esi edi ebp ecx edx 0 ; Note  push ecx edx 0  is create local variables
+mov ebx,ecx                    ; EBX = Base address of build nodes list
+                               ; Dword [esp + 04] = Processor Groups option
 ;---------- Select scenario = f( NUMA option ) --------------------------------;
 cmp eax,NUMA_NO_CONTROL
 jbe .withoutNuma
@@ -39,7 +39,7 @@ mov [ebx + NUMACTRL.nodeID],esi        ; Store node number
 lea eax,[ebx + NUMACTRL.nodeAffinity]  ; EAX = Pointer to Processor Mask
 push eax                               ; Parm #2 = Pointer Processor Mask
 push esi                               ; Parm #1 = Node number
-cmp dword [esp + 8],PG_OPTIMAL         ; dword [esp+8] = PG_OPTIMAL if  
+cmp dword [esp + 12],PG_OPTIMAL        ; Dword [esp + 12] = PG_OPTIMAL if  
 jne .getSmallMask                      ; Processor Groups: supported and enabled              
 .getBigMask:
 call [DYNA_IMPORT._GetNumaNodeProcessorMaskEx]  ; Write qword to [x], [x+8], mask+group
@@ -62,7 +62,7 @@ cmp ebx,ebp             ; Check size limit, maximum 64 used entries
 jb .numaNodesScan       ; Go cycle if entries available yet 
 ;---------- End of cycle for build list of nodes ------------------------------;
 .nodesDone:
-sub ebx,[esp + 4]       ; EBX = Number of bytes stored, now pointer - start p.
+sub ebx,[esp + 08]      ; EBX = Number of bytes stored, now pointer - start p.
 xchg eax,ebx            ; EAX = Number of bytes stored 
 xor edx,edx
 mov ebx,NUMACTRL_SIZE   ; EBX = One entry size
@@ -73,7 +73,7 @@ div ebx                 ; EAX = Total size / Entry size = entries stored,
 .done:
 clc                       ; CF=0 means no errors
 .exit:
-pop ecx ecx ebp edi esi ebx   ; first,  pop ecx ecx  because local variable
+pop ecx ecx ecx ebp edi esi ebx   ; first  pop ecx ecx ecx , local variables
 ret
 .error:
 stc                       ; CF=1 means error detected

@@ -47,24 +47,24 @@
 ;                        FASM and NCRB definitions.                            ;        
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-include 'win32a.inc'               ; FASM definitions
-include 'data\data.inc'            ; NCRB project global definitions
+include 'win32a.inc'             ; FASM definitions
+include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.4.3.0'
+RESOURCE_VERSION        EQU '2.4.4.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.03 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.04 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
-ID_EXE_ICON             = 100      ; This application icon
-ID_EXE_ICONS            = 101      ; This application icon group
-MSG_MEMORY_ALLOC_ERROR  = 0        ; Error messages IDs, from this file
-MSG_INIT_FAILED         = 1        ; Note. Resource DLL cannot be used for 
-MSG_LOAD_FAILED         = 2        ; this messages:
-MSG_HANDLE_NULL         = 3        ; it must be valid before DLL loaded 
+ID_EXE_ICON             = 100    ; This application icon
+ID_EXE_ICONS            = 101    ; This application icon group
+MSG_MEMORY_ALLOC_ERROR  = 0      ; Error messages IDs, from this file
+MSG_INIT_FAILED         = 1      ; Note. Resource DLL cannot be used for 
+MSG_LOAD_FAILED         = 2      ; this messages strings:
+MSG_HANDLE_NULL         = 3      ; this strings must be valid before DLL loaded 
 MSG_ICON_FAILED         = 4 
 MSG_ICONS_POOL_FAILED   = 5
 MSG_RAW_RESOURCE_FAILED = 6  
@@ -132,23 +132,23 @@ test eax,eax
 jz .iconFailed                     ; Go if load error, icon handle = NULL
 mov [ebx + APPDATA.hIcon],eax      ; Store handle of application icon
 ;---------- Get handles and address pointers to tabs icons at resources DLL ---; 
-mov ebp,ICON_FIRST                  ; EBP = Icons identifiers
 lea edi,[ebx + APPDATA.lockedIcons] ; EDI = Pointer to icons pointers list
 mov esi,ICON_COUNT                  ; ESI = Number of loaded icons
+mov ebp,ICON_FIRST                  ; EBP = Icons identifiers
 ;---------- Cycle for load icons from resource DLL ----------------------------;
-.loadIcons:
+.loadIcons:                        ; Cycle for icons resources and images
 push RT_GROUP_ICON                 ; Parm#3 = Resource type
 push ebp                           ; Parm#2 = Resource name, used numeric ID
 push [ebx + APPDATA.hResources]    ; Parm#1 = Module handle, this load from DLL
 call [FindResource]                ; Find resource, get handle of block
 test eax,eax                       ; EAX = HRSRC, handle of resource block
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-push eax                           ; Parm#2 = Resource name, used numeric ID
+push eax                           ; Parm#2 = Resource handle
 push [ebx + APPDATA.hResources]    ; Parm#1 = Module handle, this load from DLL
 call [LoadResource]                ; Load resource, get resource handle  
 test eax,eax                       ; EAX = HGLOBAL, handle of resource data
 jz .iconsPoolFailed                ; Go if handle = NULL, means error
-push eax                           ; Parm#1 = Resource handle
+push eax                           ; Parm#1 = Resource data handle
 call [LockResource]                ; Lock resource, get address pointer
 test eax,eax                       ; EAX = LPVOID, pointer to resource
 jz .iconsPoolFailed                ; Go if pointer = NULL, means error
@@ -161,6 +161,7 @@ jnz .loadIcons                     ; Cycle for initializing all icons
 lea edi,[ebx + APPDATA.lockedBigIcons]
 mov esi,BIG_ICON_COUNT
 mov ebp,IDG_ABOUT_BOX
+;---------- Cycle for load icons from resource DLL ----------------------------;
 .loadBigIcons:                     ; Cycle for icons resources and images
 push RT_GROUP_ICON                 ; Parm#3 = Resource type
 push ebp                           ; Parm#2 = Resource name, used numeric ID
@@ -231,31 +232,31 @@ lea edi,[ebx + APPDATA.hFont1]
 .createFonts:
 xor eax,eax
 movzx ecx,word [esi + 00]
-jecxz .doneFonts
+jecxz .doneFonts            ; Go exit cycle if end of list
 lea edx,word [esi + 16]
-push edx
+push edx                    ; Parm#14 = pszFaceName (font name)
 movzx edx,word [esi + 14]
-push edx
+push edx                    ; Parm#13 = iPitchAndFamily
 movzx edx,word [esi + 12]
-push edx
+push edx                    ; Parm#12 = iQuality
 movzx edx,word [esi + 10]
-push edx
+push edx                    ; Parm#11 = iClipPrecision
 movzx edx,word [esi + 08]
-push edx
+push edx                    ; Parm#10 = iOutPrecision
 movzx edx,word [esi + 06]
-push edx
-push eax
-push eax
-push eax
+push edx                    ; Parm#9 = iCharset
+push eax                    ; Parm#8 = bStrikeOut = 0
+push eax                    ; Parm#7 = bUnderline = 0
+push eax                    ; Parm#6 = bItalic = 0
 movzx edx,word [esi + 04]
-push edx
-push eax
-push eax
-push eax
-push ecx
+push edx                    ; Parm#5 = cWeight
+push eax                    ; Parm#4 = cOrientation = 0
+push eax                    ; Parm#3 = cEscapement = 0
+push eax                    ; Parm#2 = cWidth, 0 means closed match value
+push ecx                    ; Parm#1 = cHeight
 call [CreateFont]
 test eax,eax
-jz .createFontFailed
+jz .createFontFailed        ; Go error if font create failed
 stosd
 add esi,16
 @@:
@@ -307,10 +308,10 @@ lea esi,[edi + APPBUFFERS.pointerLoadInf]
 lea edi,[edi + APPBUFFERS.sizeLoadInf] 
 mov [esi],ebp
 mov dword [edi],LOAD_INF_LIMIT
-call LoadInf  ; Load configuration file NCRB.INF
+call LoadInf                ; Load configuration file NCRB.INF
 pop edi
 test eax,eax
-jz .skipInf
+jz .skipInf                 ; Go skip if configuration file not loaded
 ;---------- Parse loaded configuration file ncrb.inf --------------------------;
 mov ecx,[edi + APPBUFFERS.pointerLoadInf]
 mov edx,[edi + APPBUFFERS.sizeLoadInf]
@@ -325,7 +326,7 @@ test ebp,0Fh
 jz @f
 and ebp,0FFFFFFF0h
 add ebp,10h 
-@@:
+@@:            ; At this point EBP aligned by 16
 add edx,ecx
 call ParseInf  ; Parse configuration file NCRB.INF, assign option fields values
 ;---------- Analusing parsing errors ------------------------------------------;
@@ -522,7 +523,7 @@ jz .doneDeleteFonts
 mov ecx,[edi]
 add edi,4
 jecxz .skipDelete
-push ecx
+push ecx             ; Parm#1 = Object handle
 call [DeleteObject]
 .skipDelete:
 add esi,14
@@ -536,7 +537,7 @@ pop esi
 ;---------- Unload resource library -------------------------------------------;
 mov ecx,[ebx + APPDATA.hResources]  ; ECX = Library DATA.DLL handle
 jecxz .skipUnload                   ; Go skip unload if handle = null
-push ecx
+push ecx                            ; Parm#1 = Library handle
 call [FreeLibrary]                  ; Unload DATA.DLL
 .skipUnload:
 ;---------- Release memory ----------------------------------------------------;
@@ -575,7 +576,7 @@ mov al,MSG_INIT_FAILED
 jmp .errorProgram
 .memoryAllocError:
 mov al,MSG_MEMORY_ALLOC_ERROR
-;---------- Show message box and go epplication termination -------------------;
+;---------- Show message box and go application termination -------------------;
 ; This procedure for application error, use message strings from exe file,
 ; can execute if resource DLL not loaded or load failes.
 .errorProgram:
@@ -1565,16 +1566,17 @@ ERROR_BUFFER_LIMIT  = 07Ah
 VALUE_BUFFER_LIMIT  = 128 * 1024 
 ;---------- Equations for UPB, IPB, OPB data build and interpreting -----------;
 ; Assembler Methods (AM) option values count and Bandwidth/Latency criteria
-; TODO. Add new methods, update AM_BYTE_COUNT, LATENCY_MODE, plus see below.
+; Note. For add new methods, update AM_BYTE_COUNT, LATENCY_MODE, plus see below.
 AM_BYTE_COUNT       =  26     ; 26 bytes per methods primary list
-LATENCY_MODE        =  24     ; modes ID = 24, 25 for latency measurement.  TODO. USE TRANSLATION FOR TEMPORAL/NONTEMPORAL, THIS VALUE = 24*2=48.
+; Note. Can use table NON_TEMPORAL_TRANSLATOR for make latency test temporal/nontemporal.
+LATENCY_MODE        =  24     ; modes ID = 24, 25 for latency measurement.
 LATENCY_MODE_COUNT  =  2      ; Force 32x2 addend (this yet for ia32 version only)
 READ_SSE128_MODE    =  9      ; for add information about prefetch distance
 READ_AVX256_MODE    =  12     ; for add information about prefetch distance
 READ_AVX512_MODE    =  15     ; for add information about prefetch distance
 ; Options limits and values
-; 22 codes of assembler option, argument for AM_Selector translation,
-; because 22 checkboxes for assembler method select in GUI
+; 26 codes of assembler option, argument for AM_Selector translation,
+; because 26 checkboxes for assembler method select in GUI
 ASM_ARGUMENT_LIMIT  =  AM_BYTE_COUNT - 1
 ; 45 names for assembler methods, result of AM_Selector translation
 ASM_RESULT_LIMIT    =  45 + 1
@@ -1929,10 +1931,12 @@ perfCoreCache     SUMMARYCACHE
 perfCoreTopology  SUMMARYTOPOLOGY
 effCoreCache      SUMMARYCACHE
 effCoreTopology   SUMMARYTOPOLOGY   ; end of sequental block, 6 structures
-; Affinity masks for hybrid P and E cores as single bit vector.  Note platforms with
-; simultaneously exists processor group and hybrid topology not supported yet.
+; Affinity masks for hybrid P and E cores as single bit vectors.
+; Note. Platforms with simultaneously exists processor groups
+; and hybrid topology not supported yet.
 perfCoreAffinity  dd  ?
 effCoreAffinity   dd  ?
+; Differentiated Hyper Threading flags for all platform, P-Cores, E-Cores.
 ; This flags must be sequental for base-index access
 htAll             db  ?    ; start of sequental block, 4 bytes
 htPcores          db  ?
