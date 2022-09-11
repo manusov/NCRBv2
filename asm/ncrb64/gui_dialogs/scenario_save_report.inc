@@ -7,6 +7,7 @@
 ;------------------------------------------------------------------------------; 
 
 ; TODO. Check disk full.
+; TODO. Append option for text report, especially for table after drawings.
 ; TODO. Results for system information, vector brief, simple run, 
 ;       table for drawings data.
 
@@ -69,7 +70,7 @@ jnz .createOk
 call [GetLastError]
 cmp eax,ERROR_FILE_EXISTS
 jne .reportError 
-;---------- Support situation File exists -------------------------------------;
+;---------- Support situation: file exists ------------------------------------;
 mov r9d,MB_YESNOCANCEL + MB_ICONWARNING   ; R9  = Parm#4 = Message type
 lea r8,[PROGRAM_NAME]               ; R8  = Parm#3 = Pointer to caption string
 lea rdi,[FILE_WORK_BUFFER]
@@ -97,7 +98,35 @@ lea rsi,[ABOUT_NAME]
 call HelperFileStringWrite 
 jz .closeAfterError 
 ;---------- Save system information as text data ------------------------------;
-; TODO.
+lea rdi,[FILE_WORK_BUFFER]
+push rdi
+mov ax,0A0Dh
+stosw
+stosw
+mov al,' '
+stosb
+mov ax,STR_FULL_SYSINFO
+call PoolStringWrite
+mov al,0
+stosb
+pop rsi
+call HelperFileStringWrite  ; Write to file: name of screen, associated with table
+jz .closeAfterError
+call HelperLineWrite
+call HelperFileStringWrite  ; Write to file: horizontal line
+jz .closeAfterError
+push rbx
+lea rdi,[FILE_WORK_BUFFER]
+mov rbx,[APP_DATA.hTabDlg + 0]
+mov ax,REPORT_BINDER_SYSINFO
+call Binder
+mov ax,0A0Dh
+stosw
+mov al,0
+stosb
+pop rbx
+call HelperFileStringWrite  ; Write to file: report extracted from widgets
+jz .closeAfterError
 ;---------- Save vector brief test results as text data -----------------------;
 ; TODO.
 ;---------- Save simple run benchmarks results as text data -------------------; 
@@ -130,10 +159,10 @@ call PoolStringWrite
 mov al,0
 stosb
 pop rsi
-call HelperFileStringWrite  ; Write name of screen, associated with table
+call HelperFileStringWrite  ; Write to file: name of screen, associated with table
 jz @f
 call HelperLineWrite
-call HelperFileStringWrite  ; Write horizontal line
+call HelperFileStringWrite  ; Write to file: horizontal line
 jz @f
 lea rdi,[FILE_WORK_BUFFER]
 push rdi
@@ -142,14 +171,14 @@ call PoolStringWrite
 mov al,0
 stosb
 pop rsi
-call HelperFileStringWrite  ; Write table up string with columns names
+call HelperFileStringWrite  ; Write to file: table up string with columns names
 jz @f
 call HelperLineWrite
-call HelperFileStringWrite  ; Write horizontal line
+call HelperFileStringWrite  ; Write to file: horizontal line
 @@:
 pop rsi
 jz .closeAfterError
-call HelperFileStringWrite  ; Write table content 
+call HelperFileStringWrite  ; Write to file: table content 
 jz .closeAfterError
 .textSkip:
 add r14,4

@@ -112,6 +112,8 @@ cmp ax,IDB_NUMA_CANCEL
 je .wmclose
 cmp ax,IDB_P_GROUPS_CANCEL
 je .wmclose
+cmp ax,IDB_SMBIOS_CANCEL
+je .wmclose
 cmp ax,IDB_ACPI_CANCEL
 je .wmclose
 cmp ax,IDB_A_CPUID_CANCEL

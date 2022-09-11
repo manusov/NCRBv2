@@ -51,12 +51,12 @@ include 'win32a.inc'             ; FASM definitions
 include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.4.4.0'
+RESOURCE_VERSION        EQU '2.4.5.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.04 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.05 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100    ; This application icon
@@ -642,8 +642,9 @@ ret
 ;---------- Find string in the pool by index and write this string ------------;
 ;                                                                              ;
 ; INPUT:   AX  = String index in the application resources strings pool        ;
+;          EDI = Destination Pointer                                           ;
 ;                                                                              ;
-; OUTPUT:  ESI = Updated pointer to string, selected by index                  ;
+; OUTPUT:  ESI = Updated pointer to next string, after selected by index       ;
 ;          EDI = Modified by copy                                              ;  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
@@ -1092,12 +1093,18 @@ call SizePrint64
 mov ax,' )'
 stosw
 ret
-;---------- Execute binder in the binders pool by index -----------------------;
+;---------- Execute GUI binder in the binders pool by index -------------------;
+; Binder used for build GUI from system information data and                   ; 
+; write text report from GUI (script entries with name starts "R...".          ;
 ;                                                                              ;
 ; INPUT:   EBX = Current window handle for get dialogue items                  ;
+;          EDI = Pointer to text buffer for write report,                      ;
+;                this input parameter for report scripts only                  ;
 ;          AX  = Binder index in the binders pool                              ;
 ;                                                                              ;
-; OUTPUT:  None                                                                ;  
+; OUTPUT:  EDI = Updated by write report,                                      ;
+;                this output parameter for report scripts only,                ;
+;                otherwise EDI unchanged                                       ;  
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
 Binder:
@@ -1126,11 +1133,11 @@ and edx,00001FFFh     ; EDX = second 13-bit parameter
 and ecx,00111111b
 push esi edi
 call [PROC_BINDERS + ecx * 4 - 4]  ; call by ECX = Binder index
-pop edi esi
+pop edi esi           ; note about EDI updated in the stack by report scripts
 jmp .found            ; cycle for next instruction of binder
 .stop:
-pop ebp edi esi ebx
-ret
+pop ebp edi esi ebx   ; note about EDI updated in the stack by report scripts
+ret                   
 ;---------- Script handler: bind indexed string from pool to GUI object -------;
 BindSetString:        ; EAX = String ID, EDX = Resource ID for GUI item
 mov esi,[APP_DATA.lockedStrings]
@@ -1418,10 +1425,10 @@ cmp al,9
 ja .error          ; Error if invalid decimal char
 imul ecx,ecx,10
 add ecx,eax
-jmp .parseDec       ; Go to cycle for parse decimal string
-.parseDone:         ; Save extracted value (32 or 64 bit) if parse OK
+jmp .parseDec      ; Go to cycle for parse decimal string
+.parseDone:        ; Save extracted value (32 or 64 bit) if parse OK
 xchg eax,ecx
-cmp bp,2            ; Detect 32 or 64-bit store required
+cmp bp,2           ; Detect 32 or 64-bit store required
 jb .store32
 stosd
 xchg eax,edx
@@ -1472,6 +1479,113 @@ push edi              ; Parm#1 = hWnd
 call [SendMessage]    ; Set string for GUI item
 pop esi
 ret
+;---------- Script handlers: get string from widget and store to report -------;
+; Note about input ESP = pointer to stack frame for update EDI = buffer pointer
+RbindGetString:
+mov esi,edx            ; ESI = Script parameters: left, fmt, crlf
+push eax               ; Parm#2 = Resource ID for GUI item
+mov ecx,edx
+and ecx,0Fh
+mov al,' '
+rep stosb              ; Write spaces to left interval
+push ebx               ; Parm#1 = Parent window handle  
+call [GetDlgItem]      ; Return handle of GUI item
+test eax,eax
+jz .error              ; Go if error, item not found
+push edi               ; Parm#4 = Pointer to buffer
+push 80                ; Parm#3 = Maximum length
+push WM_GETTEXT        ; Parm#2 = Message
+push eax               ; Parm#1 = GUI item handle
+call [SendMessage]
+test eax,eax
+jz .error              ; Go if error, can't read string
+cmp eax,80
+ja .error
+add edi,eax
+mov ecx,esi
+shr ecx,4
+movzx ecx,cl
+sub ecx,eax
+jbe @f
+mov al,' '
+rep stosb              ; Write spaces for fixed size formatted string
+@@:
+bt esi,12
+jnc @f
+mov ax,0A0Dh
+stosw
+@@:
+mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
+.error:
+ret
+;--- Script handlers: get enabled state of widget and store 0/1 to report -----;
+; Note about input ESP = pointer to stack frame for update EDI = buffer pointer
+RbindGetBool:
+mov esi,edx            ; ESI = Script parameters: left, fmt, crlf
+push eax               ; Parm#2 = Resource ID for GUI item
+mov ecx,edx
+and ecx,0Fh
+mov al,' '
+rep stosb              ; Write spaces to left interval
+push ebx               ; Parm#1 = Parent window handle  
+call [GetDlgItem]      ; Return handle of GUI item
+test eax,eax
+jz .error              ; Go if error, item not found
+push eax               ; Parm#1 = GUI item handle
+call [IsWindowEnabled]
+test eax,eax
+mov al,'0'
+jz @f
+inc eax
+@@:
+stosb 
+mov ecx,esi
+shr ecx,4
+movzx ecx,cl
+sub ecx,1
+jbe @f
+mov al,' '
+rep stosb              ; Write spaces for fixed size formatted string
+@@:
+bt esi,12
+jnc @f
+mov ax,0A0Dh
+stosw
+@@:
+mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
+.error:
+ret
+;---------- Script handlers: store string from resource by id to report -------;
+; Note about input ESP = pointer to stack frame for update EDI = buffer pointer
+RbindWrite:
+push eax
+mov ecx,edx            ; EDX = Script parameters: left, fmt, crlf
+and ecx,0Fh
+mov al,' '
+rep stosb              ; Write spaces to left interval
+pop eax
+mov ebp,edi
+call PoolStringWrite   ; Write string, selected by index
+mov eax,edi
+sub eax,ebp 
+mov ecx,edx
+shr ecx,4
+movzx ecx,cl
+sub ecx,eax
+jbe @f
+mov al,' '
+rep stosb              ; Write spaces for fixed size formatted string
+@@:
+bt edx,12
+jnc @f
+mov ax,0A0Dh
+stosw
+@@:
+mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
+ret
 ;---------- Include subroutines from modules ----------------------------------;
 include 'ncrb32\gui_dialogs\connect_code.inc'
 include 'ncrb32\load_config\connect_code.inc'
@@ -1509,6 +1623,12 @@ PROC_BINDERS   DD  BindSetString
                DD  BindGetDec32
                DD  BindGetHex32
                DD  BindGetHex64              
+;---------- Pointers to procedures of text report bind scripts interpreter ----;
+; Report binders list is continue of GUI binders list, adddressed by macro ID
+               DD  RbindGetString
+               DD  RbindGetBool
+               DD  RbindWrite
+;---------- Special support for combo box GUI element -------------------------;
 PROC_COMBO     DD  BindComboStopOn     ; End of list, combo box enabled
                DD  BindComboStopOff    ; End of list, combo box disabled (gray) 
                DD  BindComboCurrent    ; Add item to list as current selected

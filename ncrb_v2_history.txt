@@ -1,3 +1,8 @@
+11.09.2022. v2.04.05. Changes for x64 and ia32 versions.
+1) Added system information data to text report saved as file.
+2) Internal minor changes.
+
+
 29.08.2022. v2.04.04. Changes for x64 and ia32 versions.
 1) Internal minor changes.
 2) Improved comments.

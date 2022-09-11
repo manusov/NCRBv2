@@ -979,8 +979,14 @@ STR_REPORT_EXISTS_1    = STR_REPORT_FILE_NAME + 5
 STR_REPORT_EXISTS_2    = STR_REPORT_FILE_NAME + 6 
 STR_REPORT_SAVED       = STR_REPORT_FILE_NAME + 7 
 STR_REPORT_DEF_EXT     = STR_REPORT_FILE_NAME + 8 
+STR_REPORT_COMMA       = STR_REPORT_FILE_NAME + 9
+STR_REPORT_COLON       = STR_REPORT_FILE_NAME + 10
+STR_REPORT_CRLF        = STR_REPORT_FILE_NAME + 11
+STR_REPORT_CACHE       = STR_REPORT_FILE_NAME + 12
+STR_REPORT_SMP         = STR_REPORT_FILE_NAME + 13
+STR_REPORT_MEMORY      = STR_REPORT_FILE_NAME + 14
 ;---------- Strings for Kernel Mode Driver and Service Control Program --------;
-STR_NAME_KMD32         = STR_REPORT_DEF_EXT + 1  
+STR_NAME_KMD32         = STR_REPORT_MEMORY + 1  
 STR_NAME_KMD64         = STR_NAME_KMD32 + 1
 STR_DRV_NAME           = STR_NAME_KMD32 + 2
 STR_DRV_DEVICE         = STR_NAME_KMD32 + 3
@@ -1042,6 +1048,9 @@ BINDER_WIDGET_PREFETCH     = 24
 BINDER_WIDGET_CUSTOM_SIZE  = 25
 ;--- Binder for disable buttons when run benchmarks and enable after ----------;
 BINDER_BUTTONS_ON_OFF      = 26 
+;--- Report binder for save text report from GUI widgets, sysinfo screen ------;
+REPORT_BINDER_SYSINFO      = 27
+
 ;---------- List of pointers to strings used by GUI binders -------------------;
 ; This structures used as template for offsets in the bind buffer.
 ; For ia32/x64 unification, pointers always 64-bit, high dword = 0 for ia32. 
@@ -1177,6 +1186,7 @@ viewAcpiSum    dq  ?
 viewAffCpu     dq  ?
 ; end of sequental group of pointers
 ;---------- Vector brief benchmark results screen support ---------------------;
+; VB means Vector Brief.
 VB_REPORT_COUNT  =  14  
 VB_REPORT_STEP   =  41
 vbSse128read   db  40 + 1  dup ?  ; Benchmark results for SSE128 Read
@@ -1197,6 +1207,7 @@ vbX87sincos    db  40 + 1  dup ?  ; Benchmark results for x87 Sine+Cosine (FSINC
 ; TODO. Can share BINDLIST space, for example mr and vb.
 ;       This can be solution for alignment.
 ; But BINDLIST can be used for reports, include saved text strings.
+; MR means Memory Run.
 mrApplication  db  40 + 1  dup ?
 mrMethod       db  80 + 1  dup ?
 mrWidth        db  40 + 1  dup ?
@@ -1221,6 +1232,7 @@ mrDtscSec      db  40 + 1  dup ?
 mrDtscIns      db  40 + 1  dup ?
 mrLastValue    db  40 + 1  dup ? 
 ;---------- Memory and cache benchmark drawings window screen support ---------;
+; MD means Memory Draw.
 mdAsm          db  80 + 1  dup ?
 mdPrefetch     db  40 + 1  dup ?
 mdObject       db  40 + 1  dup ?
@@ -1230,8 +1242,8 @@ mdPages        db  40 + 1  dup ?
 mdNuma         db  40 + 1  dup ?
 ends
 
-;---------- Macro definitions for binders scripts instructions ----------------;
-macro BIND_STOP
+;---------- Macro definitions for GUI binders scripts instructions ------------;
+MACRO BIND_STOP
 { DB  0 }
 MACRO SET_STRING srcid, dstid
 { DD 01h + (srcid) SHL 6 + (dstid) SHL 19 }
@@ -1266,6 +1278,14 @@ MACRO GET_HEX32 srcid, dstid
 { DD 0Dh + (dstid) SHL 6 + (srcid) SHL 19 } 
 MACRO GET_HEX64 srcid, dstid                             
 { DD 0Eh + (dstid) SHL 6 + (srcid) SHL 19 } 
+
+;---------- Macro definitions for text report binders scripts instructions ----;
+MACRO RGET_STR srcid, left, fmt, crlf
+{ DD 0Fh + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
+MACRO RGET_BOOL srcid, left, fmt, crlf
+{ DD 10h + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
+MACRO RWRITE_STR srcid, left, fmt, crlf
+{ DD 11h + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
 
 ;---------- Macro definitions for CPU/OS features bitmaps builders scripts ----;
 R_EAX = 0

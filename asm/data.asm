@@ -53,7 +53,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.4.4.0'
+RESOURCE_VERSION      EQU  '2.4.5.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -1042,6 +1042,12 @@ DB  'File '                , 0
 DB  ' exists. Overwrite?'  , 0
 DB  'Report saved: '       , 0 
 DB  'txt'                  , 0
+DB  ','                    , 0
+DB  ':'                    , 0
+DB  0Dh,0Ah                , 0
+DB  'Cache'                , 0
+DB  'SMP'                  , 0
+DB  'Memory'               , 0
 ;---------- Strings for Kernel Mode Driver and Service Control Program --------;
 DB  'KMD32.SYS'  , 0
 DB  'KMD64.SYS'  , 0
@@ -1807,6 +1813,179 @@ SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_NUMA_CANCEL
 SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_P_GROUPS_CANCEL
 SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_ACPI_CANCEL
 SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_A_CPUID_CANCEL
+BIND_STOP
+;--- Continue, binder for save text report from sysinfo screen widgets --------;
+; Entries format
+; RGET_STR srcid, left, fmt, crlf
+; RGET_BOOL srcid, left, fmt, crlf
+; RWRITE_STR srcid, left, fmt, crlf
+; CPUID base info
+RGET_STR    IDC_SYSINFO_NAME     , 1,  0, 1
+RGET_STR    IDC_SYSINFO_VENDOR   , 1,  0, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_TFMS     , 0,  0, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_TSC      , 0,  0, 1
+; CPUID features
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RGET_STR    IDC_SYSINFO_CPUID    , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_MMX      , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_MMX      , 0,  0, 1   
+RGET_STR    IDC_SYSINFO_SSE      , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSE      , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SSE2     , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSE2     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SSE3     , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSE3     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SSSE3    , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSSE3    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SSE41    , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSE41    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SSE42    , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_SSE42    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_AVX      , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_AVX      , 0,  0, 1
+RGET_STR    IDC_SYSINFO_AVX2     , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_AVX2     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_AVX512F  , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_AVX512F  , 0,  0, 1
+RGET_STR    IDC_SYSINFO_RDRAND   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_RDRAND   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_VMX_SVM  , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_VMX_SVM  , 0,  0, 1
+RGET_STR    IDC_SYSINFO_X8664    , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_X8664    , 0,  0, 1
+; CPUID features, AVX512 list
+RGET_STR    IDC_SYSINFO_A0       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A0       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_A1       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A1       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_A2       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A2       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_A3       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A3       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_A4       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A4       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_A5       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_A5       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B0       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B0       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B1       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B1       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B2       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B2       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B3       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B3       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B4       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B4       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_B5       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_B5       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_C0       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_C0       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_C1       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_C1       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_C2       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_C2       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_C3       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_C3       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_D0       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_D0       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_D1       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_D1       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_D2       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_D2       , 0,  0, 1
+RGET_STR    IDC_SYSINFO_D3       , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_D3       , 0,  0, 1
+; XCR0 context flags
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RGET_STR    IDC_SYSINFO_XCR0     , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_XMM015   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_XMM015   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_YMM015   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_YMM015   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_ZMM015   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_ZMM015   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_ZMM1631  , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_ZMM1631  , 0,  0, 1
+RGET_STR    IDC_SYSINFO_K07      , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_K07      , 0,  0, 1
+RGET_STR    IDC_SYSINFO_BNDREG   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_BNDREG   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_BNDCSR   , 1, 21, 0
+RGET_BOOL   IDC_SYSINFO_BNDCSR   , 0,  0, 1
+; ACPI
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RGET_STR    IDC_SYSINFO_ACPI     , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_MADT     , 1,  4, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_MADT_1   , 0,  6, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_MADT_2   , 0,  8, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_MADT_3   , 0, 19, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_MADT_4   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SRAT     , 1,  4, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_SRAT_1   , 0,  6, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_SRAT_2   , 0,  8, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_SRAT_3   , 0, 19, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_SRAT_4   , 0,  0, 1
+; Cache
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RWRITE_STR  STR_REPORT_CACHE     , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_L1C      , 1, 12, 0
+RGET_STR    IDC_SYSINFO_L1C_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_L1D      , 1, 12, 0
+RGET_STR    IDC_SYSINFO_L1D_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_L2U      , 1, 12, 0
+RGET_STR    IDC_SYSINFO_L2U_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_L3U      , 1, 12, 0
+RGET_STR    IDC_SYSINFO_L3U_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_L4U      , 1, 12, 0
+RGET_STR    IDC_SYSINFO_L4U_V    , 0,  0, 1
+; SMP
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RWRITE_STR  STR_REPORT_SMP       , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_THREADS  , 1, 32, 0 
+RGET_STR    IDC_SYSINFO_THR_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_CORES    , 1, 32, 0
+RGET_STR    IDC_SYSINFO_CORES_V  , 0,  0, 1
+RGET_STR    IDC_SYSINFO_SOCKETS  , 1, 32, 0
+RGET_STR    IDC_SYSINFO_SOCK_V   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_GRP      , 1, 32, 0
+RGET_STR    IDC_SYSINFO_GRP_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_PCORES   , 1, 32, 0  
+RGET_STR    IDC_SYSINFO_PCOR_V   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_ECORES   , 1, 32, 0
+RGET_STR    IDC_SYSINFO_ECOR_V   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_PTOT     , 1, 32, 0
+RGET_STR    IDC_SYSINFO_PTOT_V   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_PCUR     , 1, 32, 0
+RGET_STR    IDC_SYSINFO_PCUR_V   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_NUMA     , 1, 32, 0
+RGET_STR    IDC_SYSINFO_NUMA_V   , 0,  0, 0
+RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
+RGET_STR    IDC_SYSINFO_NUMA_M   , 0,  0, 1
+; Memory
+RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
+RWRITE_STR  STR_REPORT_MEMORY    , 1,  0, 0
+RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
+RGET_STR    IDC_SYSINFO_MEM      , 1, 32, 0
+RGET_STR    IDC_SYSINFO_MEM_V    , 0,  0, 1
+RGET_STR    IDC_SYSINFO_MEM_A    , 1, 32, 0
+RGET_STR    IDC_SYSINFO_MEM_AV   , 0,  0, 1
+RGET_STR    IDC_SYSINFO_LRPG     , 1, 32, 0
+RGET_STR    IDC_SYSINFO_LRPG_V   , 0,  0, 0
+RGET_STR    IDC_SYSINFO_LRPG_E   , 0,  0, 1
 BIND_STOP
 endres
 ;---------- CPU common features bitmap builder script -------------------------;
