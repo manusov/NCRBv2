@@ -135,6 +135,8 @@ call SizePrint64
 add esi,24
 jmp .numaExt
 .numaDoneExt:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 pop esi

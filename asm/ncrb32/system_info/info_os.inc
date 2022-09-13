@@ -180,20 +180,20 @@ stosb
 mov al,MEMORYSTATUSEX_DEF.ullAvailExtendedVirtual
 call HelperOsInfoHex
 mov edi,ebp
-mov ax,0A0Dh                                     ; Interval
+mov ax,0A0Dh                                 ; Interval
 stosw
 mov ebp,edi 
-mov bh,0                                         ; BH = 0 means system info
+mov bh,0                                     ; BH = 0 means system info
 call HelperSystemInfo
 mov edi,ebp
-mov ax,0A0Dh                                     ; Interval
+mov ax,0A0Dh                                 ; Interval
 stosw
 mov ebp,edi 
-mov ax,STR_OS_PROC_CURRENT                       ; Processors at currebt group
+mov ax,STR_OS_PROC_CURRENT                   ; Processors at current group
 call HelperOsInfoString
 mov al,SYSTEM_INFO.dwNumberOfProcessors
 call HelperOsInfoNumber32
-mov ecx,[OS_DATA.activeProcessorCount]      ; Processors total
+mov ecx,[OS_DATA.activeProcessorCount]       ; Processors total
 jecxz @f
 push ecx
 mov ax,STR_OS_PROC_TOTAL
@@ -201,7 +201,7 @@ call HelperOsInfoString
 pop eax
 call HelperOsInfoValue32
 @@:
-mov ecx,[OS_DATA.activeProcessorGroupCount] ; Processors groups
+mov ecx,[OS_DATA.activeProcessorGroupCount]  ; Processors groups
 jecxz @f
 push ecx
 mov ax,STR_OS_PROC_GROUPS
@@ -209,7 +209,7 @@ call HelperOsInfoString
 pop eax
 call HelperOsInfoValue32
 @@:
-mov ecx,[OS_DATA.numaNodeCount]  ; NUMA domains
+mov ecx,[OS_DATA.numaNodeCount]              ; NUMA domains
 jecxz @f
 push ecx
 mov ax,STR_OS_NUMA_DOMAINS
@@ -217,11 +217,11 @@ call HelperOsInfoString
 pop eax
 call HelperOsInfoValue32
 @@:
-mov ax,STR_OS_NORMAL_PAGE                        ; Normal page size
+mov ax,STR_OS_NORMAL_PAGE                    ; Normal page size
 call HelperOsInfoString
 mov al,SYSTEM_INFO.dwPageSize
 call HelperOsInfoSizeAuto32
-mov ecx,[OS_DATA.largePageSize]  ; Large page size and status
+mov ecx,[OS_DATA.largePageSize]              ; Large page size and status
 jecxz .skipLargePages
 push ecx
 mov ax,STR_OS_LARGE_PAGE
@@ -241,6 +241,8 @@ pop esi edi eax
 xor edx,edx
 call HexPrint64
 .skipLargePages:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov ebp,edi

@@ -311,6 +311,8 @@ pop ecx
 loop .acpiScan 
 .acpiDone:
 pop esi
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov ebp,edi
@@ -382,6 +384,8 @@ pop ecx
 loop .acpiDataScan
 pop esi
 .acpiDataDone:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov ebp,edi

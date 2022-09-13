@@ -64,6 +64,8 @@ mov bl,0
 call DecimalPrint32
 jmp .groupsScan 
 .groupsDone:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov rbp,rdi

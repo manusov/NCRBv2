@@ -111,13 +111,18 @@ add esi,32
 add ebp,82
 dec ecx
 jnz .scanLines
-mov edi,ebp
-mov ax,0A0Dh
-stosw
-mov ebp,edi
 inc edx
 pop ecx
 cmp esi,ecx
+
+mov edi,ebp
+jnb .lastSkip
+mov ax,0A0Dh
+stosw
+.lastSkip:
+mov ebp,edi
+
+
 jb .scanBlocks
 .affCpuidDataDone:
 pop esi

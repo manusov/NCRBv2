@@ -316,6 +316,8 @@ add rbp,82
 pop rcx
 loop .acpiScan 
 .acpiDone:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov rbp,rdi
@@ -327,7 +329,8 @@ test r14,r14
 jz .noAcpiData 
 mov rsi,[DYNA_PTR.listAcpi.objectStart]
 mov rcx,[DYNA_PTR.listAcpi.objectStop]
-jrcxz .noAcpiData
+test rcx,rcx
+jz .noAcpiData
 mov rcx,[rsi]
 sub rcx,rsi
 sub ecx,16
@@ -372,6 +375,8 @@ add rbp,82
 pop rcx
 loop .acpiDataScan
 .acpiDataDone:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov rbp,rdi

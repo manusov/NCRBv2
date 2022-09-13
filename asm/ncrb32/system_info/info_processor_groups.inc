@@ -64,6 +64,8 @@ call DecimalPrint32
 jmp .groupsScan 
 .groupsDone:
 pop esi
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov ebp,edi

@@ -27,6 +27,8 @@ TextNativeOs:
 mov [DYNA_PTR.textNativeOs.objectStart],ebp
 mov bh,1                                  ; BH = 1 means native system info
 call HelperSystemInfo
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov ebp,edi

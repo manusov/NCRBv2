@@ -187,11 +187,11 @@ mov rdi,rbp
 mov ax,0A0Dh                                     ; Interval
 stosw
 mov rbp,rdi 
-mov ax,STR_OS_PROC_CURRENT                       ; Processors at currebt group
+mov ax,STR_OS_PROC_CURRENT                       ; Processors at current group
 call HelperOsInfoString
 mov al,SYSTEM_INFO.dwNumberOfProcessors
 call HelperOsInfoNumber32
-mov ecx,[OS_DATA.activeProcessorCount] ; [r15 + REGISTRY64.osData.activeProcessorCount]      ; Processors total
+mov ecx,[OS_DATA.activeProcessorCount]           ; Processors total
 jecxz @f
 push rcx
 mov ax,STR_OS_PROC_TOTAL
@@ -199,7 +199,7 @@ call HelperOsInfoString
 pop rax
 call HelperOsInfoValue32
 @@:
-mov ecx,[OS_DATA.activeProcessorGroupCount]   ; [r15 + REGISTRY64.osData.activeProcessorGroupCount] ; Processors groups
+mov ecx,[OS_DATA.activeProcessorGroupCount]      ; Processors groups
 jecxz @f
 push rcx
 mov ax,STR_OS_PROC_GROUPS
@@ -207,7 +207,7 @@ call HelperOsInfoString
 pop rax
 call HelperOsInfoValue32
 @@:
-mov ecx,[OS_DATA.numaNodeCount] ; [r15 + REGISTRY64.osData.numaNodeCount]  ; NUMA domains
+mov ecx,[OS_DATA.numaNodeCount]                  ; NUMA domains
 jecxz @f
 push rcx
 mov ax,STR_OS_NUMA_DOMAINS
@@ -219,7 +219,7 @@ mov ax,STR_OS_NORMAL_PAGE                        ; Normal page size
 call HelperOsInfoString
 mov al,SYSTEM_INFO.dwPageSize
 call HelperOsInfoSizeAuto32
-mov rcx,[OS_DATA.largePageSize] ; [r15 + REGISTRY64.osData.largePageSize]  ; Large page size and status
+mov rcx,[OS_DATA.largePageSize]                  ; Large page size and status
 jrcxz .skipLargePages
 push rcx
 mov ax,STR_OS_LARGE_PAGE
@@ -228,7 +228,7 @@ pop rax
 push rax
 mov bl,0FFh
 call SizePrint64
-cmp [OS_DATA.largePageEnable],0 ; [r15 + REGISTRY64.osData.largePageEnable],0
+cmp [OS_DATA.largePageEnable],0
 mov ax,STR_OS_DISABLED
 je @f
 mov ax,STR_OS_ENABLED
@@ -238,6 +238,8 @@ pop rax
 mov rdi,r8
 call HexPrint64
 .skipLargePages:
+mov ax,0A0Dh
+stosw
 mov al,0
 stosb
 mov rbp,rdi

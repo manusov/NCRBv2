@@ -120,8 +120,6 @@ lea rdi,[FILE_WORK_BUFFER]
 mov rbx,[APP_DATA.hTabDlg + 0]
 mov ax,REPORT_BINDER_SYSINFO
 call Binder
-mov ax,0A0Dh
-stosw
 mov al,0
 stosb
 pop rbx
@@ -148,10 +146,6 @@ push rdi
 mov ax,0A0Dh
 stosw
 stosw
-cmp r13d,REPORT_TEXT_COUNT
-je @f
-stosw
-@@:
 mov al,' '
 stosb
 mov ax,[r14 + 0]

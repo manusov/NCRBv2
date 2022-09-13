@@ -107,13 +107,15 @@ add rsi,32
 add rbp,82
 dec r12d
 jnz .scanLines
-mov rdi,rbp
-mov ax,0A0Dh
-stosw
-mov rbp,rdi
 inc r14d
 pop rcx
 cmp rsi,rcx
+mov rdi,rbp
+jnb .lastSkip
+mov ax,0A0Dh
+stosw
+.lastSkip:
+mov rbp,rdi
 jb .scanBlocks
 .affCpuidDataDone:
 mov al,0

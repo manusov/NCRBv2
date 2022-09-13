@@ -114,8 +114,6 @@ mov edi,FILE_WORK_BUFFER
 mov ebx,[APP_DATA.hTabDlg + 0]
 mov ax,REPORT_BINDER_SYSINFO
 call Binder
-mov ax,0A0Dh
-stosw
 mov al,0
 stosb
 pop ebx
@@ -142,10 +140,6 @@ push edi
 mov ax,0A0Dh
 stosw
 stosw
-cmp ebp,REPORT_TEXT_COUNT
-je @f
-stosw
-@@:
 mov al,' '
 stosb
 mov ax,[edx + 0]
