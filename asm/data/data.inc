@@ -1048,9 +1048,12 @@ BINDER_WIDGET_PREFETCH     = 24
 BINDER_WIDGET_CUSTOM_SIZE  = 25
 ;--- Binder for disable buttons when run benchmarks and enable after ----------;
 BINDER_BUTTONS_ON_OFF      = 26 
-;--- Report binder for save text report from GUI widgets, sysinfo screen ------;
-REPORT_BINDER_SYSINFO      = 27
-
+;--- Report binder for save text report from GUI widgets ----------------------;
+REPORT_BINDER_SYSINFO      = 27    ; sysinfo screen 
+REPORT_BINDER_VECTOR_BRIEF = 28    ; vector brief
+REPORT_BINDER_MEMORY_RUN   = 29    ; memory run (simple text result)
+REPORT_BINDER_RUN_MBPS     = 30    ; part depends on MBPS/Latency: MBPS
+REPORT_BINDER_RUN_LATENCY  = 31    ; part depends on MBPS/Latency: nanoseconds
 ;---------- List of pointers to strings used by GUI binders -------------------;
 ; This structures used as template for offsets in the bind buffer.
 ; For ia32/x64 unification, pointers always 64-bit, high dword = 0 for ia32. 
@@ -1286,6 +1289,8 @@ MACRO RGET_BOOL srcid, left, fmt, crlf
 { DD 10h + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
 MACRO RWRITE_STR srcid, left, fmt, crlf
 { DD 11h + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
+MACRO RINFO_STR srcid, left, fmt, crlf
+{ DD 12h + (srcid) SHL 6 + (left) SHL 19 + (fmt) SHL 23 + (crlf) SHL 31 }
 
 ;---------- Macro definitions for CPU/OS features bitmaps builders scripts ----;
 R_EAX = 0

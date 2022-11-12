@@ -51,12 +51,12 @@ include 'win64a.inc'             ; FASM definitions
 include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win64 edition.'
-RESOURCE_VERSION        EQU '2.4.6.0'
+RESOURCE_VERSION        EQU '2.4.7.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win64.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.06 for Windows x64.'
+ABOUT_TEXT_2            EQU 'v2.04.07 for Windows x64.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100    ; This application icon
@@ -1105,9 +1105,9 @@ jz .stop
 mov edx,eax
 mov ecx,eax
 shr eax,6
-and eax,00001FFFh       ; EAX = first 13-bit parameter
+and eax,00001FFFh       ; EAX = first 13-bit parameter, bits RAX[63-32] = 0
 shr edx,6 + 13
-and edx,00001FFFh       ; EDX = second 13-bit parameter
+and edx,00001FFFh       ; EDX = second 13-bit parameter, bits RDX[63-32] = 0
 and ecx,00111111b
 push rsi
 call [PROC_BINDERS + rcx * 8 - 8]  ; call by ECX = Binder index
@@ -1567,6 +1567,8 @@ rep stosb              ; Write spaces to left interval
 pop rax
 mov rbp,rdi
 call PoolStringWrite   ; Write string, selected by index
+;---------- Entry point for RbindWriteInfo common part ------------------------; 
+RbindWriteEntry:
 mov rax,rdi
 sub rax,rbp 
 mov ecx,edx
@@ -1584,6 +1586,17 @@ stosw
 @@:
 mov [rsp + 6*8],rdi    ; Update RDI, returned by Binder subroutine
 ret
+;---------- Script handlers: store string from BINDLIST by offset to report ---;
+; Note about input RSP = pointer to stack frame for update RDI = buffer pointer
+RbindWriteInfo:
+lea rsi,[BIND_LIST + rax]
+mov ecx,edx            ; EDX = Script parameters: left, fmt, crlf
+and ecx,0Fh
+mov al,' '
+rep stosb              ; Write spaces to left interval
+mov rbp,rdi
+call StringWrite       ; Copy string from BINDLIST to report
+jmp RbindWriteEntry
 ;---------- Include subroutines from modules ----------------------------------;
 include 'ncrb64\gui_dialogs\connect_code.inc'
 include 'ncrb64\load_config\connect_code.inc'
@@ -1626,6 +1639,7 @@ PROC_BINDERS   DQ  BindSetString
                DQ  RbindGetString
                DQ  RbindGetBool
                DQ  RbindWrite
+               DQ  RbindWriteInfo
 ;---------- Special support for combo box GUI element -------------------------;
 PROC_COMBO     DQ  BindComboStopOn     ; End of list, combo box enabled
                DQ  BindComboStopOff    ; End of list, combo box disabled (gray) 
@@ -1989,6 +2003,11 @@ hTabDlg                 dq ITEM_COUNT dup ?      ; Sheets handles
 hPleaseWait             dq ?                     ; "Please wait" window handle
 lockedBigIcons          dq BIG_ICON_COUNT dup ?  ; Pointers to icon resources
 createdBigIcons         dq BIG_ICON_COUNT dup ?  ; Pointers to icons
+;--- "Vector brief" and "Memory run" windows runs flags for save report -------;
+; D0 = Vector brief, D1 = Memory run, 
+; D2 = Memory run type: 0 = MBPS, 1 = NANOSECONDS, actual if D1 = 1, 
+; D[31-3] = Reserved
+runsFlags               dd ?
 ends
 APP_DATA APPDATA ?
 ;---------- Operating system constants and structures definition --------------;

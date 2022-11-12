@@ -90,41 +90,13 @@ jmp .noSelections      ; Otherwise, go exit dialogue by "Cancel" (IDCANCEL)
 xchg ebx,eax           ; EBX = Report file handle
 mov esi,ABOUT_NAME
 call HelperFileStringWrite 
-jz .closeAfterError 
+jz .closeAfterError    ; Go file operations error handling if failed 
 ;---------- Save system information as text data ------------------------------;
-mov edi,FILE_WORK_BUFFER
-push edi
-mov ax,0A0Dh
-stosw
-stosw
-mov al,' '
-stosb
-mov ax,STR_FULL_SYSINFO
-call PoolStringWrite
-mov al,0
-stosb
-pop esi
-call HelperFileStringWrite  ; Write to file: name of screen, associated with table
-jz .closeAfterError
-call HelperLineWrite
-call HelperFileStringWrite  ; Write to file: horizontal line
-jz .closeAfterError
-push ebx
-mov edi,FILE_WORK_BUFFER
-mov ebx,[APP_DATA.hTabDlg + 0]
-mov ax,REPORT_BINDER_SYSINFO
-call Binder
-mov al,0
-stosb
-pop ebx
-call HelperFileStringWrite  ; Write to file: report extracted from widgets
-jz .closeAfterError
-;---------- Save vector brief test results as text data -----------------------;
-; TODO.
-;---------- Save simple run benchmarks results as text data -------------------; 
-; TODO.
-;---------- Save drawings benchmark results as text data ----------------------; 
-; TODO.
+mov dx,STR_FULL_SYSINFO          ; DX  = Window or screen name string ID
+mov ax,REPORT_BINDER_SYSINFO     ; AX  = Widgets to report bind list ID
+mov ecx,[APP_DATA.hTabDlg + 0]   ; ECX = Window or screen handle
+call HelperBlockWrite            ; Here EBX = Report file handle
+jz .closeAfterError              ; Go file operations error handling if failed
 ;---------- Cycle for save differrent parts of report: text blocks ------------; 
 mov ebp,REPORT_TEXT_COUNT             ; EBP = Number of tables in the report
 mov edi,DYNA_PTR.textOs               ; EDI = Pointer to text tables list
@@ -135,7 +107,7 @@ add edi,sizeof.ALLOCATOR
 test esi,esi
 jz .textSkip                ; Go skip if this text block is empty
 push esi edi edx
-mov edi,FILE_WORK_BUFFER
+mov edi,FILE_WORK_BUFFER    ; EDI = Transit buffer per each block of report
 push edi
 mov ax,0A0Dh
 stosw
@@ -176,12 +148,48 @@ jz .closeAfterError
 add edx,4
 dec ebp
 jnz .textBlocks             ; Cycle for all screens with tables
+;---------- Save vector brief test results as text data -----------------------;
+test [APP_DATA.runsFlags],0001b
+jz .skipVectorBrief         ; Go skip if "Vector brief" window yet not runned 
+mov dx,STR_CHILD_VECTOR_BRIEF      ; DX  = Window or screen name string ID 
+mov ax,REPORT_BINDER_VECTOR_BRIEF  ; AX  = Widgets to report bind list ID
+xor ecx,ecx                        ; ECX = Handle, not used here
+call HelperBlockWrite       ; Here RBX = Report file handle
+jz .closeAfterError         ; Go file operations error handling if failed
+.skipVectorBrief:
+;---------- Save simple run benchmarks results as text data -------------------; 
+test [APP_DATA.runsFlags],0010b
+jz .skipMemoryRun           ; Go skip if "Memory run" window yet not runned  
+mov dx,STR_CHILD_MEM_REPORT        ; DX  = Window or screen name string ID 
+mov ax,REPORT_BINDER_MEMORY_RUN    ; AX  = Widgets to report bind list ID
+xor ecx,ecx                        ; ECX = Handle, not used here
+call HelperBlockWrite       ; Here RBX = Report file handle
+jz .closeAfterError         ; Go file operations error handling if failed
+test [APP_DATA.runsFlags],0100b
+mov ax,REPORT_BINDER_RUN_MBPS
+jz @f                               ; Select MBPS or Latency (nanoseconds) mode
+mov ax,REPORT_BINDER_RUN_LATENCY
+@@:
+lea edi,[FILE_WORK_BUFFER]
+push ebx edi
+xor ebx,ebx
+call Binder
+mov al,0
+stosb
+pop esi ebx                 ; ESI = Pointer to text block, EBX = File handle
+call HelperFileStringWrite  ; Write to file: last part MBPS or nanoseconds
+.skipMemoryRun:
+;---------- Save drawings benchmark results as text data ----------------------; 
+;
+; TODO.
+;
 jmp .closeOk
-;---------- Close report file -------------------------------------------------;
+;---------- Close report file if error ----------------------------------------;
 .closeAfterError:
 push ebx                     ; Parm #1 = File handle         
 call [CloseHandle]
 jmp .reportError
+;---------- Close report file if saved successfully ---------------------------;
 .closeOk:
 push ebx                     ; Parm #1 = File handle         
 call [CloseHandle]
@@ -276,4 +284,46 @@ pop eax
 stosw
 mov al,0
 stosb
+ret
+;---------- Helper for write text report block from GUI window to file --------;
+;                                                                              ;
+; INPUT  : EBX = File handle                                                   ;
+;          DX  = String ID for report block name                               ;    
+;          AX  = Bind list ID for saved information description                ; 
+;          ECX = GUI window handle, 0 if not actual                            ;             
+;                                                                              ;
+; OUTPUT : EAX = OS status, 0 means error, otherwise no errors                 ;
+;          Additionally, ZF flag set (Z) if EAX = 0 for fast detect errors     ;  
+;                                                                              ;
+;------------------------------------------------------------------------------; 
+HelperBlockWrite:
+push eax ecx
+mov edi,FILE_WORK_BUFFER    ; EDI = Transit buffer per each block of report
+push edi
+mov ax,0A0Dh
+stosw
+stosw
+mov al,' '
+stosb
+mov ax,dx                   ; AX = DX = String ID for report block name
+call PoolStringWrite
+mov al,0
+stosb
+pop esi
+call HelperFileStringWrite  ; Write to file: name of screen, associated with table
+jz @f
+call HelperLineWrite
+call HelperFileStringWrite  ; Write to file: horizontal line
+jz @f
+push ebx
+mov edi,FILE_WORK_BUFFER
+mov ebx,[esp + 04]          ; EBX = input ECX image = GUI window handle
+mov ax,[esp + 08]           ; AX = Bind list ID for saved information description 
+call Binder
+mov al,0
+stosb
+pop ebx                     ; EBX = File handle
+call HelperFileStringWrite  ; Write to file: report extracted from widgets
+@@:                         ; EAX and ZF flag here valid
+pop ecx ecx                 ; This for clear stack only
 ret

@@ -51,12 +51,12 @@ include 'win32a.inc'             ; FASM definitions
 include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.4.6.0'
+RESOURCE_VERSION        EQU '2.4.7.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.06 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.07 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100    ; This application icon
@@ -1515,7 +1515,7 @@ jnc @f
 mov ax,0A0Dh
 stosw
 @@:
-mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 1*4],edi    ; Update EDI, returned by script handler subroutine
 mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
 .error:
 ret
@@ -1553,7 +1553,7 @@ jnc @f
 mov ax,0A0Dh
 stosw
 @@:
-mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 1*4],edi    ; Update EDI, returned by script handler subroutine
 mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
 .error:
 ret
@@ -1568,6 +1568,8 @@ rep stosb              ; Write spaces to left interval
 pop eax
 mov ebp,edi
 call PoolStringWrite   ; Write string, selected by index
+;---------- Entry point for RbindWriteInfo common part ------------------------; 
+RbindWriteEntry:
 mov eax,edi
 sub eax,ebp 
 mov ecx,edx
@@ -1583,9 +1585,20 @@ jnc @f
 mov ax,0A0Dh
 stosw
 @@:
-mov [esp + 1*4],edi    ; Update EDI, returned by Binder subroutine
+mov [esp + 1*4],edi    ; Update EDI, returned by script handler subroutine
 mov [esp + 4*4],edi    ; Update EDI, returned by Binder subroutine
 ret
+;---------- Script handlers: store string from BINDLIST by offset to report ---;
+; Note about input ESP = pointer to stack frame for update EDI = buffer pointer
+RbindWriteInfo:
+lea esi,[BIND_LIST + eax]
+mov ecx,edx            ; EDX = Script parameters: left, fmt, crlf
+and ecx,0Fh
+mov al,' '
+rep stosb              ; Write spaces to left interval
+mov ebp,edi
+call StringWrite       ; Copy string from BINDLIST to report
+jmp RbindWriteEntry
 ;---------- Include subroutines from modules ----------------------------------;
 include 'ncrb32\gui_dialogs\connect_code.inc'
 include 'ncrb32\load_config\connect_code.inc'
@@ -1628,6 +1641,7 @@ PROC_BINDERS   DD  BindSetString
                DD  RbindGetString
                DD  RbindGetBool
                DD  RbindWrite
+               DD  RbindWriteInfo
 ;---------- Special support for combo box GUI element -------------------------;
 PROC_COMBO     DD  BindComboStopOn     ; End of list, combo box enabled
                DD  BindComboStopOff    ; End of list, combo box disabled (gray) 
@@ -1991,6 +2005,11 @@ hTabDlg                 dd ITEM_COUNT dup ?      ; Sheets handles
 hPleaseWait             dd ?                     ; "Please wait" window handle
 lockedBigIcons          dd BIG_ICON_COUNT dup ?  ; Pointers to icon resources
 createdBigIcons         dd BIG_ICON_COUNT dup ?  ; Pointers to icons
+;--- "Vector brief" and "Memory run" windows runs flags for save report -------;
+; D0 = Vector brief, D1 = Memory run, 
+; D2 = Memory run type: 0 = MBPS, 1 = NANOSECONDS, actual if D1 = 1, 
+; D[31-3] = Reserved
+runsFlags               dd ?
 ends
 APP_DATA APPDATA ?
 ;---------- Operating system constants and structures definition --------------;

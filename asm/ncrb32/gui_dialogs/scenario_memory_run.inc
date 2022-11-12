@@ -379,10 +379,11 @@ lea edi,[ebp + BINDLIST.mrLastValue]
 cmp [esi + MEMIPB.updatedAsm],LATENCY_MODE
 jae .latencyMode
 ;---------- Branch for Bandwidth, Speed (MBPS) --------------------------------;
+and [APP_DATA.runsFlags],0FFFFFFFBh    ; Mark MBPS mode for text report data
 push edx eax
-fild [esi + MEMIPB.measureRepeats]   ; st0 = Repeats, iterations, note 64-bit
-fimul [esi + MEMIPB.startBlockSize]  ; st0 * Operational block size, bytes 
-fimul [esi + MEMIPB.updatedThreads]   ; Required all threads same size
+fild [esi + MEMIPB.measureRepeats]     ; st0 = Repeats, iterations, note 64-bit
+fimul [esi + MEMIPB.startBlockSize]    ; st0 * Operational block size, bytes 
+fimul [esi + MEMIPB.updatedThreads]    ; Required all threads same size
 ;---------- At this point, st0 = BlockSize * Repeats * Threads ----------------;
 mov dword [esp],1000000     ; alternative is 1048576 (binary/decimal MB select)
 fidiv dword [esp]           ; st0 = total megabytes executed
@@ -396,6 +397,7 @@ mov bx,0200h            ; Float part is 2 digits, Integer part without template
 jmp .entryMode
 ;---------- Branch for Latency, Latency (ns) ----------------------------------;
 .latencyMode:
+or [APP_DATA.runsFlags],00000004h        ; Mark NANOSECONDS mode for text report data
 push edx eax
 mov eax,dword [CPU_DATA.tscClockHz + 0]
 mov edx,dword [CPU_DATA.tscClockHz + 4]
@@ -416,7 +418,10 @@ mov bx,0300h        ; Float part is 3 digits, Integer part without template
 call DoublePrint
 mov al,0
 stosb
-clc
+;---------- Mark result valid for save text report procedure ------------------;
+or [APP_DATA.runsFlags],0010b
+; here can skip CLC instruction because OR instruction clears CF  
+;---------- Entry point for error branch --------------------------------------;
 .error:  ; CF = 1 error flag and AL must be valid if exit by error
 mov [esp + 28],al
 popad

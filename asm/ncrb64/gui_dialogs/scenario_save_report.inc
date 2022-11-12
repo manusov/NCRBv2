@@ -93,44 +93,16 @@ je .restartDialogue    ; Go restart dialogue if "No"
 jmp .noSelections      ; Otherwise, go exit dialogue by "Cancel" (IDCANCEL) 
 ;---------- Report file create OK, save report file header --------------------;
 .createOk:
-xchg rbx,rax                 ; RBX = Report file handle
+xchg rbx,rax                ; RBX = Report file handle
 lea rsi,[ABOUT_NAME]
 call HelperFileStringWrite 
-jz .closeAfterError 
+jz .closeAfterError         ; Go file operations error handling if failed 
 ;---------- Save system information as text data ------------------------------;
-lea rdi,[FILE_WORK_BUFFER]
-push rdi
-mov ax,0A0Dh
-stosw
-stosw
-mov al,' '
-stosb
-mov ax,STR_FULL_SYSINFO
-call PoolStringWrite
-mov al,0
-stosb
-pop rsi
-call HelperFileStringWrite  ; Write to file: name of screen, associated with table
-jz .closeAfterError
-call HelperLineWrite
-call HelperFileStringWrite  ; Write to file: horizontal line
-jz .closeAfterError
-push rbx
-lea rdi,[FILE_WORK_BUFFER]
-mov rbx,[APP_DATA.hTabDlg + 0]
-mov ax,REPORT_BINDER_SYSINFO
-call Binder
-mov al,0
-stosb
-pop rbx
-call HelperFileStringWrite  ; Write to file: report extracted from widgets
-jz .closeAfterError
-;---------- Save vector brief test results as text data -----------------------;
-; TODO.
-;---------- Save simple run benchmarks results as text data -------------------; 
-; TODO.
-;---------- Save drawings benchmark results as text data ----------------------; 
-; TODO.
+mov r12w,STR_FULL_SYSINFO        ; R12W = Window or screen name string ID 
+mov r13w,REPORT_BINDER_SYSINFO   ; R13W = Widgets to report bind list ID
+mov r14,[APP_DATA.hTabDlg + 0]   ; R14  = Window or screen handle
+call HelperBlockWrite            ; Here RBX = Report file handle
+jz .closeAfterError              ; Go file operations error handling if failed
 ;---------- Cycle for save differrent parts of report: text blocks ------------; 
 mov r13d,REPORT_TEXT_COUNT             ; R13 = Number of tables in the report
 lea r12,[DYNA_PTR.textOs]              ; R12 = Pointer to text tables list
@@ -141,7 +113,7 @@ add r12,sizeof.ALLOCATOR
 test rsi,rsi
 jz .textSkip                ; Go skip if this text block is empty
 push rsi
-lea rdi,[FILE_WORK_BUFFER]
+lea rdi,[FILE_WORK_BUFFER]  ; RDI = Transit buffer per each block of report
 push rdi
 mov ax,0A0Dh
 stosw
@@ -178,12 +150,48 @@ jz .closeAfterError
 add r14,4
 dec r13d
 jnz .textBlocks             ; Cycle for all screens with tables
+;---------- Save vector brief test results as text data -----------------------;
+test [APP_DATA.runsFlags],0001b
+jz .skipVectorBrief         ; Go skip if "Vector brief" window yet not runned 
+mov r12w,STR_CHILD_VECTOR_BRIEF      ; R12W = Window or screen name string ID 
+mov r13w,REPORT_BINDER_VECTOR_BRIEF  ; R13W = Widgets to report bind list ID
+xor r14,r14                          ; R14  = Handle, not used here
+call HelperBlockWrite       ; Here RBX = Report file handle
+jz .closeAfterError         ; Go file operations error handling if failed
+.skipVectorBrief:
+;---------- Save simple run benchmarks results as text data -------------------; 
+test [APP_DATA.runsFlags],0010b
+jz .skipMemoryRun           ; Go skip if "Memory run" window yet not runned  
+mov r12w,STR_CHILD_MEM_REPORT       ; R12W = Window or screen name string ID 
+mov r13w,REPORT_BINDER_MEMORY_RUN   ; R13W = Widgets to report bind list ID
+xor r14,r14                         ; R14  = Handle, not used here
+call HelperBlockWrite               ; Here RBX = Report file handle
+jz .closeAfterError                 ; Go file operations error handling if failed
+test [APP_DATA.runsFlags],0100b
+mov ax,REPORT_BINDER_RUN_MBPS
+jz @f                               ; Select MBPS or Latency (nanoseconds) mode
+mov ax,REPORT_BINDER_RUN_LATENCY
+@@:
+lea rdi,[FILE_WORK_BUFFER]
+push rbx rdi
+xor ebx,ebx
+call Binder
+mov al,0
+stosb
+pop rsi rbx                 ; RSI = Pointer to text block, RBX = File handle
+call HelperFileStringWrite  ; Write to file: last part MBPS or nanoseconds
+.skipMemoryRun:
+;---------- Save drawings benchmark results as text data ----------------------; 
+;
+; TODO.
+;
 jmp .closeOk
-;---------- Close report file -------------------------------------------------;
+;---------- Close report file if error ----------------------------------------;
 .closeAfterError:
 mov rcx,rbx                  ; RCX = Parm #1 = File handle         
 call [CloseHandle]
 jmp .reportError
+;---------- Close report file if saved successfully ---------------------------;
 .closeOk:
 mov rcx,rbx                  ; RCX = Parm #1 = File handle         
 call [CloseHandle]
@@ -286,4 +294,44 @@ pop rax
 stosw
 mov al,0
 stosb
+ret
+;---------- Helper for write text report block from GUI window to file --------;
+;                                                                              ;
+; INPUT  : RBX  = File handle                                                  ;
+;          R12W = String ID for report block name                              ;    
+;          R13W = Bind list ID for saved information description               ; 
+;          R14  = GUI window handle, 0 if not actual                           ;             
+;                                                                              ;
+; OUTPUT : RAX = OS status, 0 means error, otherwise no errors                 ;
+;          Additionally, ZF flag set (Z) if RAX = 0 for fast detect errors     ;  
+;                                                                              ;
+;------------------------------------------------------------------------------; 
+HelperBlockWrite:
+lea rdi,[FILE_WORK_BUFFER]  ; RDI = Transit buffer per each block of report
+push rdi
+mov ax,0A0Dh
+stosw
+stosw
+mov al,' '
+stosb
+mov ax,r12w                 ; R12W = String ID for report block name
+call PoolStringWrite
+mov al,0
+stosb
+pop rsi
+call HelperFileStringWrite  ; Write to file: name of screen, associated with table
+jz @f
+call HelperLineWrite
+call HelperFileStringWrite  ; Write to file: horizontal line
+jz @f
+push rbx
+lea rdi,[FILE_WORK_BUFFER]
+mov rbx,r14                 ; R14  = GUI window handle
+mov ax,r13w                 ; R13W = Bind list ID for saved information description
+call Binder
+mov al,0
+stosb
+pop rbx                     ; RBX = File handle
+call HelperFileStringWrite  ; Write to file: report extracted from widgets
+@@:                         ; RAX and ZF flag here valid
 ret

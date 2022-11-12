@@ -1,3 +1,24 @@
+12.11.2022. v2.04.07. Changes for x64 and ia32 versions.
+1) Data from screens "Vector brief" and "Memory run" added to text report.
+2) Added signatures for detection ACPI tables:
+   APMT, 'Arm Performance Monitoring Unit'
+   CCEL, 'Confidential Computing Event Log'
+   CDAT, 'Coherent Device Attribute'
+   DTPR, 'DMA TXT Protected Range'
+   IERS, 'Inline Encryption Reporting Structure'
+   KEYP, 'Key Programming Interface for Integrity'
+   MHSP, 'Microsoft Pluton Security Processor'
+   NBFT, 'NVMe-over-Fabric Boot Firmware'
+   SWFT, 'Sound Wire File'
+   Data source:
+   Advanced Configuration and Power Interface (ACPI) Specification.
+   Release 6.5.
+   UEFI Forum, Inc.
+   August 29, 2022.
+   https://uefi.org/specifications
+   https://uefi.org/sites/default/files/resources/ACPI_Spec_6_5_Aug29.pdf
+
+
 13.09.2022. v2.04.06. Changes for x64 and ia32 versions.
 Fixed bug with extra empty lines in the text report.
 

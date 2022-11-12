@@ -58,7 +58,6 @@ mov cl,[esi + 1]                     ; CL = Count, power of 2
 mov eax,1
 shl eax,cl
 mov [edi + THCTRL.sizeInst],eax      ; EAX = Instructions count per 4K
-
 movzx eax,byte [esi + 2]             ; EAX = Repeats
 cdq
 mov ecx,VECTOR_BRIEF_REPEATS_SCALE
@@ -164,6 +163,10 @@ add edi,VB_REPORT_STEP
 dec ecx
 jnz .strings
 pop eax eax ; remove local variable
+;---------- Mark result valid for save text report procedure ------------------; 
+or [APP_DATA.runsFlags],0001b
+; here can skip CLC instruction because OR instruction clears CF
+;---------- Entry point for error branch --------------------------------------;
 .error:     ; CF = 1 and AL must be valid if exit by error branch
 mov [esp + 28],al
 popad

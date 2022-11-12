@@ -53,7 +53,7 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.4.6.0'
+RESOURCE_VERSION      EQU  '2.4.7.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
 RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
 ;------------------------------------------------------------------------------;
@@ -1814,19 +1814,19 @@ SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_P_GROUPS_CANCEL
 SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_ACPI_CANCEL
 SET_BOOL    BINDLIST.scratchPad + 0 , 0 , IDB_A_CPUID_CANCEL
 BIND_STOP
-;--- Continue, binder for save text report from sysinfo screen widgets --------;
+;--- Continue, binder for save text report from "Sysinfo" screen widgets ------;
 ; Entries format
 ; RGET_STR srcid, left, fmt, crlf
 ; RGET_BOOL srcid, left, fmt, crlf
 ; RWRITE_STR srcid, left, fmt, crlf
-; CPUID base info
+;--- CPUID base info ---
 RGET_STR    IDC_SYSINFO_NAME     , 1,  0, 1
 RGET_STR    IDC_SYSINFO_VENDOR   , 1,  0, 0
 RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
 RGET_STR    IDC_SYSINFO_TFMS     , 0,  0, 0
 RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
 RGET_STR    IDC_SYSINFO_TSC      , 0,  0, 1
-; CPUID features
+;--- CPUID features ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RGET_STR    IDC_SYSINFO_CPUID    , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1856,7 +1856,7 @@ RGET_STR    IDC_SYSINFO_VMX_SVM  , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_VMX_SVM  , 0,  0, 1
 RGET_STR    IDC_SYSINFO_X8664    , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_X8664    , 0,  0, 1
-; CPUID features, AVX512 list
+;--- CPUID features, AVX512 list ---
 RGET_STR    IDC_SYSINFO_A0       , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_A0       , 0,  0, 1
 RGET_STR    IDC_SYSINFO_A1       , 1, 21, 0
@@ -1897,7 +1897,7 @@ RGET_STR    IDC_SYSINFO_D2       , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_D2       , 0,  0, 1
 RGET_STR    IDC_SYSINFO_D3       , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_D3       , 0,  0, 1
-; XCR0 context flags
+;--- XCR0 context flags ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RGET_STR    IDC_SYSINFO_XCR0     , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1915,7 +1915,7 @@ RGET_STR    IDC_SYSINFO_BNDREG   , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_BNDREG   , 0,  0, 1
 RGET_STR    IDC_SYSINFO_BNDCSR   , 1, 21, 0
 RGET_BOOL   IDC_SYSINFO_BNDCSR   , 0,  0, 1
-; ACPI
+;--- ACPI ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RGET_STR    IDC_SYSINFO_ACPI     , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1937,7 +1937,7 @@ RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
 RGET_STR    IDC_SYSINFO_SRAT_3   , 0, 19, 0
 RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
 RGET_STR    IDC_SYSINFO_SRAT_4   , 0,  0, 1
-; Cache
+;--- Cache ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RWRITE_STR  STR_REPORT_CACHE     , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1951,7 +1951,7 @@ RGET_STR    IDC_SYSINFO_L3U      , 1, 12, 0
 RGET_STR    IDC_SYSINFO_L3U_V    , 0,  0, 1
 RGET_STR    IDC_SYSINFO_L4U      , 1, 12, 0
 RGET_STR    IDC_SYSINFO_L4U_V    , 0,  0, 1
-; SMP
+;--- SMP ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RWRITE_STR  STR_REPORT_SMP       , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1975,7 +1975,7 @@ RGET_STR    IDC_SYSINFO_NUMA     , 1, 32, 0
 RGET_STR    IDC_SYSINFO_NUMA_V   , 0,  0, 0
 RWRITE_STR  STR_REPORT_COMMA     , 0,  2, 0
 RGET_STR    IDC_SYSINFO_NUMA_M   , 0,  0, 1
-; Memory
+;--- Memory ---
 RWRITE_STR  STR_REPORT_CRLF      , 0,  0, 0
 RWRITE_STR  STR_REPORT_MEMORY    , 1,  0, 0
 RWRITE_STR  STR_REPORT_COLON     , 0,  0, 1
@@ -1986,6 +1986,106 @@ RGET_STR    IDC_SYSINFO_MEM_AV   , 0,  0, 1
 RGET_STR    IDC_SYSINFO_LRPG     , 1, 32, 0
 RGET_STR    IDC_SYSINFO_LRPG_V   , 0,  0, 0
 RGET_STR    IDC_SYSINFO_LRPG_E   , 0,  0, 1
+BIND_STOP
+;--- Continue, binder for save text report from "Vector brief" child window ---;
+RWRITE_STR  STR_VB_TIMINGS          , 1,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+RWRITE_STR  STR_VB_SSE128_READ      , 1, 15, 0
+RINFO_STR   BINDLIST.vbSse128read   , 0,  0, 1
+RWRITE_STR  STR_VB_SSE128_WRITE     , 1, 15, 0
+RINFO_STR   BINDLIST.vbSse128write  , 0,  0, 1
+RWRITE_STR  STR_VB_SSE128_COPY      , 1, 15, 0
+RINFO_STR   BINDLIST.vbSse128copy   , 0,  0, 1 
+RWRITE_STR  STR_VB_AVX256_READ      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx256read   , 0,  0, 1
+RWRITE_STR  STR_VB_AVX256_WRITE     , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx256write  , 0,  0, 1
+RWRITE_STR  STR_VB_AVX256_COPY      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx256copy   , 0,  0, 1 
+RWRITE_STR  STR_VB_AVX512_READ      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx512read   , 0,  0, 1
+RWRITE_STR  STR_VB_AVX512_WRITE     , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx512write  , 0,  0, 1
+RWRITE_STR  STR_VB_AVX512_COPY      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx512copy   , 0,  0, 1 
+RWRITE_STR  STR_VB_SQRTPD_XMM       , 1, 15, 0
+RINFO_STR   BINDLIST.vbSse128sqrt   , 0,  0, 1
+RWRITE_STR  STR_VB_VSQRTPD_YMM      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx256sqrt   , 0,  0, 1
+RWRITE_STR  STR_VB_VSQRTPD_ZMM      , 1, 15, 0
+RINFO_STR   BINDLIST.vbAvx512sqrt   , 0,  0, 1
+RWRITE_STR  STR_VB_FCOS             , 1, 15, 0
+RINFO_STR   BINDLIST.vbX87cos       , 0,  0, 1
+RWRITE_STR  STR_VB_FSINCOS          , 1, 15, 0
+RINFO_STR   BINDLIST.vbX87sincos    , 0,  0, 1 
+BIND_STOP
+;--- Continue, binder for save text report from "Memory run" child window -----;
+;--- Common parameters ---
+RWRITE_STR  STR_MR_FIRST            , 1,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+RWRITE_STR  STR_MR_APPLICATION      , 1, 26, 0  
+RINFO_STR   BINDLIST.mrApplication  , 0,  0, 1
+RWRITE_STR  STR_MR_METHOD           , 1, 26, 0
+RINFO_STR   BINDLIST.mrMethod       , 0,  0, 1
+RWRITE_STR  STR_MR_WIDTH            , 1, 26, 0
+RINFO_STR   BINDLIST.mrWidth        , 0,  0, 1
+RWRITE_STR  STR_MR_THREADS          , 1, 26, 0
+RINFO_STR   BINDLIST.mrThreads      , 0,  0, 1
+RWRITE_STR  STR_MR_HYPER_THR        , 1, 26, 0
+RINFO_STR   BINDLIST.mrHyperT       , 0,  0, 1
+RWRITE_STR  STR_MR_LARGE_PAGES      , 1, 26, 0
+RINFO_STR   BINDLIST.mrLargeP       , 0,  0, 1
+RWRITE_STR  STR_MR_NUMA             , 1, 26, 0
+RINFO_STR   BINDLIST.mrNuma         , 0,  0, 1
+RWRITE_STR  STR_MR_P_GROUPS         , 1, 26, 0
+RINFO_STR   BINDLIST.mrGroups       , 0,  0, 1
+RWRITE_STR  STR_MR_HYBRID           , 1, 26, 0 
+RINFO_STR   BINDLIST.mrHybrid       , 0,  0, 1
+RWRITE_STR  STR_MR_TARGET_OBJ       , 1, 26, 0
+RINFO_STR   BINDLIST.mrTarget       , 0,  0, 1
+RWRITE_STR  STR_MR_PREF_DIST        , 1, 26, 0
+RINFO_STR   BINDLIST.mrDistance     , 0,  0, 1
+RWRITE_STR  STR_MR_SIZE_TOTAL       , 1, 26, 0
+RINFO_STR   BINDLIST.mrSizeTotal    , 0,  0, 1
+RWRITE_STR  STR_MR_SIZE_PER_THR     , 1, 26, 0
+RINFO_STR   BINDLIST.mrSizeThread   , 0,  0, 1                                    
+RWRITE_STR  STR_MR_MEASURE_PROF     , 1, 26, 0
+RINFO_STR   BINDLIST.mrMeasProf     , 0,  0, 1
+RWRITE_STR  STR_MR_MEASURE_REP      , 1, 26, 0
+RINFO_STR   BINDLIST.mrMeasRep      , 0,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+;--- Memory allocation ---
+RWRITE_STR  STR_MR_MEMORY_ALLOC     , 1,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+RWRITE_STR  STR_MR_BLOCK_1          , 1, 26, 0
+RINFO_STR   BINDLIST.mrBlock1       , 0,  0, 1
+RWRITE_STR  STR_MR_BLOCK_2          , 1, 26, 0
+RINFO_STR   BINDLIST.mrBlock2       , 0,  0, 1
+RWRITE_STR  STR_MR_MEM_ALC_ALL      , 1, 26, 0
+RINFO_STR   BINDLIST.mrAllocAll     , 0,  0, 1
+RWRITE_STR  STR_MR_MEM_ALC_THR      , 1, 26, 0
+RINFO_STR   BINDLIST.mrAllocThr     , 0,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+;--- Measurement results ---
+RWRITE_STR  STR_MR_MEAS_RESULTS     , 1,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+RWRITE_STR  STR_MR_DT_MS            , 1, 26, 0
+RINFO_STR   BINDLIST.mrDtMs         , 0,  0, 1
+RWRITE_STR  STR_MR_DTSC_SEC_MHZ     , 1, 26, 0
+RINFO_STR   BINDLIST.mrDtscSec      , 0,  0, 1
+RWRITE_STR  STR_MR_DTSC_INS_CLK     , 1, 26, 0
+RINFO_STR   BINDLIST.mrDtscIns      , 0,  0, 1
+RWRITE_STR  STR_REPORT_CRLF         , 0,  0, 0
+BIND_STOP
+;--- Continue, binder for save text report from "Memory run" child window -----;
+;--- Addition for MBPS (megabytes per second) mode ---
+RWRITE_STR  STR_MR_SPEED_MBPS       , 1, 26, 0
+RINFO_STR   BINDLIST.mrLastValue    , 0,  0, 1
+BIND_STOP
+;--- Continue, binder for save text report from "Memory run" child window -----;
+;--- Addition for LATENCY (nanoseconds) mode ---
+RWRITE_STR  STR_MR_LATENCY_NS       , 1, 26, 0
+RINFO_STR   BINDLIST.mrLastValue    , 0,  0, 1
 BIND_STOP
 endres
 ;---------- CPU common features bitmap builder script -------------------------;
@@ -2341,11 +2441,14 @@ resdata acpiData
 DB  'AEST' , 'Arm Error Source'                                 , 0
 DB  'AGDI' , 'Arm Generic Diagnostic Dump Interface'            , 0
 DB  'APIC' , 'Multiple APIC Description'                        , 0
+DB  'APMT' , 'Arm Performance Monitoring Unit'                  , 0
 DB  'ASF!' , 'Alert Standard Format'                            , 0
 DB  'BDAT' , 'BIOS Data ACPI'                                   , 0
 DB  'BERT' , 'Boot Error Record'                                , 0
 DB  'BGRT' , 'Boot Graphics Resource'                           , 0
 DB  'BOOT' , 'Simple Boot Flag'                                 , 0
+DB  'CCEL' , 'Confidential Computing Event Log'                 , 0
+DB  'CDAT' , 'Coherent Device Attribute'                        , 0
 DB  'CDIT' , 'Component Distance Information'                   , 0
 DB  'CEDT' , 'CXL Early Discovery'                              , 0
 DB  'CPEP' , 'Corrected Platform Error Polling'                 , 0
@@ -2355,6 +2458,7 @@ DB  'DBGP' , 'Debug Port'                                       , 0
 DB  'DBG2' , 'Microsoft Debug Port Type 2 Description'          , 0
 DB  'DMAR' , 'DMA Remapping'                                    , 0
 DB  'DSDT' , 'Differentiated System Description'                , 0
+DB  'DTPR' , 'DMA TXT Protected Range'                          , 0
 DB  'DPPT' , 'DMA Protection Policy'                            , 0
 DB  'DRTM' , 'Dynamic Root of Trust for Measurement'            , 0
 DB  'ECDT' , 'Embedded Controller Boot Resources'               , 0
@@ -2371,15 +2475,19 @@ DB  'HEST' , 'Hardware Error Source'                            , 0
 DB  'HMAT' , 'Heterogeneous Memory Attributes'                  , 0
 DB  'HPET' , 'High Precision Event Timer'                       , 0
 DB  'IBFT' , 'iSCSI Boot Firmware'                              , 0
+DB  'IERS' , 'Inline Encryption Reporting Structure'            , 0
 DB  'IORT' , 'I/O Remapping'                                    , 0
 DB  'IVRS' , 'I/O Virtualization Reporting'                     , 0
+DB  'KEYP' , 'Key Programming Interface for Integrity'          , 0
 DB  'LPIT' , 'Low Power Idle'                                   , 0
 DB  'MCFG' , 'Memory Mapped Configuration'                      , 0
 DB  'MCHI' , 'Management Controller Host Interface'             , 0
+DB  'MHSP' , 'Microsoft Pluton Security Processor'              , 0
 DB  'MPAM' , 'Arm Memory Partitioning and Monitoring'           , 0
 DB  'MSDM' , 'Microsoft Data Management'                        , 0
 DB  'MSCT' , 'Maximum System Characteristics'                   , 0
 DB  'MPST' , 'Memory Power State'                               , 0
+DB  'NBFT' , 'NVMe-over-Fabric Boot Firmware'                   , 0
 DB  'NFIT' , 'NVDIMM Firmware Interface'                        , 0
 DB  'NHLT' , 'Non-HD Audio Link/Endpoint Description'           , 0
 DB  'OEMx' , 'OEM Specific Information'                         , 0
@@ -2407,6 +2515,7 @@ DB  'SPCR' , 'Serial Port Console Redirection'                  , 0
 DB  'SPMI' , 'Server Platform Management Interface'             , 0
 DB  'STAO' , '_STA Override'                                    , 0
 DB  'SVKL' , 'Storage Volume Key Data'                          , 0
+DB  'SWFT' , 'Sound Wire File'                                  , 0
 DB  'TCPA' , 'Trusted Computing Platform Alliance Capabilities' , 0
 DB  'TDEL' , 'Trust Domain Event Log'                           , 0
 DB  'TPM2' , 'Trusted Platform Module 2'                        , 0

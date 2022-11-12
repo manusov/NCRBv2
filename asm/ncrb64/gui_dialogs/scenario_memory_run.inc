@@ -333,6 +333,7 @@ lea rdi,[r14 + BINDLIST.mrLastValue]
 cmp [r11 + MEMIPB.updatedAsm],LATENCY_MODE
 jae .latencyMode
 ;---------- Branch for Bandwidth, Speed (MBPS) --------------------------------;
+and [APP_DATA.runsFlags],0FFFFFFFBh      ; Mark MBPS mode for text report data
 mov rax,[r11 + MEMIPB.startBlockSize]    ; RAX = Operational block size, bytes 
 mov rcx,[r11 + MEMIPB.measureRepeats]    ; RCX = Repeats, iterations, note 64-bit     
 mul rcx                                  ; RAX = BlockSize * Repeats
@@ -353,6 +354,7 @@ mov bx,0200h        ; Float part is 2 digits, Integer part without template
 jmp .entryMode
 ;---------- Branch for Latency, Latency (ns) ----------------------------------;
 .latencyMode:
+or [APP_DATA.runsFlags],00000004h        ; Mark NANOSECONDS mode for text report data
 mov rax,[CPU_DATA.tscClockHz]
 mov [r12 + MEMOPB.tscFrequencyHz],rax
 push 1000000000
@@ -371,7 +373,10 @@ mov bx,0300h        ; Float part is 3 digits, Integer part without template
 call DoublePrint
 mov al,0
 stosb
-clc
+;---------- Mark result valid for save text report procedure ------------------;
+or [APP_DATA.runsFlags],0010b
+; here can skip CLC instruction because OR instruction clears CF  
+;---------- Entry point for error branch --------------------------------------;
 .error:  ; CF = 1 error flag and AL must be valid if exit by error 
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 ret

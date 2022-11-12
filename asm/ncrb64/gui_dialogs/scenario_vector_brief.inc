@@ -152,7 +152,10 @@ add r14,VB_REPORT_STEP
 dec r13d
 jnz .strings
 pop rax     ; remove local variable
-clc
+;---------- Mark result valid for save text report procedure ------------------;
+or [APP_DATA.runsFlags],0001b
+; here can skip CLC instruction because OR instruction clears CF  
+;---------- Entry point for error branch --------------------------------------;
 .error:     ; CF = 1 and AL must be valid if exit by error branch 
 pop r15 r14 r13 r12 rbp rdi rsi rbx
 ret
