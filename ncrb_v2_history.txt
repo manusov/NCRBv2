@@ -1,3 +1,11 @@
+17.12.2022. v2.04.08. Changes for x64 version.
+Added special support for number of threads > MAXIMUM_WAIT_OBJECTS.
+This actual for platforms with above 64 logical processors.
+See MSDN for restrictions at WinAPI function WaitForMultipleObjects:
+constant MAXIMUM_WAIT_OBJECTS = 64.
+https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitformultipleobjects
+
+
 12.11.2022. v2.04.07. Changes for x64 and ia32 versions.
 1) Data from screens "Vector brief" and "Memory run" added to text report.
 2) Added signatures for detection ACPI tables:

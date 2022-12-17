@@ -15,8 +15,11 @@ CUSTOM_BLOCK_MAX        =  256 * 1024 * 1024
 CUSTOM_BLOCK_ALIGN      =  512
 ;---------- Memory timings constants ------------------------------------------;
 ; 10000 milliseconds = 10 seconds, events wait time for
-; communication with child thread
+; communication with child thread (service thread)
 THREAD_TIME_LIMIT       =  10000  
+; 60000 milliseconds = 1 minute, events wait time for
+; child threads (measurement threads group) execution done 
+MEASURE_TIME_LIMIT      =  60000  
 ; Benchmarks repeat parameters, precision=f(repeats), for Cache&RAM mode
 ; Calibrate iterations for objects, normal mode
 ; this constants must be multiple of LATENCY DIVISOR (50)

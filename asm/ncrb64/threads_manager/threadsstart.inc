@@ -50,12 +50,24 @@ WaitThreads:
 ;---------- Wait for N threads executed, count at EBX -------------------------;
 mov ecx,ebx                    ; RCX = Parm#1 = Number of objects ( threads )
 mov rdx,r13                    ; RDX = Parm#2 = Pointer to events list
+;--- Special support for number of threads > MAXIMUM_WAIT_OBJECTS, see MSDN ---;
+mov eax,MAXIMUM_WAIT_OBJECTS
+cmp ecx,eax
+jbe @f                             ; Skip if number of threads < limit
+xchg ecx,eax                       ; ECX = Number of threads per call
+@@:
+sub ebx,ecx                        ; EBX = Number of handles for next iteration
+lea r13,[r13 + rcx * EVENT_SIZE]   ; R13 = Pointer for next group of handles
+;--- End of special support for number of threads > MAXIMUM_WAIT_OBJECTS ------;
 mov r8d,1                      ; R8  = Parm#3 = Wait All flag
-mov r9d,60000                  ; R9  = Parm#4 = Timeout, milliseconds                
+mov r9d,MEASURE_TIME_LIMIT     ; R9  = Parm#4 = Timeout, milliseconds                
 call [WaitForMultipleObjects]  ; Call WinAPI function
 test rax,rax                   ; Status=0 means wait OK
 mov rax,-1
 jnz ErrorThreads
+;--- Special support for number of threads > MAXIMUM_WAIT_OBJECTS, see MSDN ---;
+test ebx,ebx
+jnz WaitThreads
 ;---------- Serializing and get TSC, measurement interval end -----------------; 
 xor eax,eax                  ; CPUID function 0
 cpuid                        ; This CPUID for serializing only, results ignored

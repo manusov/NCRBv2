@@ -51,12 +51,12 @@ include 'win32a.inc'             ; FASM definitions
 include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.4.7.0'
+RESOURCE_VERSION        EQU '2.4.8.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
 RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.07 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.08 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100    ; This application icon
@@ -1810,6 +1810,7 @@ origGroup       dd  ?   ; Store processor group for original offinity mask (STOR
 ends
 MAX_THREADS            =  256   ; Maximum number of supported threads: total and per processor group
 MAX_THREADS_PER_GROUP  =  64
+MAXIMUM_WAIT_OBJECTS   =  64    ; See MSDN for this parameter and WaitForMultipleObjects function restrictions
 ; Thread entry size = 64 bytes, const because optimal shift by 6 can be used
 ; 16384 bytes, 256 entries * 64 bytes, used for (multi) thread management
 THCTRL_SIZE            =  sizeof.THCTRL

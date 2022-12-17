@@ -42,7 +42,9 @@ jnz .runThreads          ; Cycle for all entries
 ;---------- This point also referenced by Re-Start subroutine -----------------;
 WaitThreads:
 ;---------- Wait for N threads executed, count at EBX -------------------------;
-push 60000               ; Parm#4 = Timeout, milliseconds                
+; Note. Special support for MAXIMUM_WAIT_OBJECTS limitation not used
+; at ia32 version. See this operation at x64 source. 
+push MEASURE_TIME_LIMIT  ; Parm#4 = Timeout, milliseconds                
 push 1                   ; Parm#3 = Wait All flag
 push ebp                 ; Parm#2 = Pointer to events list
 push ebx                 ; Parm#1 = Number of objects (threads)
