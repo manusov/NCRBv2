@@ -71,8 +71,11 @@ stosd
 xchg eax,edx
 stosd
 ;---------- Measure TSC frequency ---------------------------------------------;
-call HelperMeasureTsc
+call HelperMeasureTscByPerformanceCounter
+jnc @f                ; Go if advanced method OK, skip legacy method
+call HelperMeasureTscByFileTime
 jc .errorTscFreq      ; Go error if TSC frequency measurement failed
+@@:
 ;---------- Cache detection by CPUID ------------------------------------------;
 mov edi,CPU_CACHE_DATA
 call HelperCpuidCache
@@ -236,23 +239,25 @@ pop esi ebx
 ret
 
 ;---------- Measure CPU TSC (Time Stamp Counter) clock frequency --------------;
+; This subroutine uses legacy method: OS File Time as reference clock,         ;
+; see also advanced subroutine: HelperMeasureTscByPerformanceCounter.          ;            
 ; Store results F = Frequency=[Hz].                                            ;
 ; Call this subroutine only if CPUID and RDTSC both supported.                 ;
 ;                                                                              ;
 ; INPUT:   EDI = Destination pointer for save TSC frequency                    ;
 ;                                                                              ;
 ; OUTPUT:  CF flag = Status: 0(NC)=Measured OK, 1(C)=Measurement error	       ;
-;          Output EDI and destination memory valid only if CF=0(NC)            ;
+;          Output EDI and destination memory updated only if CF=0(NC)          ;
 ;          EDI = Input EDI + 8 , buffer size fixed = 8 bytes                   ;
 ;          Destination memory at [input EDI] = Results                         ;
 ;           Qword [00-07] = TSC frequency, Hz = delta TSC per 1 second         ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-HelperMeasureTsc:
+HelperMeasureTscByFileTime:
 cld                        ; Clear direction, because STOSQ used
 push ebx esi ebp eax eax   ; Last 2 pushes = reserve space for local variables
 mov ebp,esp                ; EBP = pointer to local variables
-;---------- Start measure frequency, get current change -----------------------;
+;---------- Start measure frequency -------------------------------------------;
 push ebp                          ; Parm#1 = pointer to output 64-bit variable
 call [GetSystemTimeAsFileTime]    ; Get current count
 mov esi,[ebp]
@@ -276,7 +281,7 @@ ja @f
 cmp [ebp + 0],esi
 jb @b
 @@:
-rdtsc                             ; Get end TSC, calculate delta-TSC
+rdtsc           ; Get end TSC, calculate delta-TSC
 pop esi ebx
 sub eax,esi
 sbb edx,ebx     ; EDX:EAX = Delta TSC per 1 second = frequency, Hz
@@ -285,6 +290,8 @@ mov ecx,eax
 or ecx,edx
 jz .error       ; Go error if frequency = 0
 ;-------- Store Frequency, as 64-bit integer value, Hz, delta-TSC per second --;
+; EDI updated only if no errors, because alternative measurement subroutine
+; can be called after this.
 stosd                   ; Store EAX = Frequency, low dword
 xchg eax,edx
 stosd                   ; Store EAX = Frequency, high dword
@@ -292,6 +299,92 @@ stosd                   ; Store EAX = Frequency, high dword
 clc             ; CF=0 (NC) means CPU clock measured OK
 .exit:
 pop eax eax ebp esi ebx
+ret
+.error:
+stc             ; CF=1 (CY) means CPU clock measured ERROR
+jmp .exit
+
+;---------- Measure CPU TSC (Time Stamp Counter) clock frequency --------------;
+; This subroutine uses advanced method: OS Performance Counter as reference    ;
+; clock, see also legacy subroutine: HelperMeasureTscByFileTime.               ;            
+; Store results F = Frequency=[Hz].                                            ;
+; Call this subroutine only if CPUID and RDTSC both supported.                 ;
+;                                                                              ;
+; INPUT:   EDI = Destination pointer for save TSC frequency                    ;
+;                                                                              ;
+; OUTPUT:  CF flag = Status: 0(NC)=Measured OK, 1(C)=Measurement error	       ;
+;          Output EDI and destination memory updated only if CF=0(NC)          ;
+;          EDI = Input EDI + 8 , buffer size fixed = 8 bytes                   ;
+;          Destination memory at [input EDI] = Results                         ;
+;           Qword [00-07] = TSC frequency, Hz = delta TSC per 1 second         ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperMeasureTscByPerformanceCounter:
+cld                        ; Clear direction, because STOSQ used
+push ebx esi ebp
+xor eax,eax
+push eax eax eax eax       ; 16 bytes for 2 Qword stack variables
+mov ebp,esp                ; EBP = pointer to local variables
+;---------- Detect performance counter status and frequency -------------------;
+lea eax,[ebp + 08]
+push eax                   ; Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceFrequency]  ; Qword [ebp + 08] = performance frequency
+test eax,eax
+jz .error                  ; Go error if status = FALSE
+;---------- Get current ticks counter value -----------------------------------;
+push ebp                   ; Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]  ; Qword [ebp + 00] = performance counter now
+test eax,eax
+jz .error                  ; Go error if status = FALSE
+mov ebx,[ebp + 00]         ; EBX:ESI = Performance counter now
+mov esi,[ebp + 04]
+;---------- Wait next tick for synchronization --------------------------------;
+@@:
+push ebp                   ; Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]
+test eax,eax
+jz .error                  ; Go error if status = FALSE
+cmp ebx,[ebp + 00]
+jne @f
+cmp esi,[ebp + 04]
+je @b                      ; Go wait cycle if counter value = previous
+@@:
+;---------- Start measurement -------------------------------------------------;
+mov ebx,[ebp + 00]        ; EBX:ESI = Current value of counter
+mov esi,[ebp + 04]
+add ebx,[ebp + 08]        ; EBX:ESI = Current + Ticks per second = target value
+adc esi,[ebp + 12]
+rdtsc                     ; Get start TSC
+push edx eax
+@@:
+push ebp                  ; Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]
+test eax,eax
+jz .error                 ; Go error if status = FALSE
+cmp esi,[ebp + 04]
+ja @b
+jb @f
+cmp ebx,[ebp + 00]
+jae @b                    ; Go wait cycle if target value >= current value
+@@:
+rdtsc           ; Get end TSC, calculate delta-TSC
+pop esi ebx
+sub eax,esi
+sbb edx,ebx     ; EDX:EAX = Delta TSC per 1 second = frequency, Hz
+jb .error       ; Go error if frequency < 0               
+mov ecx,eax
+or ecx,edx
+jz .error       ; Go error if frequency = 0
+;-------- Store Frequency, as 64-bit integer value, Hz, delta-TSC per second --;
+; EDI updated only if no errors, because alternative measurement subroutine
+; can be called after this.
+stosd                      ; Store EAX = Frequency, low dword
+xchg eax,edx
+stosd                      ; Store EAX = Frequency, high dword
+;---------- Restore ESP, pop extra registers, exit ----------------------------;
+clc                        ; CF=0 (NC) means CPU clock measured OK
+.exit:
+pop eax eax eax eax ebp esi ebx  ; Cannot ADD ESP,16 because CF flag
 ret
 .error:
 stc             ; CF=1 (CY) means CPU clock measured ERROR

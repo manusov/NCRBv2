@@ -65,8 +65,11 @@ bts rax,63
 @@:
 stosq
 ;---------- Measure TSC frequency ---------------------------------------------;
-call HelperMeasureTsc
+call HelperMeasureTscByPerformanceCounter
+jnc @f                ; Go if advanced method OK, skip legacy method
+call HelperMeasureTscByFileTime
 jc .errorTscFreq      ; Go error if TSC frequency measurement failed
+@@:
 ;---------- Cache detection by CPUID ------------------------------------------;
 lea rdi,[CPU_CACHE_DATA]
 call HelperCpuidCache
@@ -230,21 +233,23 @@ pop rsi rbx
 ret
 
 ;---------- Measure CPU TSC (Time Stamp Counter) clock frequency --------------;
+; This subroutine uses legacy method: OS File Time as reference clock,         ;
+; see also subroutine: HelperMeasureTscByPerformanceCounter.                   ;            
 ; Store results F = Frequency=[Hz].                                            ;
 ; Call this subroutine only if CPUID and RDTSC both supported.                 ;
 ;                                                                              ;
 ; INPUT:   RDI = Destination pointer for save TSC frequency                    ;
 ;                                                                              ;
 ; OUTPUT:  CF flag = Status: 0(NC)=Measured OK, 1(C)=Measurement error	       ;
-;          Output RDI and destination memory valid only if CF=0(NC)            ;
+;          Output RDI and destination memory updated only if CF=0(NC)          ;
 ;          RDI = Input RDI + 8 , buffer size fixed = 8 bytes                   ;
 ;          Destination memory at [input RDI] = Results                         ;
 ;           Qword [00-07] = TSC frequency, Hz = delta TSC per 1 second         ;
 ;                                                                              ;
 ;------------------------------------------------------------------------------;
-HelperMeasureTsc:
+HelperMeasureTscByFileTime:
 cld                        ; Clear direction, because STOSQ used
-push rbx rbp rbp           ; Last push for reserve local variable space
+push rbx rsi rbp rbp       ; Last push for reserve local variable space
 mov rbp,rsp                ; RBP used for restore RSP and addressing variables
 and rsp,0FFFFFFFFFFFFFFF0h
 sub rsp,32                 ; Make parameters shadow
@@ -273,12 +278,88 @@ or rax,rdx                        ; RAX = 64-bit TSC at operation end
 sub rax,rbx                       ; RAX = Delta TSC
 jbe .error
 ;---------- Store result ------------------------------------------------------; 
+; RDI updated only if no errors, because alternative measurement subroutine
+; can be called after this.
 stosq     ; Store Frequency, as 64-bit integer value, Hz, delta-TSC per second
 ;---------- Restore RSP, pop extra registers, exit ----------------------------;
 clc             ; CF=0 (NC) means CPU clock measured OK
 .exit:
 mov rsp,rbp
-pop rbp rbp rbx
+pop rbp rbp rsi rbx
+ret
+.error:
+stc             ; CF=1 (CY) means CPU clock measured ERROR
+jmp .exit
+
+;---------- Measure CPU TSC (Time Stamp Counter) clock frequency --------------;
+; This subroutine uses advanced method: OS Performance Counter as reference    ;
+; clock, see also legacy subroutine: HelperMeasureTscByFileTime.               ;            
+; Store results F = Frequency=[Hz].                                            ;
+; Call this subroutine only if CPUID and RDTSC both supported.                 ;
+;                                                                              ;
+; INPUT:   RDI = Destination pointer for save TSC frequency                    ;
+;                                                                              ;
+; OUTPUT:  CF flag = Status: 0(NC)=Measured OK, 1(C)=Measurement error	       ;
+;          Output RDI and destination memory updated only if CF=0(NC)          ;
+;          RDI = Input RDI + 8 , buffer size fixed = 8 bytes                   ;
+;          Destination memory at [input RDI] = Results                         ;
+;           Qword [00-07] = TSC frequency, Hz = delta TSC per 1 second         ;
+;                                                                              ;
+;------------------------------------------------------------------------------;
+HelperMeasureTscByPerformanceCounter:
+cld                        ; Clear direction, because STOSQ used
+push rbx rsi rbp
+xor eax,eax
+push rax rax               ; 16 bytes for 2 Qword stack variables
+mov rbp,rsp                ; RBP used for restore RSP and addressing variables
+and rsp,0FFFFFFFFFFFFFFF0h
+sub rsp,32                 ; Make parameters shadow
+;---------- Detect performance counter status and frequency -------------------;
+lea rcx,[rbp + 08]         ; RCX = Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceFrequency]  ; Qword [rbp + 08] = performance frequency
+test rax,rax
+jz .error                  ; Go error if status = FALSE
+;---------- Get current ticks counter value -----------------------------------;
+mov rcx,rbp                ; RCX = Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]  ; Qword [rbp + 00] = performance counter now
+test rax,rax
+jz .error                  ; Go error if status = FALSE
+mov rsi,[rbp]              ; RSI = Performance counter now
+;---------- Wait next tick for synchronization --------------------------------;
+@@:
+mov rcx,rbp                ; RCX = Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]
+test rax,rax
+jz .error                  ; Go error if status = FALSE
+cmp rsi,[rbp]
+je @b                      ; Go wait cycle if counter value = previous
+;---------- Start measurement -------------------------------------------------;
+mov rsi,[rbp + 00]         ; RSI = Current value of counter
+add rsi,[rbp + 08]         ; RSI = Current + Ticks per second = target value
+rdtsc                      ; Get start TSC
+shl rdx,32
+lea rbx,[rax + rdx]        ; RBX = 64-bit TSC at operation start
+@@:
+mov rcx,rbp                ; RCX = Parm#1 = pointer to output 64-bit variable
+call [QueryPerformanceCounter]
+test rax,rax
+jz .error                  ; Go error if status = FALSE
+cmp rsi,[rbp]
+jae @b                     ; Go wait cycle if target value >= current value
+rdtsc                      ; Get end TSC, calculate delta-TSC
+shl rdx,32
+or rax,rdx                 ; RAX = 64-bit TSC at operation end
+sub rax,rbx                ; RAX = Delta TSC
+jbe .error                 ; Go error if delta TSC <= 0
+;---------- Store result ------------------------------------------------------; 
+; RDI updated only if no errors, because alternative measurement subroutine
+; can be called after this.
+stosq     ; Store Frequency, as 64-bit integer value, Hz, delta-TSC per second
+;---------- Restore RSP, pop extra registers, exit ----------------------------;
+clc             ; CF=0 (NC) means CPU clock measured OK
+.exit:          ; Flags must be not changed, because CF = status
+mov rsp,rbp
+pop rax rax rbp rsi rbx
 ret
 .error:
 stc             ; CF=1 (CY) means CPU clock measured ERROR

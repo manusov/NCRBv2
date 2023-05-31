@@ -1,3 +1,14 @@
+31.05.2023. v2.04.09. Changes for x64 and ia32 versions.
+1) Used QueryPerformanceFrequency(), QueryPerformanceCounter() WinAPI functions
+   for measure TSC frequency, if this API supported. This improve precision,
+   especially for test at Oracle VirtualBox virtual machines.
+   Legacy function GetSystemTimeAsFileTime() has units 100 ns but real resolution
+   is platform-specific and too big (milliseconds typical).
+2) Added signature for detection ACPI table:
+   ASPT, 'AMD Secure Processor Table'.
+3) Some minor optimizations.
+
+
 17.12.2022. v2.04.08. Changes for x64 version.
 Added special support for number of threads > MAXIMUM_WAIT_OBJECTS.
 This actual for platforms with above 64 logical processors.

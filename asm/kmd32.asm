@@ -1,7 +1,7 @@
 ;=========================================================================================================;
 ;                                                                                                         ;
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
-; (C)2022 Ilya Manusov.                                                                                   ;
+; (C)2023 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
 ;                                                                                                         ;
 ; This version v2.xx.xx                                                                                   ;
@@ -63,9 +63,9 @@
 include 'win32a.inc'   ; FASM definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION   EQU  'NCRB Kernel Mode Driver for Win32'
-RESOURCE_VERSION       EQU  '0.0.0.1'
+RESOURCE_VERSION       EQU  '0.0.0.2'
 RESOURCE_COMPANY       EQU  'https://github.com/manusov'
-RESOURCE_COPYRIGHT     EQU  '(C) 2022 Ilya Manusov'
+RESOURCE_COPYRIGHT     EQU  '(C) 2023 Ilya Manusov'
 ;---------- Kernel Mode Driver definitions ------------------------------------;
 ; Some zero constant values used for XOR/TEST optimizations, 
 ; carefully inspect code if change.                        ;
@@ -144,12 +144,12 @@ jmp .exit
 ; Load structure to point to IRP handlers
 .success:
 mov eax,[ebp + 8]            ; [lpDriverObject]
-lea edx,[DriverUnloadEntryPoint]
+mov edx,DriverUnloadEntryPoint
 mov [eax + 34h],edx          ; V_DRIVER_OBJECT.DriverUnload
-lea edx,[DispatchCreateClose]
+mov edx,DispatchCreateClose
 mov [eax + 38h],edx          ; V_DRIVER_OBJECT.MajorFunction + IRP_MJ_CREATE_OFFSET
 mov [eax + 40h],edx          ; V_DRIVER_OBJECT.MajorFunction + IRP_MJ_CLOSE_OFFSET
-lea edx,[DispatchReadWrite]
+mov edx,DispatchReadWrite
 mov [eax + 44h],edx          ; V_DRIVER_OBJECT.MajorFunction + IRP_MJ_READ_OFFSET
 mov [eax + 48h],edx          ; V_DRIVER_OBJECT.MajorFunction + IRP_MJ_WRITE_OFFSET
 ;---------- Assign result, exit -----------------------------------------------;

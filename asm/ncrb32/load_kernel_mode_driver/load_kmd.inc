@@ -191,7 +191,7 @@ jmp kmdDone
 ;------------------------------------------------------------------------------;
 UnloadKernelModeDriver:
 push ebx esi edi ebp ecx
-lea ebx,[SCP_DATA]
+mov ebx,SCP_DATA
 xor esi,esi                    ; Pre-clear OS error code
 mov edi,1                      ; Set yet no errors
 ;---------- Close device file, uninstall driver -------------------------------; 

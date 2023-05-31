@@ -1,7 +1,7 @@
 ;=========================================================================================================;
 ;                                                                                                         ;
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
-; (C)2022 Ilya Manusov.                                                                                   ;
+; (C)2023 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
 ;                                                                                                         ;
 ; This version v2.xx.xx                                                                                   ;
@@ -53,9 +53,9 @@ include 'win32a.inc'
 include 'data\data.inc'
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION  EQU  'NCRB universal resource library for Win32 and Win64'
-RESOURCE_VERSION      EQU  '2.4.8.0'
+RESOURCE_VERSION      EQU  '2.4.9.0'
 RESOURCE_COMPANY      EQU  'https://github.com/manusov'
-RESOURCE_COPYRIGHT    EQU  '(C) 2022 Ilya Manusov'
+RESOURCE_COPYRIGHT    EQU  '(C) 2023 Ilya Manusov'
 ;------------------------------------------------------------------------------;
 ;                                                                              ;
 ;                            Resources section.                                ;        
@@ -2443,6 +2443,7 @@ DB  'AGDI' , 'Arm Generic Diagnostic Dump Interface'            , 0
 DB  'APIC' , 'Multiple APIC Description'                        , 0
 DB  'APMT' , 'Arm Performance Monitoring Unit'                  , 0
 DB  'ASF!' , 'Alert Standard Format'                            , 0
+DB  'ASPT' , 'AMD Secure Processor Table'                       , 0
 DB  'BDAT' , 'BIOS Data ACPI'                                   , 0
 DB  'BERT' , 'Boot Error Record'                                , 0
 DB  'BGRT' , 'Boot Graphics Resource'                           , 0

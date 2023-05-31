@@ -1,7 +1,7 @@
 ;=========================================================================================================;
 ;                                                                                                         ;
 ; Project NCRB ( NUMA CPU&RAM Benchmarks v2.xx.xx ).                                                      ;
-; (C)2022 Ilya Manusov.                                                                                   ;
+; (C)2023 Ilya Manusov.                                                                                   ;
 ; manusov1969@gmail.com                                                                                   ;
 ;                                                                                                         ;
 ; This version v2.xx.xx                                                                                   ;
@@ -51,12 +51,12 @@ include 'win32a.inc'             ; FASM definitions
 include 'data\data.inc'          ; NCRB project global definitions
 ;---------- Global application and version description definitions ------------;
 RESOURCE_DESCRIPTION    EQU 'NCRB Win32 edition.'
-RESOURCE_VERSION        EQU '2.4.8.0'
+RESOURCE_VERSION        EQU '2.4.9.0'
 RESOURCE_COMPANY        EQU 'https://github.com/manusov'
-RESOURCE_COPYRIGHT      EQU '(C) 2022 Ilya Manusov.'
+RESOURCE_COPYRIGHT      EQU '(C) 2023 Ilya Manusov.'
 PROGRAM_NAME_TEXT       EQU 'NUMA CPU&RAM Benchmarks for Win32.'
 ABOUT_TEXT_1            EQU 'NUMA CPU&RAM Benchmarks.'
-ABOUT_TEXT_2            EQU 'v2.04.08 for Windows ia32.'
+ABOUT_TEXT_2            EQU 'v2.04.09 for Windows ia32.'
 ABOUT_TEXT_3            EQU RESOURCE_COPYRIGHT 
 ;---------- Global identifiers definitions ------------------------------------;
 ID_EXE_ICON             = 100    ; This application icon

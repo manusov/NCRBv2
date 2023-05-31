@@ -170,7 +170,7 @@ mov ax,REPORT_BINDER_RUN_MBPS
 jz @f                               ; Select MBPS or Latency (nanoseconds) mode
 mov ax,REPORT_BINDER_RUN_LATENCY
 @@:
-lea edi,[FILE_WORK_BUFFER]
+mov edi,FILE_WORK_BUFFER
 push ebx edi
 xor ebx,ebx
 call Binder

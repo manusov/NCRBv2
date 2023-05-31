@@ -204,7 +204,7 @@ mov rcx,[GC_PARMS.handleFont]
 call [DeleteObject]
 ;---------- Delete timer ------------------------------------------------------;
 mov rcx,rbx                            ; Parm#1 = RCX = Parent window handle
-xor rdx,rdx                            ; Set same as for SetTimer function
+xor edx,edx                            ; Set same as for SetTimer function
 call [KillTimer]
 ;---------- Destroy window, disable draw counter ------------------------------;
 mov edx,1                              ; RDX = Parm#2 = Result for return
